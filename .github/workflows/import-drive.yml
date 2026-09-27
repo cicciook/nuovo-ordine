@@ -1,0 +1,31 @@
+name: Importa modpack da Drive
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versione nuova, per esempio 2026.09.28-1'
+        required: false
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: pubblicazione-modpack
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepara dipendenze
+        run: python -m pip install gdown==5.2.0 requests==2.34.2 platformdirs==4.3.8
+      - name: Importa file e pubblica release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MODPACK_DRIVE_URL: ${{ secrets.MODPACK_DRIVE_URL }}
+          PACK_VERSION: ${{ inputs.version }}
+        run: python tools/import_drive.py --publish

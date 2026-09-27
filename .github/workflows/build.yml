@@ -1,0 +1,46 @@
+name: Compila launcher
+on:
+  workflow_dispatch:
+  push:
+    tags: ['launcher-v*']
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt pyinstaller==6.16.0 pytest==8.3.5
+      - run: python -m pytest -q
+      - run: python tools/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NuovoOrdine-${{ matrix.os }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/launcher-v')
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Pubblica eseguibili
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" artifacts/* --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Estrarre l'intero archivio."
