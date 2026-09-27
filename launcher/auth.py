@@ -1,25 +1,38 @@
-import hmac
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import parse_qs, urlsplit
+
 import keyring
+import requests
 from keyring.backend import get_all_keyring
 from minecraft_launcher_lib import microsoft_account as msa
+from minecraft_launcher_lib.exceptions import AzureAppNotPermitted, AccountNotOwnMinecraft
 
-REDIRECT = "http://localhost:53682/callback"
 SERVICE = "NuovoOrdine.Microsoft"
+DEVICE_CODE_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode"
+TOKEN_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
+SCOPE = "XboxLive.signin offline_access"
 
 
 def secure_keyring():
-    allowed = ("keyring.backends.Windows", "keyring.backends.macOS", "keyring.backends.SecretService", "keyring.backends.kwallet")
+    allowed = (
+        "keyring.backends.Windows",
+        "keyring.backends.macOS",
+        "keyring.backends.SecretService",
+        "keyring.backends.kwallet",
+    )
     try:
-        candidates = [b for b in get_all_keyring() if type(b).__module__.startswith(allowed) and b.priority > 0]
+        candidates = [
+            b
+            for b in get_all_keyring()
+            if type(b).__module__.startswith(allowed) and b.priority > 0
+        ]
         return max(candidates, key=lambda b: b.priority) if candidates else None
     except Exception:
         return None
 
 
 def saved_token(client_id):
+    if not client_id:
+        return None
     backend = secure_keyring()
     try:
         return backend.get_password(SERVICE, client_id) if backend else None
@@ -39,6 +52,8 @@ def remember(client_id, data, report):
 
 
 def forget(client_id):
+    if not client_id:
+        return
     backend = secure_keyring()
     if backend:
         try:
@@ -49,56 +64,96 @@ def forget(client_id):
 
 
 def refresh(client_id, token, report):
-    data = msa.complete_refresh(client_id, None, REDIRECT, token)
+    data = msa.complete_refresh(client_id, None, None, token)
     remember(client_id, data, report)
     return data
+
+
+def _finish_minecraft_login(ms_access_token, refresh_token):
+    xbl = msa.authenticate_with_xbl(ms_access_token)
+    xbl_token = xbl["Token"]
+    userhash = xbl["DisplayClaims"]["xui"][0]["uhs"]
+
+    xsts = msa.authenticate_with_xsts(xbl_token)
+    minecraft = msa.authenticate_with_minecraft(userhash, xsts["Token"])
+    if "access_token" not in minecraft:
+        raise AzureAppNotPermitted()
+
+    access_token = minecraft["access_token"]
+    profile = msa.get_profile(access_token)
+    if profile.get("error") == "NOT_FOUND":
+        raise AccountNotOwnMinecraft()
+
+    profile["access_token"] = access_token
+    profile["refresh_token"] = refresh_token
+    return profile
 
 
 def login(client_id, report, open_browser):
-    url, state, verifier = msa.get_secure_login_data(client_id, REDIRECT)
-    result = {}
+    """Microsoft OAuth device-code flow, intentionally matching Prism Launcher's UX."""
+    if not client_id:
+        raise RuntimeError(
+            "Il login Microsoft non è configurato in questa build del launcher. "
+            "Il proprietario deve impostare una volta il Client ID dell'app Nuovo Ordine."
+        )
 
-    class Callback(BaseHTTPRequestHandler):
-        def log_message(self, *args):
-            pass  # Authorization codes must never enter the log.
+    response = requests.post(
+        DEVICE_CODE_URL,
+        data={"client_id": client_id, "scope": SCOPE},
+        timeout=(15, 30),
+    )
+    response.raise_for_status()
+    device = response.json()
+    if "device_code" not in device:
+        raise RuntimeError(device.get("error_description", "Microsoft non ha avviato il login."))
 
-        def do_GET(self):
-            parts = urlsplit(self.path)
-            query = parse_qs(parts.query)
-            valid = parts.path == "/callback" and hmac.compare_digest(query.get("state", [""])[0], state)
-            if not valid:
-                self.send_error(400, "Invalid callback")
-                return
-            if "error" in query:
-                result["error"] = "Accesso annullato o rifiutato da Microsoft."
-            elif "code" in query:
-                result["code"] = query["code"][0]
-            else:
-                self.send_error(400, "Missing authorization code")
-                return
-            body = b"<html><body><h2>Nuovo Ordine</h2><p>Puoi chiudere questa scheda e tornare al launcher.</p></body></html>"
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+    browser_url = device.get("verification_uri_complete") or device.get("verification_uri")
+    if not browser_url:
+        raise RuntimeError("Microsoft non ha restituito la pagina di accesso.")
 
-    try:
-        server = HTTPServer(("127.0.0.1", 53682), Callback)
-    except OSError as exc:
-        raise RuntimeError("La porta di login 53682 è occupata. Chiudi gli altri launcher e riprova.") from exc
-    with server:
-        server.timeout = 1
-        open_browser(url)
-        report("Completa l'accesso Microsoft nel browser (tempo massimo: 3 minuti).")
-        deadline = time.monotonic() + 180
-        while not result and time.monotonic() < deadline:
-            server.handle_request()
-    if "error" in result:
-        raise RuntimeError(result["error"])
-    if "code" not in result:
-        raise RuntimeError("Accesso scaduto. Premi di nuovo Accedi con Microsoft.")
-    data = msa.complete_login(client_id, None, REDIRECT, result["code"], verifier)
-    remember(client_id, data, report)
-    return data
+    user_code = device.get("user_code", "")
+    if user_code:
+        report(f"Browser aperto • codice Microsoft: {user_code}")
+    else:
+        report("Browser Microsoft aperto. Completa l'accesso.")
+    open_browser(browser_url)
+
+    interval = max(2, int(device.get("interval", 5)))
+    deadline = time.monotonic() + int(device.get("expires_in", 900))
+    token = None
+
+    while time.monotonic() < deadline:
+        time.sleep(interval)
+        response = requests.post(
+            TOKEN_URL,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "client_id": client_id,
+                "device_code": device["device_code"],
+            },
+            timeout=(15, 30),
+        )
+        data = response.json()
+        if "access_token" in data:
+            token = data
+            break
+
+        error = data.get("error")
+        if error == "authorization_pending":
+            continue
+        if error == "slow_down":
+            interval += 5
+            continue
+        if error in ("authorization_declined", "access_denied"):
+            raise RuntimeError("Accesso Microsoft annullato.")
+        if error == "expired_token":
+            raise RuntimeError("Il codice Microsoft è scaduto. Premi di nuovo Accedi con Microsoft.")
+        raise RuntimeError(data.get("error_description", "Accesso Microsoft non riuscito."))
+
+    if not token:
+        raise RuntimeError("Accesso Microsoft scaduto. Premi di nuovo Accedi con Microsoft.")
+
+    report("Microsoft autenticato • verifico Xbox e Minecraft…")
+    profile = _finish_minecraft_login(token["access_token"], token["refresh_token"])
+    remember(client_id, profile, report)
+    return profile
