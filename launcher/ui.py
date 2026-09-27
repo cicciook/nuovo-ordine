@@ -1,9 +1,10 @@
+import base64
 import re
 import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, QUrl, QTimer, QLockFile
-from PySide6.QtGui import QDesktopServices, QPainter, QColor, QLinearGradient, QPixmap
+from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QProgressBar, QPlainTextEdit, QDialog, QFormLayout,
@@ -17,6 +18,30 @@ from .config import DATA, load_config, atomic_json, validate_config
 def resource_path(relative):
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
     return base / relative
+
+
+def load_logo_pixmap():
+    """Load the real logo. The b64 chunks are a robust fallback for packaged builds."""
+    direct = resource_path("launcher/assets/nuovo-ordine-logo.jpg")
+    if direct.exists() and direct.stat().st_size > 1024:
+        pixmap = QPixmap(str(direct))
+        if not pixmap.isNull():
+            return pixmap
+
+    parts = []
+    for index in range(1, 7):
+        path = resource_path(f"launcher/assets/logo.b64.{index:02d}")
+        if not path.exists():
+            return QPixmap()
+        parts.append(path.read_text("ascii").strip())
+
+    try:
+        raw = base64.b64decode("".join(parts), validate=True)
+    except Exception:
+        return QPixmap()
+    pixmap = QPixmap()
+    pixmap.loadFromData(raw, "JPG")
+    return pixmap
 
 
 STYLE = """
@@ -121,32 +146,6 @@ QPlainTextEdit {
 """
 
 
-class LogoHero(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.image = QPixmap(str(resource_path("launcher/assets/nuovo-ordine-logo.jpg")))
-        self.setMinimumHeight(320)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor("#06111f"))
-        if not self.image.isNull():
-            scaled = self.image.scaled(
-                self.size(),
-                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-            x = (scaled.width() - self.width()) // 2
-            y = (scaled.height() - self.height()) // 2
-            painter.drawPixmap(self.rect(), scaled, scaled.rect().adjusted(x, y, -x, -y))
-        shade = QLinearGradient(0, 0, 0, self.height())
-        shade.setColorAt(0, QColor(2, 10, 20, 35))
-        shade.setColorAt(0.7, QColor(2, 10, 20, 80))
-        shade.setColorAt(1, QColor(2, 10, 20, 190))
-        painter.fillRect(self.rect(), shade)
-        painter.end()
-
-
 class Worker(QThread):
     status = Signal(str)
     progress = Signal(int, int)
@@ -165,7 +164,7 @@ class Worker(QThread):
         except Exception as exc:
             kind = type(exc).__name__
             friendly = {
-                "AzureAppNotPermitted": "L'app Microsoft non è abilitata alle API Minecraft. Il proprietario deve richiedere l'abilitazione del Client ID.",
+                "AzureAppNotPermitted": "L'app Microsoft Nuovo Ordine non è ancora abilitata alle API Minecraft.",
                 "AccountNotOwnMinecraft": "Questo account non possiede Minecraft Java Edition o non ha un profilo Java attivo.",
                 "InvalidRefreshToken": "L'accesso è scaduto. Accedi di nuovo con Microsoft.",
                 "XSTSError": "Xbox non ha autorizzato l'account. Verifica profilo Xbox e autorizzazioni famiglia.",
@@ -183,6 +182,7 @@ class Worker(QThread):
 class Settings(QDialog):
     def __init__(self, cfg, parent):
         super().__init__(parent)
+        self.cfg = cfg
         self.setWindowTitle("Nuovo Ordine • Impostazioni")
         self.setMinimumWidth(560)
         form = QFormLayout(self)
@@ -190,7 +190,6 @@ class Settings(QDialog):
         for key, title, placeholder in [
             ("repository", "Repository pubblico GitHub", "nomeutente/nuovo-ordine"),
             ("branch", "Ramo degli aggiornamenti", "main"),
-            ("microsoft_client_id", "Client ID Microsoft", "ID applicazione, non il client secret"),
             ("server", "Server di riserva", "play.esempio.it:25565"),
             ("java_path", "Java 17 (vuoto = automatico)", "Percorso di java / java.exe"),
         ]:
@@ -198,18 +197,21 @@ class Settings(QDialog):
             field.setPlaceholderText(placeholder)
             self.fields[key] = field
             form.addRow(title, field)
+
         self.ram = QSpinBox()
         self.ram.setRange(2048, 32768)
         self.ram.setSingleStep(1024)
         self.ram.setSuffix(" MB")
         self.ram.setValue(int(cfg.get("ram_mb", 6144)))
         form.addRow("RAM massima", self.ram)
+
         note = QLabel(
-            "Il launcher si aggiorna automaticamente dalle Release GitHub.\n"
-            "L'indirizzo pubblicato nel modpack ha precedenza sul server di riserva."
+            "L'accesso Microsoft è configurato dal proprietario del launcher e non richiede ID agli utenti.\n"
+            "Il launcher e il modpack controllano automaticamente gli aggiornamenti."
         )
         note.setWordWrap(True)
         form.addRow(note)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
@@ -218,37 +220,9 @@ class Settings(QDialog):
         form.addRow(buttons)
 
     def values(self):
-        return {
-            **{k: v.text().strip() for k, v in self.fields.items()},
-            "ram_mb": self.ram.value(),
-        }
-
-
-class MicrosoftLoginDialog(QDialog):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setWindowTitle("Aggiungi account Microsoft")
-        self.setMinimumWidth(470)
-        box = QVBoxLayout(self)
-        title = QLabel("ACCEDI CON MICROSOFT")
-        title.setObjectName("title")
-        box.addWidget(title)
-        text = QLabel(
-            "Il launcher aprirà il browser predefinito, come Prism Launcher.\n\n"
-            "1. Accedi al tuo account Microsoft nel browser.\n"
-            "2. Autorizza Minecraft.\n"
-            "3. Quando compare la conferma, torna qui.\n\n"
-            "La password non passa mai dal launcher."
-        )
-        text.setWordWrap(True)
-        text.setObjectName("subtitle")
-        box.addWidget(text)
-        buttons = QDialogButtonBox()
-        go = buttons.addButton("Apri Microsoft nel browser", QDialogButtonBox.ButtonRole.AcceptRole)
-        buttons.addButton("Annulla", QDialogButtonBox.ButtonRole.RejectRole)
-        go.clicked.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        box.addWidget(buttons)
+        values = {k: v.text().strip() for k, v in self.fields.items()}
+        values["ram_mb"] = self.ram.value()
+        return values
 
 
 class Window(QMainWindow):
@@ -260,8 +234,8 @@ class Window(QMainWindow):
         self.failed = False
         self.after_finish = None
         self.setWindowTitle("Nuovo Ordine • Launcher")
-        self.resize(1120, 760)
-        self.setMinimumSize(980, 700)
+        self.resize(1120, 780)
+        self.setMinimumSize(980, 720)
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -319,7 +293,7 @@ class Window(QMainWindow):
 
         content = QVBoxLayout()
         content.setContentsMargins(28, 24, 28, 22)
-        content.setSpacing(15)
+        content.setSpacing(13)
 
         top = QHBoxLayout()
         label = QLabel("NUOVO ORDINE LAUNCHER")
@@ -331,8 +305,24 @@ class Window(QMainWindow):
         top.addWidget(badge)
         content.addLayout(top)
 
-        hero = LogoHero()
-        content.addWidget(hero)
+        self.logo = QLabel()
+        self.logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.logo.setMinimumHeight(255)
+        self.logo.setMaximumHeight(275)
+        pixmap = load_logo_pixmap()
+        if pixmap.isNull():
+            self.logo.setText("NUOVO ORDINE")
+            self.logo.setObjectName("title")
+        else:
+            self.logo.setPixmap(
+                pixmap.scaled(
+                    470,
+                    255,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        content.addWidget(self.logo, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self.news = QLabel("Controllo launcher e modpack in corso…")
         self.news.setWordWrap(True)
@@ -363,7 +353,7 @@ class Window(QMainWindow):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setMaximumBlockCount(150)
-        self.log.setMinimumHeight(95)
+        self.log.setMinimumHeight(90)
         content.addWidget(self.log, 1)
 
         row.addLayout(content, 1)
@@ -377,25 +367,34 @@ class Window(QMainWindow):
         self.refresh_auth_controls()
         QTimer.singleShot(350, self.startup)
 
+    def microsoft_client_id(self):
+        return str(self.cfg.get("microsoft_client_id", "")).strip()
+
     def has_microsoft_login(self):
-        client_id = self.cfg.get("microsoft_client_id", "").strip()
+        client_id = self.microsoft_client_id()
         return bool(client_id and (self.session or auth.saved_token(client_id)))
 
     def refresh_auth_controls(self):
         busy = bool(self.worker and self.worker.isRunning())
         online = self.has_microsoft_login()
+        configured = bool(re.fullmatch(r"[0-9a-fA-F-]{36}", self.microsoft_client_id()))
         self.play_button.setText("GIOCA ONLINE  →" if online else "GIOCA OFFLINE  →")
         self.play_button.setEnabled(not busy)
         self.update_button.setEnabled(not busy)
-        self.login_button.setEnabled(not busy and not online)
+        self.login_button.setEnabled(not busy and not online and configured)
         self.logout_button.setEnabled(not busy and online)
         self.settings_button.setEnabled(not busy)
-        if self.session:
+        if online and self.session:
             self.account.setText("Connesso come\n" + self.session["name"])
         elif online:
             self.account.setText("Account Microsoft\nAccesso salvato")
+        elif configured:
+            self.account.setText("Modalità offline\nMicrosoft disponibile")
+            self.login_button.setText("Accedi con Microsoft")
         else:
-            self.account.setText("Modalità offline\nNessun account Microsoft")
+            self.account.setText("Modalità offline\nMicrosoft non configurato")
+            self.login_button.setText("Microsoft non configurato")
+            self.login_button.setToolTip("Il Client ID va configurato una sola volta dal proprietario del launcher, non dai giocatori.")
 
     def report(self, text):
         self.status_label.setText(text)
@@ -466,25 +465,19 @@ class Window(QMainWindow):
         self.after_finish = self.update_pack
 
     def login(self):
-        try:
-            validate_config(self.cfg, require_login=True)
-        except ValueError as exc:
-            self.error(str(exc))
-            return
-        dialog = MicrosoftLoginDialog(self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        client_id = self.microsoft_client_id()
+        if not re.fullmatch(r"[0-9a-fA-F-]{36}", client_id):
+            self.error("Login Microsoft non configurato nella build del launcher.")
             return
         self.report("Apro Microsoft nel browser…")
         self.begin(
-            lambda w: auth.login(
-                self.cfg["microsoft_client_id"], w.status.emit, w.browser.emit
-            ),
+            lambda w: auth.login(client_id, w.status.emit, w.browser.emit),
             self.set_account,
         )
 
     def logout(self):
         try:
-            auth.forget(self.cfg.get("microsoft_client_id", ""))
+            auth.forget(self.microsoft_client_id())
             self.session = None
             self.refresh_auth_controls()
             self.report("Account disconnesso. Ora puoi giocare in modalità offline.")
@@ -506,8 +499,7 @@ class Window(QMainWindow):
             name, ok = QInputDialog.getText(
                 self,
                 "Nome modalità offline",
-                "Come vuoi chiamarti in modalità offline?\n"
-                "Usa 3–16 caratteri: lettere, numeri o _",
+                "Come vuoi chiamarti in modalità offline?\nUsa 3–16 caratteri: lettere, numeri o _",
                 text=default,
             )
             if not ok:
@@ -515,7 +507,7 @@ class Window(QMainWindow):
             name = name.strip()
             if re.fullmatch(r"[A-Za-z0-9_]{3,16}", name):
                 self.cfg["offline_name"] = name
-                atomic_json(DATA / "settings.json", self.cfg)
+                self.save_user_settings()
                 return name
             QMessageBox.warning(
                 self,
@@ -542,21 +534,27 @@ class Window(QMainWindow):
             self.pack_ready,
         )
 
+    def save_user_settings(self):
+        allowed = {
+            "repository": self.cfg.get("repository", ""),
+            "branch": self.cfg.get("branch", "main"),
+            "server": self.cfg.get("server", ""),
+            "ram_mb": int(self.cfg.get("ram_mb", 6144)),
+            "java_path": self.cfg.get("java_path", ""),
+        }
+        if self.cfg.get("offline_name"):
+            allowed["offline_name"] = self.cfg["offline_name"]
+        atomic_json(DATA / "settings.json", allowed)
+
     def settings(self):
         dialog = Settings(self.cfg, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             values = dialog.values()
+            values["microsoft_client_id"] = self.microsoft_client_id()
             if "offline_name" in self.cfg:
                 values["offline_name"] = self.cfg["offline_name"]
-            if values.get("microsoft_client_id") != self.cfg.get("microsoft_client_id"):
-                try:
-                    auth.forget(self.cfg.get("microsoft_client_id", ""))
-                except RuntimeError as exc:
-                    self.error(str(exc))
-                    return
-                self.session = None
             self.cfg = values
-            atomic_json(DATA / "settings.json", values)
+            self.save_user_settings()
             self.refresh_auth_controls()
             self.report("Impostazioni salvate. Premi Verifica / aggiorna mod.")
 
