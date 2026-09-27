@@ -195,7 +195,12 @@ def _sh_quote(value):
 
 
 def apply_update(update):
-    """Spawn a tiny detached helper that replaces the running installation after exit."""
+    """Spawn a detached helper that replaces the installation after this process exits.
+
+    The helper deliberately runs with DATA as its working directory. Running it from
+    inside the installation directory can keep that directory locked on Windows and
+    make the launcher disappear without being able to install/restart the new copy.
+    """
     payload = Path(update["payload"]).resolve()
     target = Path(update["target"]).resolve()
     if not payload.exists() or not target.exists():
@@ -206,31 +211,65 @@ def apply_update(update):
 
     if sys.platform == "win32":
         script = DATA / "apply-launcher-update.ps1"
+        log = DATA / "launcher-update.log"
         backup = target.with_name(target.name + ".old")
         exe = target / "NuovoOrdine.exe"
         body = f"""$ErrorActionPreference = 'Stop'
-$pidToWait = {pid}
-while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
-$src = '{_ps_quote(payload)}'
-$dst = '{_ps_quote(target)}'
-$old = '{_ps_quote(backup)}'
-if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force }}
-Move-Item -LiteralPath $dst -Destination $old
+$log = '{_ps_quote(log)}'
+function Write-UpdateLog([string]$message) {{
+    Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $message)
+}}
+function Retry-Action([scriptblock]$action, [string]$name) {{
+    $last = $null
+    for ($i = 0; $i -lt 40; $i++) {{
+        try {{ & $action; return }} catch {{ $last = $_; Start-Sleep -Milliseconds 250 }}
+    }}
+    throw "$name failed: $last"
+}}
 try {{
-    Move-Item -LiteralPath $src -Destination $dst
+    Write-UpdateLog 'Updater avviato.'
+    $pidToWait = {pid}
+    while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
+    Start-Sleep -Milliseconds 500
+    $src = '{_ps_quote(payload)}'
+    $dst = '{_ps_quote(target)}'
+    $old = '{_ps_quote(backup)}'
+    if (Test-Path -LiteralPath $old) {{
+        Retry-Action {{ Remove-Item -LiteralPath $old -Recurse -Force }} 'cleanup backup'
+    }}
+    Retry-Action {{ Move-Item -LiteralPath $dst -Destination $old }} 'backup current launcher'
+    try {{
+        Retry-Action {{ Move-Item -LiteralPath $src -Destination $dst }} 'install new launcher'
+    }} catch {{
+        Write-UpdateLog ('Installazione fallita, rollback: ' + $_)
+        if (Test-Path -LiteralPath $dst) {{ Remove-Item -LiteralPath $dst -Recurse -Force -ErrorAction SilentlyContinue }}
+        Retry-Action {{ Move-Item -LiteralPath $old -Destination $dst }} 'rollback launcher'
+        throw
+    }}
+    if (-not (Test-Path -LiteralPath '{_ps_quote(exe)}')) {{ throw 'Nuovo eseguibile non trovato dopo aggiornamento.' }}
+    Write-UpdateLog 'Aggiornamento installato, riavvio launcher.'
+    Start-Process -FilePath '{_ps_quote(exe)}' -WorkingDirectory '{_ps_quote(target)}'
+    Start-Sleep -Seconds 3
+    if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue }}
+    Write-UpdateLog 'Aggiornamento completato.'
 }} catch {{
-    Move-Item -LiteralPath $old -Destination $dst
+    Write-UpdateLog ('ERRORE: ' + $_)
+    try {{
+        $dst = '{_ps_quote(target)}'
+        $old = '{_ps_quote(backup)}'
+        if (-not (Test-Path -LiteralPath $dst) -and (Test-Path -LiteralPath $old)) {{ Move-Item -LiteralPath $old -Destination $dst }}
+        if (Test-Path -LiteralPath '{_ps_quote(exe)}') {{ Start-Process -FilePath '{_ps_quote(exe)}' -WorkingDirectory '{_ps_quote(target)}' }}
+    }} catch {{ Write-UpdateLog ('Rollback/riavvio fallito: ' + $_) }}
     exit 1
 }}
-Start-Process -FilePath '{_ps_quote(exe)}'
-Start-Sleep -Seconds 2
-if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force }}
-Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
+Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
 """
         script.write_text(body, encoding="utf-8")
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
         subprocess.Popen(
             ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            cwd=str(DATA),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=flags,
@@ -239,6 +278,7 @@ Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
         return
 
     script = DATA / "apply-launcher-update.sh"
+    log = DATA / "launcher-update.log"
     backup = target.with_name(target.name + ".old")
     if sys.platform == "darwin":
         relaunch = f"open {_sh_quote(target)}"
@@ -246,18 +286,25 @@ Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
         relaunch = f"nohup {_sh_quote(target / 'NuovoOrdine')} >/dev/null 2>&1 &"
     body = f"""#!/bin/sh
 set -eu
+log={_sh_quote(log)}
+echo "$(date -Iseconds) Updater avviato." >> "$log"
 while kill -0 {pid} 2>/dev/null; do sleep 0.25; done
+sleep 0.5
 src={_sh_quote(payload)}
 dst={_sh_quote(target)}
 old={_sh_quote(backup)}
 rm -rf "$old"
-mv "$dst" "$old"
-if mv "$src" "$dst"; then
+if mv "$dst" "$old" && mv "$src" "$dst"; then
+  echo "$(date -Iseconds) Aggiornamento installato, riavvio launcher." >> "$log"
   {relaunch}
-  sleep 2
+  sleep 3
   rm -rf "$old"
+  echo "$(date -Iseconds) Aggiornamento completato." >> "$log"
 else
-  mv "$old" "$dst"
+  echo "$(date -Iseconds) Aggiornamento fallito; tento rollback." >> "$log"
+  rm -rf "$dst" || true
+  if [ -e "$old" ]; then mv "$old" "$dst" || true; fi
+  {relaunch} || true
   exit 1
 fi
 rm -f "$0"
@@ -266,6 +313,8 @@ rm -f "$0"
     script.chmod(0o700)
     subprocess.Popen(
         ["/bin/sh", str(script)],
+        cwd=str(DATA),
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
