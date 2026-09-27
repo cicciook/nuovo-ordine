@@ -69,6 +69,41 @@ def refresh(client_id, token, report):
     return data
 
 
+def _oauth_error(data, fallback):
+    description = str(data.get("error_description", "")).strip()
+    error = str(data.get("error", "")).strip()
+    combined = f"{error} {description}"
+    if "AADSTS7000218" in combined or error == "unauthorized_client":
+        return (
+            "L'app Microsoft del launcher non è abilitata come client pubblico. "
+            "In Microsoft Entra apri Authentication e imposta Allow public client flows su Yes."
+        )
+    if "AADSTS700016" in combined or error == "invalid_client":
+        return "Il Client ID Microsoft del launcher non è valido o non è disponibile per gli account personali."
+    return description or fallback
+
+
+def _post_oauth(url, data):
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            headers={"Accept": "application/json"},
+            timeout=(15, 30),
+        )
+    except requests.RequestException as exc:
+        raise RuntimeError("Non riesco a contattare Microsoft. Controlla Internet e riprova.") from exc
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise RuntimeError("Microsoft ha restituito una risposta non valida. Riprova tra poco.") from exc
+
+    if response.status_code >= 400:
+        raise RuntimeError(_oauth_error(payload, f"Microsoft ha rifiutato la richiesta ({response.status_code})."))
+    return payload
+
+
 def _finish_minecraft_login(ms_access_token, refresh_token):
     xbl = msa.authenticate_with_xbl(ms_access_token)
     xbl_token = xbl["Token"]
@@ -97,16 +132,12 @@ def login(client_id, report, open_browser):
             "Il proprietario deve configurarlo una sola volta nella build."
         )
 
-    response = requests.post(
+    device = _post_oauth(
         DEVICE_CODE_URL,
-        data={"client_id": client_id, "scope": SCOPE},
-        headers={"Accept": "application/json"},
-        timeout=(15, 30),
+        {"client_id": client_id, "scope": SCOPE},
     )
-    response.raise_for_status()
-    device = response.json()
     if "device_code" not in device:
-        raise RuntimeError(device.get("error_description", "Microsoft non ha avviato il login."))
+        raise RuntimeError(_oauth_error(device, "Microsoft non ha avviato il login."))
 
     browser_url = device.get("verification_uri_complete") or device.get("verification_uri")
     if not browser_url:
@@ -125,17 +156,14 @@ def login(client_id, report, open_browser):
 
     while time.monotonic() < deadline:
         time.sleep(interval)
-        response = requests.post(
+        data = _post_oauth(
             TOKEN_URL,
-            data={
+            {
                 "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
                 "client_id": client_id,
                 "device_code": device["device_code"],
             },
-            headers={"Accept": "application/json"},
-            timeout=(15, 30),
         )
-        data = response.json()
         if "access_token" in data:
             token = data
             break
@@ -150,7 +178,7 @@ def login(client_id, report, open_browser):
             raise RuntimeError("Accesso Microsoft annullato.")
         if error == "expired_token":
             raise RuntimeError("Il codice Microsoft è scaduto. Premi di nuovo Accedi con Microsoft.")
-        raise RuntimeError(data.get("error_description", "Accesso Microsoft non riuscito."))
+        raise RuntimeError(_oauth_error(data, "Accesso Microsoft non riuscito."))
 
     if not token:
         raise RuntimeError("Accesso Microsoft scaduto. Premi di nuovo Accedi con Microsoft.")
