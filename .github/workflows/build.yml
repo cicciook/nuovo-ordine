@@ -18,6 +18,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Inserisci configurazione Microsoft della build
+        env:
+          MSA_CLIENT_ID: ${{ vars.NUOVO_ORDINE_MSA_CLIENT_ID }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path('launcher-config.json')
+          cfg = json.loads(path.read_text('utf-8'))
+          client_id = os.environ.get('MSA_CLIENT_ID', '').strip()
+          if client_id:
+              cfg['microsoft_client_id'] = client_id
+              path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+              print('Client ID Microsoft incluso nella build.')
+          else:
+              print('NUOVO_ORDINE_MSA_CLIENT_ID non configurato: build con sola modalità offline.')
+          PY
       - run: python -m pip install -r requirements.txt pyinstaller==6.16.0 pytest==8.3.5
       - run: python -m pytest -q
       - run: python tools/build.py
@@ -52,4 +70,4 @@ jobs:
             VERSION=$(python -c "from launcher import VERSION; print(VERSION)")
             RELEASE_TAG="launcher-v$VERSION"
           fi
-          gh release create "$RELEASE_TAG" artifacts/* --target "$GITHUB_SHA" --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Supporta accesso Microsoft per il gioco online e modalità offline senza login. Estrarre l'intero archivio."
+          gh release create "$RELEASE_TAG" artifacts/* --target "$GITHUB_SHA" --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Login Microsoft via browser/device-code, modalità offline con nickname personalizzato e aggiornamento automatico. Estrarre l'intero archivio."
