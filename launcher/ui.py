@@ -206,7 +206,7 @@ class Window(QMainWindow):
         self.news.setTextFormat(Qt.TextFormat.PlainText)
         content.addWidget(self.news)
         actions = QHBoxLayout()
-        self.play_button = QPushButton("GIOCA  →")
+        self.play_button = QPushButton("GIOCA OFFLINE  →")
         self.play_button.setObjectName("play")
         self.play_button.clicked.connect(self.play)
         actions.addWidget(self.play_button,2)
@@ -214,7 +214,7 @@ class Window(QMainWindow):
         self.update_button.clicked.connect(self.update_pack)
         actions.addWidget(self.update_button,1)
         content.addLayout(actions)
-        self.status_label = QLabel("Pronto • aggiornamenti verificati prima di ogni avvio")
+        self.status_label = QLabel("Pronto • senza login puoi giocare solo offline")
         self.status_label.setWordWrap(True)
         self.status_label.setObjectName("muted")
         content.addWidget(self.status_label)
@@ -229,8 +229,29 @@ class Window(QMainWindow):
         content.addWidget(self.log,1)
         row.addLayout(content,1)
         self.controls = [self.play_button,self.update_button,self.login_button,self.logout_button,self.settings_button]
+        self.refresh_auth_controls()
         if self.cfg.get("repository"):
             QTimer.singleShot(300,self.update_pack)
+
+    def has_microsoft_login(self):
+        client_id = self.cfg.get("microsoft_client_id", "").strip()
+        return bool(client_id and (self.session or auth.saved_token(client_id)))
+
+    def refresh_auth_controls(self):
+        busy = bool(self.worker and self.worker.isRunning())
+        online = self.has_microsoft_login()
+        self.play_button.setText("GIOCA ONLINE  →" if online else "GIOCA OFFLINE  →")
+        self.play_button.setEnabled(not busy)
+        self.update_button.setEnabled(not busy)
+        self.login_button.setEnabled(not busy and not online)
+        self.logout_button.setEnabled(not busy and online)
+        self.settings_button.setEnabled(not busy)
+        if self.session:
+            self.account.setText("Connesso come\n" + self.session["name"])
+        elif online:
+            self.account.setText("Account Microsoft\nAccesso salvato")
+        else:
+            self.account.setText("Il tuo account\nNon connesso • modalità offline")
 
     def report(self, text):
         self.status_label.setText(text)
@@ -264,8 +285,7 @@ class Window(QMainWindow):
     def finish(self):
         self.bar.setRange(0,100)
         self.bar.setValue(0 if self.failed else 100)
-        for c in self.controls:
-            c.setEnabled(True)
+        self.refresh_auth_controls()
 
     def error(self,message):
         self.failed = True
@@ -274,7 +294,7 @@ class Window(QMainWindow):
 
     def set_account(self,data):
         self.session = data
-        self.account.setText("Connesso come\n" + data["name"])
+        self.refresh_auth_controls()
 
     def login(self):
         try:
@@ -288,8 +308,8 @@ class Window(QMainWindow):
         try:
             auth.forget(self.cfg.get("microsoft_client_id", ""))
             self.session = None
-            self.account.setText("Il tuo account\nNon connesso")
-            self.report("Account disconnesso da questo launcher.")
+            self.refresh_auth_controls()
+            self.report("Account disconnesso. Ora il launcher avvierà Minecraft in modalità offline.")
         except RuntimeError as exc:
             self.error(str(exc))
 
@@ -313,9 +333,9 @@ class Window(QMainWindow):
                     self.error(str(exc))
                     return
                 self.session = None
-                self.account.setText("Il tuo account\nNon connesso")
             self.cfg = values
             atomic_json(DATA / "settings.json",values)
+            self.refresh_auth_controls()
             self.report("Impostazioni salvate. Premi Verifica / aggiorna mod.")
 
     def open_releases(self):
