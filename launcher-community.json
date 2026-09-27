@@ -1,0 +1,27 @@
+{
+  "discord_url": "",
+  "changelog": [
+    {
+      "version": "v1.1.3",
+      "title": "Community Hub",
+      "body": "Aggiunti changelog, bacheca eventi e collegamento Discord accanto al logo. Questi contenuti si aggiornano da GitHub senza dover ricompilare il launcher."
+    },
+    {
+      "version": "v1.1.2",
+      "title": "Auto-update più affidabile",
+      "body": "Migliorato il sistema di aggiornamento automatico con rollback e log in caso di errore."
+    },
+    {
+      "version": "v1.1.1",
+      "title": "Nuova interfaccia e login",
+      "body": "Tema blu scuro, logo Nuovo Ordine, login Microsoft via browser e nickname personalizzato per la modalità offline."
+    }
+  ],
+  "events": [
+    {
+      "date": "",
+      "title": "Nessun evento programmato",
+      "body": "Quando pubblicherai un evento del server, comparirà qui automaticamente."
+    }
+  ]
+}
