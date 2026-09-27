@@ -29,12 +29,13 @@ jobs:
             dist/*.tar.gz
           if-no-files-found: error
   release:
-    if: startsWith(github.ref, 'refs/tags/launcher-v')
+    if: startsWith(github.ref, 'refs/tags/launcher-v') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release launcher v'))
     needs: build
     runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -43,5 +44,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" artifacts/* --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Estrarre l'intero archivio."
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/launcher-v* ]]; then
+            RELEASE_TAG="$GITHUB_REF_NAME"
+          else
+            VERSION=$(python -c "from launcher import VERSION; print(VERSION)")
+            RELEASE_TAG="launcher-v$VERSION"
+          fi
+          gh release create "$RELEASE_TAG" artifacts/* --target "$GITHUB_SHA" --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Supporta accesso Microsoft per il gioco online e modalità offline senza login. Estrarre l'intero archivio."
