@@ -9,7 +9,7 @@ from minecraft_launcher_lib.exceptions import AzureAppNotPermitted, AccountNotOw
 SERVICE = "NuovoOrdine.Microsoft"
 DEVICE_CODE_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode"
 TOKEN_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
-SCOPE = "XboxLive.signin offline_access"
+SCOPE = "XboxLive.SignIn XboxLive.offline_access"
 
 
 def secure_keyring():
@@ -90,16 +90,17 @@ def _finish_minecraft_login(ms_access_token, refresh_token):
 
 
 def login(client_id, report, open_browser):
-    """Microsoft OAuth device-code flow, intentionally matching Prism Launcher's UX."""
+    """Microsoft OAuth device-code flow matching Prism Launcher's user experience."""
     if not client_id:
         raise RuntimeError(
             "Il login Microsoft non è configurato in questa build del launcher. "
-            "Il proprietario deve impostare una volta il Client ID dell'app Nuovo Ordine."
+            "Il proprietario deve configurarlo una sola volta nella build."
         )
 
     response = requests.post(
         DEVICE_CODE_URL,
         data={"client_id": client_id, "scope": SCOPE},
+        headers={"Accept": "application/json"},
         timeout=(15, 30),
     )
     response.raise_for_status()
@@ -131,6 +132,7 @@ def login(client_id, report, open_browser):
                 "client_id": client_id,
                 "device_code": device["device_code"],
             },
+            headers={"Accept": "application/json"},
             timeout=(15, 30),
         )
         data = response.json()
