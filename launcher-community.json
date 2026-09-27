@@ -2,6 +2,11 @@
   "discord_url": "https://discord.gg/f4MnwkcGu",
   "changelog": [
     {
+      "version": "v1.1.4",
+      "title": "Login Microsoft e logo rifinito",
+      "body": "Attivato il login Microsoft tramite il Client ID ufficiale del launcher. Rimossa la cornice esterna del logo e aggiunti angoli arrotondati."
+    },
+    {
       "version": "v1.1.3",
       "title": "Community Hub",
       "body": "Aggiunti changelog, bacheca eventi e collegamento Discord accanto al logo. Questi contenuti si aggiornano da GitHub senza dover ricompilare il launcher."
