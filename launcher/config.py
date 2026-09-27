@@ -25,7 +25,10 @@ def load_config():
     cfg = json.loads((resource / "launcher-config.json").read_text("utf-8"))
     path = DATA / "settings.json"
     if path.exists():
-        cfg.update(json.loads(path.read_text("utf-8")))
+        user = json.loads(path.read_text("utf-8"))
+        # Il Client ID appartiene alla build del launcher, non alle impostazioni dei giocatori.
+        user.pop("microsoft_client_id", None)
+        cfg.update(user)
     return cfg
 
 
@@ -35,7 +38,7 @@ def validate_config(cfg, require_login=False):
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", cfg.get("branch", "")):
         raise ValueError("Il ramo GitHub deve avere un nome semplice, per esempio main.")
     if require_login and not re.fullmatch(r"[0-9a-fA-F-]{36}", cfg.get("microsoft_client_id", "")):
-        raise ValueError("Inserisci il Client ID della tua app Microsoft nelle impostazioni.")
+        raise ValueError("Il login Microsoft non è configurato in questa build del launcher.")
     if not 2048 <= int(cfg.get("ram_mb", 0)) <= 32768:
         raise ValueError("Imposta la RAM tra 2048 e 32768 MB.")
 
