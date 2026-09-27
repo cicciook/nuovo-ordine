@@ -1,0 +1,273 @@
+"""Launcher self-update from public GitHub Releases."""
+import hashlib
+import os
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+import zipfile
+from pathlib import Path
+
+import requests
+
+from . import VERSION
+from .config import DATA, validate_config
+
+MAX_UPDATE = 500 * 1024 * 1024
+
+
+def version_tuple(value):
+    match = re.fullmatch(r"(?:launcher-v|v)?(\d+)\.(\d+)\.(\d+)", str(value).strip())
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())
+
+
+def platform_name():
+    return {"win32": "windows", "darwin": "macos"}.get(sys.platform, "linux")
+
+
+def current_install_path():
+    executable = Path(sys.executable).resolve()
+    if sys.platform == "darwin":
+        for parent in executable.parents:
+            if parent.suffix == ".app":
+                return parent
+        raise RuntimeError("Bundle macOS del launcher non trovato.")
+    return executable.parent
+
+
+def _asset_for_release(release):
+    system = platform_name()
+    machine = platform.machine().lower()
+    suffix = ".zip" if system in ("windows", "macos") else ".tar.gz"
+    candidates = [
+        asset for asset in release.get("assets", [])
+        if asset.get("name", "").startswith(f"NuovoOrdine-{system}-")
+        and asset.get("name", "").endswith(suffix)
+    ]
+    if not candidates:
+        return None
+    aliases = {machine}
+    if machine in ("amd64", "x86_64"):
+        aliases.update({"amd64", "x86_64"})
+    elif machine in ("arm64", "aarch64"):
+        aliases.update({"arm64", "aarch64"})
+    for asset in candidates:
+        lower = asset["name"].lower()
+        if any(alias in lower for alias in aliases):
+            return asset
+    return candidates[0]
+
+
+def _safe_zip_extract(archive, destination):
+    destination = Path(destination).resolve()
+    with zipfile.ZipFile(archive) as bundle:
+        for member in bundle.infolist():
+            target = (destination / member.filename).resolve()
+            if not target.is_relative_to(destination):
+                raise ValueError("Archivio aggiornamento non valido.")
+        bundle.extractall(destination)
+
+
+def _safe_tar_extract(archive, destination):
+    with tarfile.open(archive, "r:gz") as bundle:
+        bundle.extractall(destination, filter="data")
+
+
+def _download(asset, target, report):
+    size = int(asset.get("size") or 0)
+    if size <= 0 or size > MAX_UPDATE:
+        raise ValueError("Dimensione aggiornamento launcher non valida.")
+    digest_header = asset.get("digest") or ""
+    expected_hash = digest_header.removeprefix("sha256:") if digest_header.startswith("sha256:") else None
+    downloaded = 0
+    hasher = hashlib.sha256()
+    with requests.get(
+        asset["browser_download_url"],
+        timeout=(15, 90),
+        stream=True,
+        headers={"Accept": "application/octet-stream", "User-Agent": f"NuovoOrdine/{VERSION}"},
+    ) as response:
+        response.raise_for_status()
+        with target.open("wb") as output:
+            for chunk in response.iter_content(1024 * 512):
+                if not chunk:
+                    continue
+                downloaded += len(chunk)
+                if downloaded > size or downloaded > MAX_UPDATE:
+                    raise ValueError("Aggiornamento launcher più grande del previsto.")
+                hasher.update(chunk)
+                output.write(chunk)
+                report(f"Download launcher • {downloaded // 1048576} / {max(1, size // 1048576)} MiB")
+    if downloaded != size:
+        raise ValueError("Download aggiornamento launcher incompleto.")
+    if expected_hash and hasher.hexdigest() != expected_hash:
+        raise ValueError("Integrità aggiornamento launcher non valida.")
+
+
+def prepare_update(cfg, report=lambda text: None):
+    """Return a staged update dict, or None when already current/unavailable.
+
+    Network failures never block launching the game; they are reported and ignored.
+    """
+    if not getattr(sys, "frozen", False):
+        report("Modalità sviluppo: aggiornamento automatico launcher non applicato.")
+        return None
+    try:
+        validate_config(cfg)
+        repo = cfg["repository"]
+        api = f"https://api.github.com/repos/{repo}/releases?per_page=30"
+        report("Controllo aggiornamenti del launcher…")
+        with requests.get(
+            api,
+            timeout=(10, 30),
+            headers={"Accept": "application/vnd.github+json", "User-Agent": f"NuovoOrdine/{VERSION}"},
+        ) as response:
+            response.raise_for_status()
+            releases = response.json()
+
+        launcher_releases = []
+        for release in releases if isinstance(releases, list) else []:
+            parsed = version_tuple(release.get("tag_name", ""))
+            if parsed and str(release.get("tag_name", "")).startswith("launcher-v"):
+                launcher_releases.append((parsed, release))
+        current = version_tuple(VERSION)
+        if not launcher_releases or not current:
+            report(f"Launcher {VERSION} aggiornato.")
+            return None
+        latest, release = max(launcher_releases, key=lambda item: item[0])
+        if latest <= current:
+            report(f"Launcher {VERSION} aggiornato.")
+            return None
+
+        asset = _asset_for_release(release)
+        if not asset:
+            report("Nuova versione trovata, ma non c'è un pacchetto per questo sistema.")
+            return None
+
+        update_root = DATA / "launcher-update" / ".".join(map(str, latest))
+        if update_root.exists():
+            shutil.rmtree(update_root, ignore_errors=True)
+        update_root.mkdir(parents=True, exist_ok=True)
+        archive = update_root / asset["name"]
+        report(f"Nuovo launcher {'.'.join(map(str, latest))} disponibile. Download automatico…")
+        _download(asset, archive, report)
+
+        stage = update_root / "stage"
+        stage.mkdir()
+        if sys.platform == "darwin":
+            subprocess.run(
+                ["ditto", "-x", "-k", str(archive), str(stage)],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            payload = stage / "NuovoOrdine.app"
+        elif asset["name"].endswith(".zip"):
+            _safe_zip_extract(archive, stage)
+            payload = stage / "NuovoOrdine"
+        else:
+            _safe_tar_extract(archive, stage)
+            payload = stage / "NuovoOrdine"
+
+        if not payload.exists():
+            raise RuntimeError("Il pacchetto dell'aggiornamento non contiene il launcher atteso.")
+
+        return {
+            "version": ".".join(map(str, latest)),
+            "payload": str(payload),
+            "target": str(current_install_path()),
+        }
+    except Exception as exc:
+        report(f"Aggiornamento launcher non disponibile ({type(exc).__name__}); continuo con la versione attuale.")
+        return None
+
+
+def _ps_quote(value):
+    return str(value).replace("'", "''")
+
+
+def _sh_quote(value):
+    return "'" + str(value).replace("'", "'\"'\"'") + "'"
+
+
+def apply_update(update):
+    """Spawn a tiny detached helper that replaces the running installation after exit."""
+    payload = Path(update["payload"]).resolve()
+    target = Path(update["target"]).resolve()
+    if not payload.exists() or not target.exists():
+        raise RuntimeError("Aggiornamento preparato non valido.")
+
+    DATA.mkdir(parents=True, exist_ok=True)
+    pid = os.getpid()
+
+    if sys.platform == "win32":
+        script = DATA / "apply-launcher-update.ps1"
+        backup = target.with_name(target.name + ".old")
+        exe = target / "NuovoOrdine.exe"
+        body = f"""$ErrorActionPreference = 'Stop'
+$pidToWait = {pid}
+while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
+$src = '{_ps_quote(payload)}'
+$dst = '{_ps_quote(target)}'
+$old = '{_ps_quote(backup)}'
+if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force }}
+Move-Item -LiteralPath $dst -Destination $old
+try {{
+    Move-Item -LiteralPath $src -Destination $dst
+}} catch {{
+    Move-Item -LiteralPath $old -Destination $dst
+    exit 1
+}}
+Start-Process -FilePath '{_ps_quote(exe)}'
+Start-Sleep -Seconds 2
+if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force }}
+Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
+"""
+        script.write_text(body, encoding="utf-8")
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+        subprocess.Popen(
+            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=flags,
+            close_fds=True,
+        )
+        return
+
+    script = DATA / "apply-launcher-update.sh"
+    backup = target.with_name(target.name + ".old")
+    if sys.platform == "darwin":
+        relaunch = f"open {_sh_quote(target)}"
+    else:
+        relaunch = f"nohup {_sh_quote(target / 'NuovoOrdine')} >/dev/null 2>&1 &"
+    body = f"""#!/bin/sh
+set -eu
+while kill -0 {pid} 2>/dev/null; do sleep 0.25; done
+src={_sh_quote(payload)}
+dst={_sh_quote(target)}
+old={_sh_quote(backup)}
+rm -rf "$old"
+mv "$dst" "$old"
+if mv "$src" "$dst"; then
+  {relaunch}
+  sleep 2
+  rm -rf "$old"
+else
+  mv "$old" "$dst"
+  exit 1
+fi
+rm -f "$0"
+"""
+    script.write_text(body, encoding="utf-8")
+    script.chmod(0o700)
+    subprocess.Popen(
+        ["/bin/sh", str(script)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True,
+    )
