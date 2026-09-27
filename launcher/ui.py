@@ -8,10 +8,11 @@ from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QProgressBar, QPlainTextEdit, QDialog, QFormLayout,
-    QLineEdit, QSpinBox, QDialogButtonBox, QMessageBox, QFrame, QInputDialog
+    QLineEdit, QSpinBox, QDialogButtonBox, QMessageBox, QFrame, QInputDialog,
+    QTabWidget, QTextBrowser
 )
 
-from . import VERSION, auth, engine, selfupdate
+from . import VERSION, auth, community, engine, selfupdate
 from .config import DATA, load_config, atomic_json, validate_config
 
 
@@ -21,7 +22,6 @@ def resource_path(relative):
 
 
 def load_logo_pixmap():
-    """Load the real logo. The b64 chunks are a robust fallback for packaged builds."""
     direct = resource_path("launcher/assets/nuovo-ordine-logo.jpg")
     if direct.exists() and direct.stat().st_size > 1024:
         pixmap = QPixmap(str(direct))
@@ -58,7 +58,7 @@ QFrame#sidebar {
     background: #050b14;
     border-right: 1px solid #15324f;
 }
-QFrame#card {
+QFrame#card, QFrame#communityCard {
     background: #0a1a2d;
     border: 1px solid #173b5e;
     border-radius: 10px;
@@ -118,6 +118,17 @@ QPushButton#play:disabled {
     color: #7fa8bf;
     border-color: #20506c;
 }
+QPushButton#discord {
+    background: #18385b;
+    border: 1px solid #3d70a3;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+QPushButton#discord:hover {
+    background: #214d7a;
+    border-color: #61d6ff;
+}
 QLineEdit, QSpinBox {
     background: #06101c;
     border: 1px solid #1b466c;
@@ -142,6 +153,31 @@ QPlainTextEdit {
     color: #8eb3cc;
     font-family: monospace;
     font-size: 11px;
+}
+QTabWidget#communityTabs::pane {
+    border: 1px solid #173b5e;
+    background: #071522;
+    border-radius: 6px;
+    top: -1px;
+}
+QTabWidget#communityTabs QTabBar::tab {
+    background: #081827;
+    color: #7893ad;
+    border: 1px solid #173b5e;
+    padding: 8px 13px;
+    margin-right: 2px;
+}
+QTabWidget#communityTabs QTabBar::tab:selected {
+    background: #0d2942;
+    color: #61d6ff;
+    border-bottom-color: #0d2942;
+}
+QTextBrowser#communityText {
+    background: #071522;
+    color: #c7dbeb;
+    border: none;
+    padding: 10px;
+    font-size: 12px;
 }
 """
 
@@ -207,7 +243,7 @@ class Settings(QDialog):
 
         note = QLabel(
             "L'accesso Microsoft è configurato dal proprietario del launcher e non richiede ID agli utenti.\n"
-            "Il launcher e il modpack controllano automaticamente gli aggiornamenti."
+            "Changelog, eventi e Discord sono gestiti da launcher-community.json su GitHub."
         )
         note.setWordWrap(True)
         form.addRow(note)
@@ -233,9 +269,10 @@ class Window(QMainWindow):
         self.worker = None
         self.failed = False
         self.after_finish = None
+        self.discord_url = ""
         self.setWindowTitle("Nuovo Ordine • Launcher")
-        self.resize(1120, 780)
-        self.setMinimumSize(980, 720)
+        self.resize(1240, 800)
+        self.setMinimumSize(1080, 735)
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -305,10 +342,17 @@ class Window(QMainWindow):
         top.addWidget(badge)
         content.addLayout(top)
 
+        hero_row = QHBoxLayout()
+        hero_row.setSpacing(16)
+
+        logo_card = QFrame()
+        logo_card.setObjectName("communityCard")
+        logo_layout = QVBoxLayout(logo_card)
+        logo_layout.setContentsMargins(12, 12, 12, 12)
         self.logo = QLabel()
         self.logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.logo.setMinimumHeight(255)
-        self.logo.setMaximumHeight(275)
+        self.logo.setMinimumHeight(245)
+        self.logo.setMaximumHeight(270)
         pixmap = load_logo_pixmap()
         if pixmap.isNull():
             self.logo.setText("NUOVO ORDINE")
@@ -316,13 +360,51 @@ class Window(QMainWindow):
         else:
             self.logo.setPixmap(
                 pixmap.scaled(
-                    470,
+                    480,
                     255,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
             )
-        content.addWidget(self.logo, 0, Qt.AlignmentFlag.AlignHCenter)
+        logo_layout.addWidget(self.logo)
+        hero_row.addWidget(logo_card, 3)
+
+        community_card = QFrame()
+        community_card.setObjectName("communityCard")
+        community_layout = QVBoxLayout(community_card)
+        community_layout.setContentsMargins(12, 12, 12, 12)
+        community_layout.setSpacing(9)
+
+        community_title = QLabel("COMMUNITY")
+        community_title.setObjectName("eyebrow")
+        community_layout.addWidget(community_title)
+
+        self.community_tabs = QTabWidget()
+        self.community_tabs.setObjectName("communityTabs")
+        self.community_tabs.setDocumentMode(True)
+
+        self.changelog_text = QTextBrowser()
+        self.changelog_text.setObjectName("communityText")
+        self.changelog_text.setOpenExternalLinks(False)
+        self.changelog_text.setPlainText("Caricamento changelog…")
+        self.community_tabs.addTab(self.changelog_text, "CHANGELOG")
+
+        self.events_text = QTextBrowser()
+        self.events_text.setObjectName("communityText")
+        self.events_text.setOpenExternalLinks(False)
+        self.events_text.setPlainText("Caricamento bacheca eventi…")
+        self.community_tabs.addTab(self.events_text, "EVENTI")
+
+        community_layout.addWidget(self.community_tabs, 1)
+
+        self.discord_button = QPushButton("DISCORD • CARICAMENTO…")
+        self.discord_button.setObjectName("discord")
+        self.discord_button.setEnabled(False)
+        self.discord_button.clicked.connect(self.open_discord)
+        community_layout.addWidget(self.discord_button)
+
+        hero_row.addWidget(community_card, 2)
+        content.addLayout(hero_row)
 
         self.news = QLabel("Controllo launcher e modpack in corso…")
         self.news.setWordWrap(True)
@@ -353,7 +435,7 @@ class Window(QMainWindow):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setMaximumBlockCount(150)
-        self.log.setMinimumHeight(90)
+        self.log.setMinimumHeight(80)
         content.addWidget(self.log, 1)
 
         row.addLayout(content, 1)
@@ -486,12 +568,35 @@ class Window(QMainWindow):
 
     def pack_ready(self, pack):
         self.news.setText(str(pack.get("news", "Benvenuto su Nuovo Ordine.")))
+        self.after_finish = self.update_community
 
     def update_pack(self):
         self.begin(
             lambda w: engine.get_pack(self.cfg, w.status.emit),
             self.pack_ready,
         )
+
+    def update_community(self):
+        self.begin(
+            lambda w: community.fetch_content(self.cfg, w.status.emit),
+            self.community_ready,
+        )
+
+    def community_ready(self, data):
+        self.changelog_text.setPlainText(community.format_changelog(data.get("changelog", [])))
+        self.events_text.setPlainText(community.format_events(data.get("events", [])))
+        self.discord_url = str(data.get("discord_url", "")).strip()
+        if self.discord_url:
+            self.discord_button.setText("ENTRA NEL DISCORD  →")
+            self.discord_button.setEnabled(True)
+        else:
+            self.discord_button.setText("DISCORD • LINK DA CONFIGURARE")
+            self.discord_button.setEnabled(False)
+        self.report("Launcher, modpack e bacheca community aggiornati.")
+
+    def open_discord(self):
+        if self.discord_url:
+            QDesktopServices.openUrl(QUrl(self.discord_url))
 
     def ask_offline_name(self):
         default = str(self.cfg.get("offline_name", "Player"))
