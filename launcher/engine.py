@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import subprocess
@@ -44,31 +45,64 @@ def ensure_game(manifest, cfg, report, progress):
     return version, java
 
 
+def offline_uuid(name):
+    # Minecraft's deterministic offline UUID algorithm (UUID.nameUUIDFromBytes).
+    digest = bytearray(hashlib.md5(("OfflinePlayer:" + name).encode("utf-8")).digest())
+    digest[6] = (digest[6] & 0x0F) | 0x30
+    digest[8] = (digest[8] & 0x3F) | 0x80
+    return bytes(digest).hex()
+
+
 def play(cfg, session, report, progress, account_ready):
-    validate_config(cfg, require_login=True)
-    refresh_token = (session or {}).get("refresh_token") or auth.saved_token(cfg["microsoft_client_id"])
-    if not refresh_token:
-        raise RuntimeError("Accedi con Microsoft prima di giocare.")
-    report("Verifica account e licenza Minecraft…")
-    session = auth.refresh(cfg["microsoft_client_id"], refresh_token, report)
-    account_ready(session)
+    validate_config(cfg)
+    client_id = cfg.get("microsoft_client_id", "").strip()
+    refresh_token = (session or {}).get("refresh_token")
+    if not refresh_token and client_id:
+        refresh_token = auth.saved_token(client_id)
+
+    online = bool(refresh_token)
+    if online:
+        validate_config(cfg, require_login=True)
+        report("Verifica account e licenza Minecraft…")
+        session = auth.refresh(client_id, refresh_token, report)
+        account_ready(session)
+    else:
+        session = None
+        report("Modalità offline: accesso Microsoft non effettuato. Il server Nuovo Ordine non verrà aperto automaticamente.")
+
     manifest = get_pack(cfg, report)
     version, java = ensure_game(manifest, cfg, report, progress)
-    options = {
-        "username": session["name"], "uuid": session["id"], "token": session["access_token"],
-        "executablePath": java, "gameDirectory": str(INSTANCE),
-        "jvmArguments": ["-Xms1024M", f'-Xmx{int(cfg["ram_mb"])}M'],
-        "launcherName": "NuovoOrdine", "launcherVersion": VERSION,
-        "enableLoggingConfig": True,
-    }
-    server = manifest.get("server") or cfg.get("server")
-    if server:
-        options["quickPlayMultiplayer"] = server
-        options["quickPlayPath"] = str(INSTANCE / "quickplay.json")
+
+    if online:
+        options = {
+            "username": session["name"], "uuid": session["id"], "token": session["access_token"],
+            "executablePath": java, "gameDirectory": str(INSTANCE),
+            "jvmArguments": ["-Xms1024M", f'-Xmx{int(cfg["ram_mb"])}M'],
+            "launcherName": "NuovoOrdine", "launcherVersion": VERSION,
+            "enableLoggingConfig": True,
+        }
+        server = manifest.get("server") or cfg.get("server")
+        if server:
+            options["quickPlayMultiplayer"] = server
+            options["quickPlayPath"] = str(INSTANCE / "quickplay.json")
+        secrets = [session["access_token"], session["refresh_token"]]
+        report("Minecraft è in esecuzione in modalità online.")
+    else:
+        username = "OfflinePlayer"
+        options = {
+            "username": username,
+            "uuid": offline_uuid(username),
+            "token": "0",
+            "executablePath": java, "gameDirectory": str(INSTANCE),
+            "jvmArguments": ["-Xms1024M", f'-Xmx{int(cfg["ram_mb"])}M'],
+            "launcherName": "NuovoOrdine", "launcherVersion": VERSION,
+            "enableLoggingConfig": True,
+        }
+        secrets = []
+        report("Minecraft è in esecuzione in modalità offline. Il collegamento automatico al server è disattivato.")
+
     args = command.get_minecraft_command(version, str(INSTANCE), options)
-    report("Minecraft è in esecuzione. Buon divertimento!")
     log_path = DATA / "game-output.log"
-    secrets = [session["access_token"], session["refresh_token"]]
     # Never log the command line; redact known tokens from game output too.
     with log_path.open("w", encoding="utf-8") as log:
         process = subprocess.Popen(args, cwd=INSTANCE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
