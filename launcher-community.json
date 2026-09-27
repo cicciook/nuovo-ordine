@@ -2,6 +2,11 @@
   "discord_url": "https://discord.gg/f4MnwkcGu",
   "changelog": [
     {
+      "version": "v1.1.5",
+      "title": "Patch login Microsoft",
+      "body": "Rinforzato il login Microsoft con gestione più chiara degli errori OAuth e messaggi specifici per la configurazione public client di Microsoft Entra."
+    },
+    {
       "version": "v1.1.4",
       "title": "Login Microsoft e logo rifinito",
       "body": "Attivato il login Microsoft tramite il Client ID ufficiale del launcher. Rimossa la cornice esterna del logo e aggiunti angoli arrotondati."
