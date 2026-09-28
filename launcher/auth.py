@@ -83,7 +83,7 @@ def _oauth_error(data, fallback):
     return description or fallback
 
 
-def _post_oauth(url, data):
+def _post_oauth(url, data, allow_error_payload=False):
     try:
         response = requests.post(
             url,
@@ -99,7 +99,11 @@ def _post_oauth(url, data):
     except ValueError as exc:
         raise RuntimeError("Microsoft ha restituito una risposta non valida. Riprova tra poco.") from exc
 
-    if response.status_code >= 400:
+    # Nel device-code flow Microsoft usa normalmente HTTP 400 anche per stati
+    # non fatali come authorization_pending e slow_down. Durante il polling
+    # dobbiamo quindi restituire il JSON al chiamante invece di trasformarlo
+    # subito in un errore visibile all'utente.
+    if response.status_code >= 400 and not allow_error_payload:
         raise RuntimeError(_oauth_error(payload, f"Microsoft ha rifiutato la richiesta ({response.status_code})."))
     return payload
 
@@ -145,9 +149,9 @@ def login(client_id, report, open_browser):
 
     user_code = device.get("user_code", "")
     if user_code:
-        report(f"Browser aperto • codice Microsoft: {user_code}")
+        report(f"Browser aperto • codice Microsoft: {user_code} • completa l'accesso, il launcher resta in attesa")
     else:
-        report("Browser Microsoft aperto. Completa l'accesso.")
+        report("Browser Microsoft aperto. Completa l'accesso: il launcher resta in attesa.")
     open_browser(browser_url)
 
     interval = max(2, int(device.get("interval", 5)))
@@ -163,12 +167,13 @@ def login(client_id, report, open_browser):
                 "client_id": client_id,
                 "device_code": device["device_code"],
             },
+            allow_error_payload=True,
         )
         if "access_token" in data:
             token = data
             break
 
-        error = data.get("error")
+        error = str(data.get("error", "")).strip()
         if error == "authorization_pending":
             continue
         if error == "slow_down":
