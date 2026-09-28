@@ -2,6 +2,11 @@
   "discord_url": "https://discord.gg/f4MnwkcGu",
   "changelog": [
     {
+      "version": "v1.1.8",
+      "title": "Updater Windows rifatto",
+      "body": "L'auto-update Windows non rinomina più la cartella del launcher: crea un backup in AppData, copia la nuova build in-place con robocopy, verifica che il nuovo launcher resti avviato e ripristina automaticamente il backup se la nuova versione si chiude subito."
+    },
+    {
       "version": "v1.1.7",
       "title": "Login Microsoft: attesa corretta",
       "body": "Corretto il device-code flow: il launcher non mostra più un errore mentre Microsoft è ancora in attesa dell'autorizzazione. Il browser resta aperto e il launcher continua ad attendere finché completi accesso e codice oppure finché il codice scade."
