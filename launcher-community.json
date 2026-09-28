@@ -2,6 +2,11 @@
   "discord_url": "https://discord.gg/f4MnwkcGu",
   "changelog": [
     {
+      "version": "v1.1.7",
+      "title": "Login Microsoft: attesa corretta",
+      "body": "Corretto il device-code flow: il launcher non mostra più un errore mentre Microsoft è ancora in attesa dell'autorizzazione. Il browser resta aperto e il launcher continua ad attendere finché completi accesso e codice oppure finché il codice scade."
+    },
+    {
       "version": "v1.1.6",
       "title": "Auto-update v2 e icona eseguibile",
       "body": "Rifatto l'aggiornamento automatico Windows con copia in-place, backup esterno, verifica del nuovo avvio e rollback automatico. L'eseguibile Windows ora incorpora il logo Nuovo Ordine come icona."
