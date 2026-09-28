@@ -195,11 +195,11 @@ def _sh_quote(value):
 
 
 def apply_update(update):
-    """Spawn a detached helper that replaces the installation after this process exits.
+    """Spawn a detached helper that applies the staged launcher after this process exits.
 
-    The helper deliberately runs with DATA as its working directory. Running it from
-    inside the installation directory can keep that directory locked on Windows and
-    make the launcher disappear without being able to install/restart the new copy.
+    Windows deliberately updates files in-place instead of renaming the running
+    installation directory. Renaming the whole PyInstaller folder is unreliable on
+    Windows because loaded DLLs and antivirus/indexers can keep directory handles open.
     """
     payload = Path(update["payload"]).resolve()
     target = Path(update["target"]).resolve()
@@ -212,62 +212,77 @@ def apply_update(update):
     if sys.platform == "win32":
         script = DATA / "apply-launcher-update.ps1"
         log = DATA / "launcher-update.log"
-        backup = target.with_name(target.name + ".old")
+        backup = DATA / "launcher-update-backup"
         exe = target / "NuovoOrdine.exe"
         body = f"""$ErrorActionPreference = 'Stop'
 $log = '{_ps_quote(log)}'
+$src = '{_ps_quote(payload)}'
+$dst = '{_ps_quote(target)}'
+$backup = '{_ps_quote(backup)}'
+$exe = '{_ps_quote(exe)}'
 function Write-UpdateLog([string]$message) {{
     Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $message)
 }}
-function Retry-Action([scriptblock]$action, [string]$name) {{
-    $last = $null
-    for ($i = 0; $i -lt 40; $i++) {{
-        try {{ & $action; return }} catch {{ $last = $_; Start-Sleep -Milliseconds 250 }}
+function Invoke-Robocopy([string]$from, [string]$to, [string]$name) {{
+    New-Item -ItemType Directory -Force -Path $to | Out-Null
+    & robocopy.exe $from $to /MIR /COPY:DAT /DCOPY:DAT /R:8 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    $code = $LASTEXITCODE
+    if ($code -ge 8) {{ throw "$name robocopy failed with exit code $code" }}
+}}
+function Restore-Backup() {{
+    if (Test-Path -LiteralPath $backup) {{
+        Write-UpdateLog 'Restoring previous launcher.'
+        Invoke-Robocopy $backup $dst 'rollback'
     }}
-    throw "$name failed: $last"
 }}
 try {{
-    Write-UpdateLog 'Updater avviato.'
+    Write-UpdateLog 'Updater started.'
     $pidToWait = {pid}
     while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
-    Start-Sleep -Milliseconds 500
-    $src = '{_ps_quote(payload)}'
-    $dst = '{_ps_quote(target)}'
-    $old = '{_ps_quote(backup)}'
-    if (Test-Path -LiteralPath $old) {{
-        Retry-Action {{ Remove-Item -LiteralPath $old -Recurse -Force }} 'cleanup backup'
+    Start-Sleep -Milliseconds 750
+
+    if (-not (Test-Path -LiteralPath $src)) {{ throw 'Staged launcher is missing.' }}
+    if (Test-Path -LiteralPath $backup) {{ Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction Stop }}
+
+    Write-UpdateLog 'Creating backup.'
+    Invoke-Robocopy $dst $backup 'backup'
+
+    Write-UpdateLog 'Installing new launcher in-place.'
+    Invoke-Robocopy $src $dst 'install'
+    if (-not (Test-Path -LiteralPath $exe)) {{ throw 'New executable missing after update.' }}
+
+    Write-UpdateLog 'Starting updated launcher.'
+    $newProcess = Start-Process -FilePath $exe -WorkingDirectory $dst -PassThru
+    Start-Sleep -Seconds 6
+    $newProcess.Refresh()
+    if ($newProcess.HasExited) {{
+        Write-UpdateLog ('New launcher exited early with code ' + $newProcess.ExitCode + '. Rolling back.')
+        Restore-Backup
+        if (-not (Test-Path -LiteralPath $exe)) {{ throw 'Executable missing after rollback.' }}
+        Start-Process -FilePath $exe -WorkingDirectory $dst | Out-Null
+        throw 'Updated launcher exited during startup; rollback completed.'
     }}
-    Retry-Action {{ Move-Item -LiteralPath $dst -Destination $old }} 'backup current launcher'
-    try {{
-        Retry-Action {{ Move-Item -LiteralPath $src -Destination $dst }} 'install new launcher'
-    }} catch {{
-        Write-UpdateLog ('Installazione fallita, rollback: ' + $_)
-        if (Test-Path -LiteralPath $dst) {{ Remove-Item -LiteralPath $dst -Recurse -Force -ErrorAction SilentlyContinue }}
-        Retry-Action {{ Move-Item -LiteralPath $old -Destination $dst }} 'rollback launcher'
-        throw
-    }}
-    if (-not (Test-Path -LiteralPath '{_ps_quote(exe)}')) {{ throw 'Nuovo eseguibile non trovato dopo aggiornamento.' }}
-    Write-UpdateLog 'Aggiornamento installato, riavvio launcher.'
-    Start-Process -FilePath '{_ps_quote(exe)}' -WorkingDirectory '{_ps_quote(target)}'
-    Start-Sleep -Seconds 3
-    if (Test-Path -LiteralPath $old) {{ Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue }}
-    Write-UpdateLog 'Aggiornamento completato.'
+
+    Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction SilentlyContinue
+    Write-UpdateLog 'Update completed successfully.'
 }} catch {{
-    Write-UpdateLog ('ERRORE: ' + $_)
+    Write-UpdateLog ('ERROR: ' + $_)
     try {{
-        $dst = '{_ps_quote(target)}'
-        $old = '{_ps_quote(backup)}'
-        if (-not (Test-Path -LiteralPath $dst) -and (Test-Path -LiteralPath $old)) {{ Move-Item -LiteralPath $old -Destination $dst }}
-        if (Test-Path -LiteralPath '{_ps_quote(exe)}') {{ Start-Process -FilePath '{_ps_quote(exe)}' -WorkingDirectory '{_ps_quote(target)}' }}
-    }} catch {{ Write-UpdateLog ('Rollback/riavvio fallito: ' + $_) }}
+        if (-not (Test-Path -LiteralPath $exe) -and (Test-Path -LiteralPath $backup)) {{ Restore-Backup }}
+        if (Test-Path -LiteralPath $exe) {{
+            $already = Get-Process -Name 'NuovoOrdine' -ErrorAction SilentlyContinue
+            if (-not $already) {{ Start-Process -FilePath $exe -WorkingDirectory $dst | Out-Null }}
+        }}
+    }} catch {{ Write-UpdateLog ('Rollback/restart failed: ' + $_) }}
     exit 1
 }}
 Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
 """
-        script.write_text(body, encoding="utf-8")
+        # Windows PowerShell 5.1 reliably detects UTF-8 when a BOM is present.
+        script.write_text(body, encoding="utf-8-sig")
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
         subprocess.Popen(
-            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)],
             cwd=str(DATA),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
