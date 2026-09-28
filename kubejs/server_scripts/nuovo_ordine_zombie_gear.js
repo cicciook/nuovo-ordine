@@ -8,6 +8,10 @@
 //
 // Mettere in: kubejs/server_scripts/nuovo_ordine_zombie_gear.js
 // Richiede riavvio completo del server.
+//
+// Compatibilita' Rhino 2001.2.x:
+// dentro i blocchi try vengono usati var invece di const/let per evitare
+// "TypeError: redeclaration of var ...".
 
 (() => {
   const $ForgeRegistries = Java.loadClass('net.minecraftforge.registries.ForgeRegistries')
@@ -22,14 +26,13 @@
   // CONFIGURAZIONE
   // =========================
 
-  // Probabilita' che OGNI pezzo di armatura equipaggiato venga droppato.
-  // 0.18 = 18%
+  // Chance di drop di OGNI pezzo di armatura equipaggiato.
   const ARMOR_DROP_CHANCE = 0.18
 
-  // Probabilita' che l'arma venga droppata.
+  // Chance di drop dell'arma.
   const WEAPON_DROP_CHANCE = 0.06
 
-  // Usura casuale dell'armatura: 0.25 = 25%, 0.80 = 80% della durabilita' consumata.
+  // Usura casuale dell'armatura.
   const ARMOR_MIN_WEAR = 0.25
   const ARMOR_MAX_WEAR = 0.80
 
@@ -37,9 +40,7 @@
   const WEAPON_MIN_WEAR = 0.10
   const WEAPON_MAX_WEAR = 0.65
 
-  // Quante parti di armatura:
-  // 1 pezzo sempre.
-  // Poi chance cumulative di aggiungerne altri.
+  // Numero di parti di armatura.
   const SECOND_PIECE_CHANCE = 0.65
   const THIRD_PIECE_CHANCE = 0.28
   const FOURTH_PIECE_CHANCE = 0.08
@@ -78,7 +79,6 @@
   }
 
   function weightedArmorCopies(path) {
-    // Armature molto pesanti/endgame piu' rare.
     if (
       path.includes('exo') ||
       path.includes('juggernaut') ||
@@ -88,7 +88,6 @@
       return 1
     }
 
-    // Kevlar / equipaggiamento comune leggermente piu' frequente.
     if (
       path.includes('kevlar') ||
       path.includes('recruit') ||
@@ -135,19 +134,19 @@
 
   function getAttackDamageBonus(item) {
     try {
-      const modifiers = item
+      var modifiers = item
         .getDefaultAttributeModifiers($EquipmentSlot.MAINHAND)
         .get($Attributes.ATTACK_DAMAGE)
 
-      const iterator = modifiers.iterator()
-      let damage = 0.0
+      var iterator = modifiers.iterator()
+      var damage = 0.0
 
       while (iterator.hasNext()) {
         damage += iterator.next().getAmount()
       }
 
       return damage
-    } catch (e) {
+    } catch (errAttack) {
       return 0.0
     }
   }
@@ -179,17 +178,17 @@
       // ARMATURE: solo Survival Instinct.
       if (namespace === 'survival_instinct' && item instanceof $ArmorItem) {
         try {
-          const slotName = item.getEquipmentSlot().getName()
+          var slotNameFound = item.getEquipmentSlot().getName()
 
-          if (armor[slotName] !== undefined) {
+          if (armor[slotNameFound] !== undefined) {
             addWeighted(
-              armor[slotName],
+              armor[slotNameFound],
               fullId,
               weightedArmorCopies(path)
             )
           }
-        } catch (e) {
-          console.error('[ZombieGear] Errore leggendo armatura ' + fullId + ': ' + e)
+        } catch (errArmorScan) {
+          console.error('[ZombieGear] Errore leggendo armatura ' + fullId + ': ' + errArmorScan)
         }
       }
 
@@ -204,17 +203,13 @@
 
       const attackDamage = getAttackDamageBonus(item)
 
-      // Accetta:
-      // - armi con vero modificatore di attacco
-      // - item con nome chiaramente da arma corpo a corpo
       if (attackDamage >= 2.0 || hasMeleeKeyword(path)) {
-        // Evita item stackabili/comuni che contengono accidentalmente una keyword.
         try {
-          const stack = new $ItemStack(item)
-          if (stack.getMaxStackSize() === 1) {
+          var candidateStack = new $ItemStack(item)
+          if (candidateStack.getMaxStackSize() === 1) {
             meleeWeapons.push(fullId)
           }
-        } catch (e) {
+        } catch (errWeaponScan) {
           // Ignora item problematici.
         }
       }
@@ -252,18 +247,17 @@
 
     if (stack.isDamageableItem() && stack.getMaxDamage() > 1) {
       const maxDamage = stack.getMaxDamage()
-      let damage = Math.floor(maxDamage * randomBetween(minWear, maxWear))
+      let damageValue = Math.floor(maxDamage * randomBetween(minWear, maxWear))
 
-      // Non deve nascere gia' rotto.
-      if (damage >= maxDamage) {
-        damage = maxDamage - 1
+      if (damageValue >= maxDamage) {
+        damageValue = maxDamage - 1
       }
 
-      if (damage < 0) {
-        damage = 0
+      if (damageValue < 0) {
+        damageValue = 0
       }
 
-      stack.setDamageValue(damage)
+      stack.setDamageValue(damageValue)
     }
 
     return stack
@@ -281,7 +275,6 @@
   function equipZombie(entity) {
     buildPools()
 
-    // Garantisce almeno un pezzo.
     let pieces = 1
 
     if (Math.random() < SECOND_PIECE_CHANCE) {
@@ -366,14 +359,13 @@
       return
     }
 
-    // Zombie vanilla + sottoclassi (Husk, Drowned, molti zombie modded).
-    // Fallback anche per entita' moddate che contengono "zombie" nell'ID.
     let zombieLike = entity instanceof $Zombie
 
     if (!zombieLike) {
       try {
-        zombieLike = entity.type.toString().toLowerCase().includes('zombie')
-      } catch (e) {
+        var entityTypeText = entity.type.toString().toLowerCase()
+        zombieLike = entityTypeText.includes('zombie')
+      } catch (errType) {
         zombieLike = false
       }
     }
@@ -383,22 +375,22 @@
     }
 
     try {
-      const data = entity.getPersistentData()
+      // In KubeJS 1.20.1 persistentData e' disponibile direttamente sull'entita'.
+      var persistentTag = entity.persistentData
 
-      // EntityEvents.spawned scatta anche al caricamento dei chunk:
-      // questo evita di riequipaggiare lo stesso zombie infinite volte.
-      if (data.getBoolean(MARKER)) {
+      // Evita di riequipaggiare lo stesso zombie quando il chunk viene ricaricato.
+      if (persistentTag.getBoolean(MARKER)) {
         return
       }
 
       equipZombie(entity)
-      data.putBoolean(MARKER, true)
-    } catch (e) {
+      persistentTag.putBoolean(MARKER, true)
+    } catch (errEquip) {
       console.error(
         '[ZombieGear] Errore equipaggiando ' +
         entity.type +
         ': ' +
-        e
+        errEquip
       )
     }
   })
