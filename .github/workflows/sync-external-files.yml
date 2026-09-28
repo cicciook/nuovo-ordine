@@ -1,0 +1,70 @@
+name: Sincronizza file esterni del modpack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pack-settings.json'
+      - '.github/workflows/sync-external-files.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Aggiorna pack.json con i file esterni
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          pack_path = Path('pack.json')
+          settings_path = Path('pack-settings.json')
+          pack = json.loads(pack_path.read_text('utf-8'))
+          settings = json.loads(settings_path.read_text('utf-8'))
+
+          external = settings.get('external_files', [])
+          by_path = {item['path']: item for item in pack.get('files', [])}
+          for item in external:
+              by_path[item['path']] = item
+
+          # Mantiene l'ordine precedente e aggiunge/sostituisce i file esterni.
+          ordered = []
+          seen = set()
+          for item in pack.get('files', []):
+              path = item['path']
+              ordered.append(by_path[path])
+              seen.add(path)
+          for item in external:
+              if item['path'] not in seen:
+                  ordered.append(item)
+                  seen.add(item['path'])
+
+          pack['files'] = ordered
+          run = os.environ.get('GITHUB_RUN_NUMBER', '1')
+          pack['version'] = datetime.now(timezone.utc).strftime('%Y.%m.%d') + '-ext-' + run
+          pack['news'] = settings.get('news', pack.get('news', ''))
+          pack_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Pubblica manifest aggiornato
+        shell: bash
+        run: |
+          if git diff --quiet -- pack.json; then
+            echo 'pack.json già aggiornato.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pack.json
+          git commit -m 'Aggiorna manifest con file esterni'
+          git push
