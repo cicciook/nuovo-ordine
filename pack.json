@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.28-ext-1",
+  "version": "2026.09.28-ext-2",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Benvenuto su Nuovo Ordine — aggiunto Starter Kit 8.1",
+  "news": "Benvenuto su Nuovo Ordine — aggiunto kit di respawn configurabile",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32086,6 +32086,13 @@
       "sha256": "e543d1dc48a27015921e832591248f325b034e81546c1c3d977b2769dac0a385",
       "mode": "replace",
       "url": "https://cdn.modrinth.com/data/6L3ydNi8/versions/7Jgf2aNZ/starterkit-1.20.1-8.1.jar"
+    },
+    {
+      "path": "kubejs/server_scripts/nuovo_ordine_respawn_kit.js",
+      "size": 3539,
+      "sha256": "978193eb6d9dd74926ce950bcca9f003d95acb23d98250bad12efb7b7f4e8349",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     }
   ],
   "archives": {
