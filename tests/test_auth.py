@@ -28,7 +28,12 @@ def test_login_uses_prism_style_device_code_flow(monkeypatch):
             "expires_in": 900,
             "interval": 1,
         }),
-        FakeResponse({"error": "authorization_pending"}),
+        # Microsoft risponde realmente con HTTP 400 finché l'utente non ha
+        # ancora completato il device-code flow. Non deve diventare un popup.
+        FakeResponse({
+            "error": "authorization_pending",
+            "error_description": "AADSTS70016: The provided request has not yet been authorized by the user.",
+        }, status=400),
         FakeResponse({
             "access_token": "microsoft-access",
             "refresh_token": "microsoft-refresh",
@@ -65,3 +70,4 @@ def test_login_uses_prism_style_device_code_flow(monkeypatch):
     assert calls[1][1]["device_code"] == "device-code"
     assert remembered[0][0] == "test-client"
     assert any("ABCD-EFGH" in message for message in reports)
+    assert any("resta in attesa" in message for message in reports)
