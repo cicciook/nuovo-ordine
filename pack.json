@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.27-1",
+  "version": "2026.09.28-ext-1",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Benvenuto su Nuovo Ordine — modpack Forge 47.4.10",
+  "news": "Benvenuto su Nuovo Ordine — aggiunto Starter Kit 8.1",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32079,6 +32079,13 @@
       "sha256": "5419a196ae5d34b22b9209369cd70147ac889ed45facb46e527f35ad7633f8d7",
       "mode": "replace",
       "archive": "extras"
+    },
+    {
+      "path": "mods/starterkit-1.20.1-8.1.jar",
+      "size": 185835,
+      "sha256": "e543d1dc48a27015921e832591248f325b034e81546c1c3d977b2769dac0a385",
+      "mode": "replace",
+      "url": "https://cdn.modrinth.com/data/6L3ydNi8/versions/7Jgf2aNZ/starterkit-1.20.1-8.1.jar"
     }
   ],
   "archives": {
