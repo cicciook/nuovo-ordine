@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -19,12 +21,33 @@ def prepare_logo():
     raw = base64.b64decode(encoded, validate=True)
     if len(raw) < 10_000 or not raw.startswith(b"\xff\xd8") or not raw.endswith(b"\xff\xd9"):
         raise RuntimeError("Logo Nuovo Ordine non valido.")
-    (assets / "nuovo-ordine-logo.jpg").write_bytes(raw)
+    logo = assets / "nuovo-ordine-logo.jpg"
+    logo.write_bytes(raw)
+    return logo
+
+
+def prepare_windows_icon(logo_path):
+    """Create a multi-resolution .ico from the official launcher artwork."""
+    assets = ROOT / "launcher" / "assets"
+    icon_path = assets / "nuovo-ordine.ico"
+    with Image.open(logo_path) as source:
+        source = source.convert("RGBA")
+        source.thumbnail((470, 470), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", (512, 512), (7, 17, 31, 255))
+        x = (canvas.width - source.width) // 2
+        y = (canvas.height - source.height) // 2
+        canvas.paste(source, (x, y), source)
+        canvas.save(
+            icon_path,
+            format="ICO",
+            sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
+        )
+    return icon_path
 
 
 def main():
     os.chdir(ROOT)
-    prepare_logo()
+    logo_path = prepare_logo()
     args = [
         sys.executable,
         "-m",
@@ -48,7 +71,10 @@ def main():
         "--copy-metadata",
         "platformdirs",
     ]
-    if sys.platform == "darwin":
+    if sys.platform == "win32":
+        icon_path = prepare_windows_icon(logo_path)
+        args += ["--icon", str(icon_path)]
+    elif sys.platform == "darwin":
         args += ["--osx-bundle-identifier", "it.nuovoordine.launcher"]
     subprocess.run(args + ["main.py"], check=True)
 
