@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "2026.09.28-ext-2",
+  "version": "2026.09.28-ext-3",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
@@ -32089,10 +32089,10 @@
     },
     {
       "path": "kubejs/server_scripts/nuovo_ordine_respawn_kit.js",
-      "size": 3539,
-      "sha256": "978193eb6d9dd74926ce950bcca9f003d95acb23d98250bad12efb7b7f4e8349",
+      "size": 3527,
+      "sha256": "9325737080844b761c9836bffe27dc020382c349fc2013b87a2c022cfdc23b63",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     }
   ],
   "archives": {
