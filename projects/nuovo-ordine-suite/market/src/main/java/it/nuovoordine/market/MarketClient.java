@@ -12,7 +12,7 @@ import java.util.*;
 
 @Mod.EventBusSubscriber(modid="nomarket",value=Dist.CLIENT)
 public class MarketClient {
-    static Object browser;static Path page;static Object handler;static int ticks;
+    static volatile Object browser;static volatile Path page;static Object handler;static int ticks;
     static final Map<Long,Long> pending=new HashMap<>();
     static void prepare()throws Exception{
         if(handler!=null)return;
