@@ -1,0 +1,143 @@
+{
+  "base_weapon_rows": 94,
+  "base_ammo_rows": 23,
+  "addon_guns": 165,
+  "addon_attachments": 211,
+  "addon_ammo": 28,
+  "total_weapon_rows": 470,
+  "total_ammo_rows": 51,
+  "packs": {
+    "ARIPS 1.3.0": {
+      "guns": 6,
+      "attachments": 107,
+      "excluded": []
+    },
+    "Maxstuff Legacy 1.8.3 hotfix": {
+      "guns": 108,
+      "attachments": 21,
+      "excluded": [
+        {
+          "id": "maxstuff:ai_awp",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:308"
+        },
+        {
+          "id": "maxstuff:ai_aws",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:308"
+        },
+        {
+          "id": "maxstuff:ar338",
+          "reason": "heavy_sniper",
+          "ammo": "ea:300winmag"
+        },
+        {
+          "id": "maxstuff:can_cannon",
+          "reason": "launcher",
+          "ammo": "maxstuff:can_blanks"
+        },
+        {
+          "id": "maxstuff:excaliber",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:50bmg"
+        },
+        {
+          "id": "maxstuff:gm6_lynx",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:50bmg"
+        },
+        {
+          "id": "maxstuff:m320t",
+          "reason": "launcher",
+          "ammo": "tacz:40mm"
+        },
+        {
+          "id": "maxstuff:m82a2",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:50bmg"
+        },
+        {
+          "id": "maxstuff:mk18_mjolnir",
+          "reason": "heavy_sniper",
+          "ammo": "tacz:338"
+        },
+        {
+          "id": "maxstuff:mrad",
+          "reason": "heavy_sniper",
+          "ammo": "ea:416barrett"
+        }
+      ]
+    },
+    "MS-Mobius Gunspack 1.5.8": {
+      "guns": 51,
+      "attachments": 83,
+      "excluded": [
+        {
+          "id": "sfms:ar50",
+          "reason": "heavy_sniper",
+          "ammo": "sfms:50arms"
+        },
+        {
+          "id": "sfms:m109",
+          "reason": "heavy_sniper",
+          "ammo": "sfms:25gl"
+        },
+        {
+          "id": "sfms:m200",
+          "reason": "heavy_sniper",
+          "ammo": "sfms:408"
+        },
+        {
+          "id": "sfms:m202",
+          "reason": "launcher",
+          "ammo": "tacz:rpg_rocket"
+        },
+        {
+          "id": "sfms:mgl320",
+          "reason": "launcher",
+          "ammo": "tacz:40mm"
+        },
+        {
+          "id": "sfms:mgl40",
+          "reason": "launcher",
+          "ammo": "tacz:40mm"
+        },
+        {
+          "id": "sfms:mgl416",
+          "reason": "launcher",
+          "ammo": "tacz:40mm"
+        }
+      ]
+    }
+  },
+  "addon_ammo_ids": [
+    "apdf:0950x38",
+    "apdf:1163x39",
+    "ea:300blk",
+    "ea:50beowulf",
+    "ea:602x41",
+    "ea:65creedmoor",
+    "ea:75fk",
+    "ea:792x57",
+    "ea:9x39",
+    "maxstuff:12g_db",
+    "maxstuff:12g_fl",
+    "maxstuff:bannana",
+    "maxstuff:laser",
+    "maxstuff:nails",
+    "sfms:12ap",
+    "sfms:300ms",
+    "sfms:30scp",
+    "sfms:50arms",
+    "sfms:50ich",
+    "sfms:arrow117",
+    "sfms:c812",
+    "sfms:c901",
+    "sfms:inf",
+    "sfms:m995",
+    "tacz:338",
+    "tacz:50bmg",
+    "tacz:68x51fury",
+    "tacz:762x54"
+  ]
+}
