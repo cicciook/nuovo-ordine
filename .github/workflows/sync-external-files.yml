@@ -131,14 +131,19 @@ jobs:
                   encoding='utf-8',
               )
 
-          # Quando viene scelta una nuova versione della quest mod, rimuove dal
-          # manifest tutte le versioni precedenti per evitare che il launcher
-          # scarichi due JAR della stessa mod.
+          # Quando viene scelta una nuova versione della quest mod o del loot mod,
+          # rimuove dal manifest le versioni precedenti per evitare JAR duplicati.
           quest_paths = {
               item['path']
               for item in external
               if re.fullmatch(r'mods/nuovo-ordine-quests-[^/]+\.jar', item['path'])
           }
+          loot_paths = {
+              item['path']
+              for item in external
+              if re.fullmatch(r'mods/lootr-more-tactical-loot-[^/]+\.jar', item['path'])
+          }
+
           current_files = pack.get('files', [])
           if quest_paths:
               current_files = [
@@ -146,6 +151,14 @@ jobs:
                   if (
                       not re.fullmatch(r'mods/nuovo-ordine-quests-[^/]+\.jar', item.get('path', ''))
                       or item.get('path') in quest_paths
+                  )
+              ]
+          if loot_paths:
+              current_files = [
+                  item for item in current_files
+                  if (
+                      not re.fullmatch(r'mods/lootr-more-tactical-loot-[^/]+\.jar', item.get('path', ''))
+                      or item.get('path') in loot_paths
                   )
               ]
 
@@ -183,10 +196,10 @@ jobs:
         run: |
           git add -A
           if git diff --cached --quiet; then
-            echo 'Manifest, mod quest e file esterni già aggiornati.'
+            echo 'Manifest e file esterni già aggiornati.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Aggiorna quest mod alla 1.1.0'
+          git commit -m 'Aggiorna manifest e file esterni'
           git push
