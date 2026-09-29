@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Quest 1.2.4: corretto timeout bridge /quest lato server",
+  "news": "Nuovo Ordine — Quest 1.2.5: bridge /quest su trasporto vanilla compatibile Mohist/Connector",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -57,11 +57,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
     },
     {
-      "path": "mods/nuovo-ordine-quests-1.2.4.jar",
-      "size": 99983,
-      "sha256": "970ff174ad573f01090d2008b1a1fb93a8a93370d905bcc7054e955cee2ff939",
+      "path": "mods/nuovo-ordine-quests-1.2.5.jar",
+      "size": 105285,
+      "sha256": "55a37e7b408fa9a1c91d28be58cdd225504ba63a07a9523306d3e603e056654f",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-quests-1.2.4.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-quests-1.2.5.jar"
     }
   ]
 }
