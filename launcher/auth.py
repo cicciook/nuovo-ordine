@@ -4,12 +4,18 @@ import keyring
 import requests
 from keyring.backend import get_all_keyring
 from minecraft_launcher_lib import microsoft_account as msa
-from minecraft_launcher_lib.exceptions import AzureAppNotPermitted, AccountNotOwnMinecraft
+from minecraft_launcher_lib.exceptions import (
+    AccountNotOwnMinecraft,
+    AzureAppNotPermitted,
+    InvalidRefreshToken,
+)
 
 SERVICE = "NuovoOrdine.Microsoft"
 DEVICE_CODE_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode"
 TOKEN_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
-SCOPE = "XboxLive.SignIn XboxLive.offline_access"
+# Lo scope deve essere identico tra device-code e refresh. "offline_access"
+# e' uno scope OAuth standard, non XboxLive.offline_access.
+SCOPE = "XboxLive.signin offline_access"
 
 
 def secure_keyring():
@@ -63,10 +69,53 @@ def forget(client_id):
             raise RuntimeError("Non riesco a eliminare l'accesso dal portachiavi di sistema.") from exc
 
 
+def _clear_invalid_token(client_id):
+    try:
+        forget(client_id)
+    except Exception:
+        # Un token non valido non deve restare marcato come account connesso solo
+        # perche' il portachiavi non e' riuscito a cancellarlo in questo momento.
+        pass
+
+
 def refresh(client_id, token, report):
-    data = msa.complete_refresh(client_id, None, None, token)
-    remember(client_id, data, report)
-    return data
+    """Rinnova un token ottenuto dal nostro device-code flow Microsoft v2.
+
+    minecraft-launcher-lib.complete_refresh() usa ancora login.live.com per il
+    refresh. I refresh token emessi dal device-code endpoint v2 del launcher
+    devono invece essere rinnovati sullo stesso endpoint consumers v2 usato al
+    login; altrimenti un accesso appena effettuato puo' sembrare gia' scaduto.
+    """
+    data = _post_oauth(
+        TOKEN_URL,
+        {
+            "client_id": client_id,
+            "scope": SCOPE,
+            "refresh_token": token,
+            "grant_type": "refresh_token",
+        },
+        allow_error_payload=True,
+    )
+
+    if "access_token" not in data:
+        _clear_invalid_token(client_id)
+        raise InvalidRefreshToken()
+
+    rotated_refresh = data.get("refresh_token") or token
+    profile = _finish_minecraft_login(data["access_token"], rotated_refresh)
+    remember(client_id, profile, report)
+    return profile
+
+
+def session_is_valid(data):
+    if not isinstance(data, dict):
+        return False
+    if not all(data.get(key) for key in ("name", "id", "access_token", "refresh_token")):
+        return False
+    try:
+        return time.time() < float(data.get("expires_at", 0))
+    except (TypeError, ValueError):
+        return False
 
 
 def _oauth_error(data, fallback):
@@ -125,6 +174,12 @@ def _finish_minecraft_login(ms_access_token, refresh_token):
 
     profile["access_token"] = access_token
     profile["refresh_token"] = refresh_token
+    try:
+        expires_in = int(minecraft.get("expires_in", 0))
+    except (TypeError, ValueError):
+        expires_in = 0
+    if expires_in > 0:
+        profile["expires_at"] = time.time() + max(1, expires_in - 60)
     return profile
 
 
