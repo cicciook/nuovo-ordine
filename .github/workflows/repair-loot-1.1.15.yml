@@ -1,0 +1,70 @@
+name: Ripara loot mod 1.1.15
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/loot-repair/ready.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ripara byte esatti del JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/loot-repair/seg*.b64 | base64 --decode > /tmp/segment.bin
+          test "$(stat -c '%s' /tmp/segment.bin)" = "6750"
+          python - <<'PY'
+          from pathlib import Path
+          jar = Path('mods/lootr-more-tactical-loot-1.1.15.jar')
+          data = bytearray(jar.read_bytes())
+          segment = Path('/tmp/segment.bin').read_bytes()
+          if len(data) != 33281:
+              raise SystemExit(f'JAR size inattesa: {len(data)}')
+          if len(segment) != 6750:
+              raise SystemExit(f'Segment size inattesa: {len(segment)}')
+          data[13500:20250] = segment
+          jar.write_bytes(data)
+          PY
+          echo 'e9fb1f7e96d50ebc0a929c6c2f38549663a97c48ae83771d79c892a3932c1b05  mods/lootr-more-tactical-loot-1.1.15.jar' | sha256sum -c -
+          unzip -t mods/lootr-more-tactical-loot-1.1.15.jar >/dev/null
+          jar tf mods/lootr-more-tactical-loot-1.1.15.jar | grep -q 'com/cicciook/lootrmoreloot/TaczLoginFix.class'
+
+      - name: Aggiorna manifest sorgente
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('pack-settings.json')
+          s = json.loads(p.read_text('utf-8'))
+          for item in s.get('external_files', []):
+              if item.get('path') == 'mods/lootr-more-tactical-loot-1.1.15.jar':
+                  item['size'] = 33281
+                  item['sha256'] = 'e9fb1f7e96d50ebc0a929c6c2f38549663a97c48ae83771d79c892a3932c1b05'
+                  item['url'] = 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.15.jar'
+          s['news'] = 'Nuovo Ordine — loot 1.1.15: fix automatico TACZ/Mohist al login, LesRaisins e granate'
+          p.write_text(json.dumps(s, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          rm -rf .github/loot-repair
+
+      - name: Pubblica JAR riparato
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Ripara esattamente loot 1.1.15 e fix TACZ login'
+          git pull --rebase origin main
+          git push
