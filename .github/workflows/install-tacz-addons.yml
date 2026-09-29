@@ -1,0 +1,215 @@
+name: Installa addon TACZ e aggiorna loot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/tacz-addons/ready.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Allinea main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --rebase origin main
+
+      - name: Scarica e verifica gli addon ufficiali
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tacz-addons
+
+          ARIPS_URL='https://mediafilez.forgecdn.net/files/6537/949/ARIPS_ver.1.3.0.zip'
+          MAXSTUFF_URL='https://mediafilez.forgecdn.net/files/8693/360/maxstuff-legacy-1.8.3_hotfix.jar'
+          MOBIUS_URL='https://mediafilez.forgecdn.net/files/8298/042/%5BTacz1.1.8%2B%5DMS-Mobius%20Gunspack%20v1.5.8.zip'
+          ENDLESS_URL='https://mediafilez.forgecdn.net/files/8107/585/endlessammo-2.0.jar'
+
+          curl -fL --retry 3 --retry-delay 2 -A 'Mozilla/5.0' "$ARIPS_URL" -o /tmp/tacz-addons/arips.zip
+          curl -fL --retry 3 --retry-delay 2 -A 'Mozilla/5.0' "$MAXSTUFF_URL" -o /tmp/tacz-addons/maxstuff.jar
+          curl -fL --retry 3 --retry-delay 2 -A 'Mozilla/5.0' "$MOBIUS_URL" -o /tmp/tacz-addons/mobius.zip
+          curl -fL --retry 3 --retry-delay 2 -A 'Mozilla/5.0' "$ENDLESS_URL" -o /tmp/tacz-addons/endlessammo.jar
+
+          echo '5bc39b5709e405e277e3488fb2c9bb34f79061b5c4206b6df2fd62bd95b129f3  /tmp/tacz-addons/arips.zip' | sha256sum -c -
+          echo 'ea4495edbcdf96b085130ad05ddc2b5092fc54c162aa7ae4a327b84ef328d0f2  /tmp/tacz-addons/maxstuff.jar' | sha256sum -c -
+          echo '4b4c679b9540c87ebb4f89dab629abb84f03006b01369389356ef97d8099af2d  /tmp/tacz-addons/mobius.zip' | sha256sum -c -
+          echo 'a56a89cee5768111be08b089c67eb7c69b6b196a  /tmp/tacz-addons/endlessammo.jar' | sha1sum -c -
+
+          test "$(stat -c '%s' /tmp/tacz-addons/arips.zip)" = '3277563'
+          test "$(stat -c '%s' /tmp/tacz-addons/maxstuff.jar)" = '33737826'
+          test "$(stat -c '%s' /tmp/tacz-addons/mobius.zip)" = '39843030'
+
+          unzip -t /tmp/tacz-addons/arips.zip >/dev/null
+          jar tf /tmp/tacz-addons/maxstuff.jar >/dev/null
+          unzip -t /tmp/tacz-addons/mobius.zip >/dev/null
+          jar tf /tmp/tacz-addons/endlessammo.jar >/dev/null
+
+          ENDLESS_SHA256="$(sha256sum /tmp/tacz-addons/endlessammo.jar | awk '{print $1}')"
+          ENDLESS_SIZE="$(stat -c '%s' /tmp/tacz-addons/endlessammo.jar)"
+          echo "ENDLESS_SHA256=$ENDLESS_SHA256" >> "$GITHUB_ENV"
+          echo "ENDLESS_SIZE=$ENDLESS_SIZE" >> "$GITHUB_ENV"
+          echo "Addon verificati. Endless Ammo: $ENDLESS_SIZE byte, sha256=$ENDLESS_SHA256"
+
+      - name: Genera catalogo completo Lootr Tactical
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='mods/lootr-more-tactical-loot-1.1.15.jar'
+          test -f "$BASE"
+          mkdir -p /tmp/loot116
+
+          if unzip -p "$BASE" META-INF/loot-update-source/WEAPONS.tsv > /tmp/loot116/base_WEAPONS.tsv && [ -s /tmp/loot116/base_WEAPONS.tsv ]; then
+            echo 'Catalogo armi base estratto dal JAR 1.1.15.'
+          else
+            cp loot-source/1.1.15/WEAPONS.tsv /tmp/loot116/base_WEAPONS.tsv
+          fi
+          if unzip -p "$BASE" META-INF/loot-update-source/AMMO.tsv > /tmp/loot116/base_AMMO.tsv && [ -s /tmp/loot116/base_AMMO.tsv ]; then
+            echo 'Catalogo munizioni base estratto dal JAR 1.1.15.'
+          else
+            cp loot-source/1.1.15/AMMO.tsv /tmp/loot116/base_AMMO.tsv
+          fi
+
+          cp loot-source/1.1.16/Patch.java /tmp/loot116/Patch.java
+          cp loot-source/1.1.16/build_addon_catalog.py /tmp/loot116/build_addon_catalog.py
+
+          python loot-source/1.1.16/build_addon_catalog.py \
+            --base-weapons /tmp/loot116/base_WEAPONS.tsv \
+            --base-ammo /tmp/loot116/base_AMMO.tsv \
+            --arips /tmp/tacz-addons/arips.zip \
+            --maxstuff /tmp/tacz-addons/maxstuff.jar \
+            --mobius /tmp/tacz-addons/mobius.zip \
+            --out-weapons /tmp/loot116/WEAPONS.tsv \
+            --out-ammo /tmp/loot116/AMMO.tsv \
+            --report /tmp/loot116/ADDON_REPORT.json
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/loot116/ADDON_REPORT.json').read_text('utf-8'))
+          assert report['addon_guns'] == 165, report
+          assert report['addon_attachments'] == 211, report
+          assert report['addon_ammo'] >= 27, report
+          assert report['total_weapon_rows'] > report['base_weapon_rows'], report
+          assert report['total_ammo_rows'] > report['base_ammo_rows'], report
+          print('Catalogo validato:', report['addon_guns'], 'armi,', report['addon_attachments'], 'accessori,', report['addon_ammo'], 'munizioni addon')
+          PY
+
+      - name: Compila Lootr Tactical 1.1.16
+        shell: bash
+        run: |
+          set -euo pipefail
+          javac --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -d /tmp/loot116 /tmp/loot116/Patch.java
+
+          java --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -cp /tmp/loot116 Patch \
+            mods/lootr-more-tactical-loot-1.1.15.jar \
+            mods/lootr-more-tactical-loot-1.1.16.jar \
+            /tmp/loot116
+
+          jar tf mods/lootr-more-tactical-loot-1.1.16.jar >/dev/null
+          unzip -p mods/lootr-more-tactical-loot-1.1.16.jar META-INF/mods.toml | grep -Eq '^version[[:space:]]*=[[:space:]]*"1\.1\.16"'
+          unzip -p mods/lootr-more-tactical-loot-1.1.16.jar META-INF/loot-update-source/ADDON_REPORT.json >/dev/null
+
+          find mods -maxdepth 1 -type f -name 'lootr-more-tactical-loot-*.jar' ! -name 'lootr-more-tactical-loot-1.1.16.jar' -delete
+
+          LOOT_SHA256="$(sha256sum mods/lootr-more-tactical-loot-1.1.16.jar | awk '{print $1}')"
+          LOOT_SIZE="$(stat -c '%s' mods/lootr-more-tactical-loot-1.1.16.jar)"
+          echo "LOOT_SHA256=$LOOT_SHA256" >> "$GITHUB_ENV"
+          echo "LOOT_SIZE=$LOOT_SIZE" >> "$GITHUB_ENV"
+          echo "Lootr Tactical 1.1.16: $LOOT_SIZE byte, sha256=$LOOT_SHA256"
+
+          cp /tmp/loot116/ADDON_REPORT.json loot-source/1.1.16/catalog-report.json
+
+      - name: Aggiorna file del launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path('pack-settings.json')
+          settings = json.loads(path.read_text('utf-8'))
+
+          new_items = [
+              {
+                  'path': 'tacz/ARIPS_ver.1.3.0.zip',
+                  'size': 3277563,
+                  'sha256': '5bc39b5709e405e277e3488fb2c9bb34f79061b5c4206b6df2fd62bd95b129f3',
+                  'mode': 'replace',
+                  'url': 'https://mediafilez.forgecdn.net/files/6537/949/ARIPS_ver.1.3.0.zip',
+              },
+              {
+                  'path': 'mods/endlessammo-2.0.jar',
+                  'size': int(os.environ['ENDLESS_SIZE']),
+                  'sha256': os.environ['ENDLESS_SHA256'],
+                  'mode': 'replace',
+                  'url': 'https://mediafilez.forgecdn.net/files/8107/585/endlessammo-2.0.jar',
+              },
+              {
+                  'path': 'mods/maxstuff-legacy-1.8.3_hotfix.jar',
+                  'size': 33737826,
+                  'sha256': 'ea4495edbcdf96b085130ad05ddc2b5092fc54c162aa7ae4a327b84ef328d0f2',
+                  'mode': 'replace',
+                  'url': 'https://mediafilez.forgecdn.net/files/8693/360/maxstuff-legacy-1.8.3_hotfix.jar',
+              },
+              {
+                  'path': 'tacz/[Tacz1.1.8+]MS-Mobius Gunspack v1.5.8.zip',
+                  'size': 39843030,
+                  'sha256': '4b4c679b9540c87ebb4f89dab629abb84f03006b01369389356ef97d8099af2d',
+                  'mode': 'replace',
+                  'url': 'https://mediafilez.forgecdn.net/files/8298/042/%5BTacz1.1.8%2B%5DMS-Mobius%20Gunspack%20v1.5.8.zip',
+              },
+              {
+                  'path': 'mods/lootr-more-tactical-loot-1.1.16.jar',
+                  'size': int(os.environ['LOOT_SIZE']),
+                  'sha256': os.environ['LOOT_SHA256'],
+                  'mode': 'replace',
+                  'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.16.jar',
+              },
+          ]
+
+          def managed(p):
+              return (
+                  p.startswith('tacz/ARIPS_ver.')
+                  or 'MS-Mobius Gunspack' in p
+                  or p.startswith('mods/maxstuff')
+                  or p.startswith('mods/endlessammo')
+                  or p.startswith('mods/lootr-more-tactical-loot-')
+              )
+
+          external = [x for x in settings.get('external_files', []) if not managed(x.get('path', ''))]
+          external.extend(new_items)
+          settings['external_files'] = external
+          settings['news'] = 'Nuovo Ordine — ARIPS, Maxstuff e MS-Mobius integrati nel Lootr Tactical'
+          path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Pubblica addon e Lootr Tactical 1.1.16
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .github/tacz-addons
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Aggiunge addon TACZ e Lootr Tactical 1.1.16'
+          git pull --rebase origin main
+          git push
