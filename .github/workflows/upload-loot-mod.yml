@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/loot-upload/**'
+      - '.github/loot-upload/ready.txt'
   workflow_dispatch:
 
 permissions:
