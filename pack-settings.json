@@ -20,6 +20,13 @@
       "sha256": "9325737080844b761c9836bffe27dc020382c349fc2013b87a2c022cfdc23b63",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
+    },
+    {
+      "path": "mods/nuovo-ordine-quests-1.0.0.jar",
+      "size": 81895,
+      "sha256": "bd5c34e40b107f050d11102ac19aca00475257cb49e8ad590287e73d1cb56115",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-quests-1.0.0.jar"
     }
   ]
 }
