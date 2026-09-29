@@ -1,0 +1,90 @@
+name: Aggiorna mod loot tattico
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/loot-upload/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-loot-mod:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ricostruisci JAR loot 1.1.12
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .github/loot-upload/part000.b64
+          mkdir -p mods
+          base64 --decode .github/loot-upload/part000.b64 > mods/lootr-more-tactical-loot-1.1.12.jar
+          echo '01935e4fdeb92ad5f6729ee1e8ef4ff054422aff6339e01ccd1da458b37cb89b  mods/lootr-more-tactical-loot-1.1.12.jar' | sha256sum -c -
+          find mods -maxdepth 1 -type f -name 'lootr-more-tactical-loot-*.jar' ! -name 'lootr-more-tactical-loot-1.1.12.jar' -delete
+          rm -rf .github/loot-upload
+
+      - name: Aggiorna pack-settings e pack.json
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          rel = 'mods/lootr-more-tactical-loot-1.1.12.jar'
+          jar = Path(rel)
+          data = jar.read_bytes()
+          item = {
+              'path': rel,
+              'size': len(data),
+              'sha256': hashlib.sha256(data).hexdigest(),
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/' + rel,
+          }
+
+          settings_path = Path('pack-settings.json')
+          settings = json.loads(settings_path.read_text('utf-8'))
+          external = [
+              old for old in settings.get('external_files', [])
+              if not (
+                  old.get('path', '').startswith('mods/lootr-more-tactical-loot-')
+                  and old.get('path', '').endswith('.jar')
+              )
+          ]
+          external.append(item)
+          settings['external_files'] = external
+          settings['news'] = 'Nuovo Ordine — loot 1.1.12: aggiunti oggetti e granate LesRaisins, C4 escluso'
+          settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          pack_path = Path('pack.json')
+          pack = json.loads(pack_path.read_text('utf-8'))
+          files = [
+              old for old in pack.get('files', [])
+              if not (
+                  old.get('path', '').startswith('mods/lootr-more-tactical-loot-')
+                  and old.get('path', '').endswith('.jar')
+              )
+          ]
+          files.append(item)
+          pack['files'] = files
+          pack['version'] = datetime.now(timezone.utc).strftime('%Y.%m.%d') + '-loot-1.1.12'
+          pack['news'] = settings['news']
+          pack_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Pubblica mod e manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Aggiorna loot mod alla 1.1.12 con LesRaisins'
+          git push
