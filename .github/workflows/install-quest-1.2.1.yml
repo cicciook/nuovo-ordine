@@ -1,0 +1,101 @@
+name: Installa quest bridge fix 1.2.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-quest-1.2.1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build patched quest jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
+          import struct, base64
+
+          src=Path('mods/nuovo-ordine-quests-1.1.0.jar')
+          out=Path('/tmp/nuovo-ordine-quests-1.2.1.jar')
+          client_events_b64='''yv66vgAAAD0BBAoAAgADBwAEDAAFAAYBABBqYXZhL2xhbmcvT2JqZWN0AQAGPGluaXQ+AQADKClWCQAIAAkHAAoMAAsADAEAI2NvbS9udW92b29yZGluZS9xdWVzdHMvQ2xpZW50RXZlbnRzAQALYnJpZGdlUmVhZHkBAAFaCgAOAA8HABAMABEAEgEAEGphdmEvbGFuZy9TeXN0ZW0BAAhuYW5vVGltZQEAAygpSgkACAAUDAAVABYBABFuZXh0QnJpZGdlQXR0ZW1wdAEAAUoFAAAAAA7msoAIABoBABdjb20uY2luZW1hbW9kLm1jZWYuTUNFRgoAHAAdBwAeDAAfACABAA9qYXZhL2xhbmcvQ2xhc3MBAAdmb3JOYW1lAQAlKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL0NsYXNzOwkAIgAjBwAkDAAlACYBABFqYXZhL2xhbmcvQm9vbGVhbgEABFRSVUUBABNMamF2YS9sYW5nL0Jvb2xlYW47CAAoAQANaXNJbml0aWFsaXplZAoAHAAqDAArACwBAAlnZXRNZXRob2QBAEAoTGphdmEvbGFuZy9TdHJpbmc7W0xqYXZhL2xhbmcvQ2xhc3M7KUxqYXZhL2xhbmcvcmVmbGVjdC9NZXRob2Q7CgAuAC8HADAMADEAMgEAGGphdmEvbGFuZy9yZWZsZWN0L01ldGhvZAEABmludm9rZQEAOShMamF2YS9sYW5nL09iamVjdDtbTGphdmEvbGFuZy9PYmplY3Q7KUxqYXZhL2xhbmcvT2JqZWN0OwoAIgA0DAA1ADYBAAZlcXVhbHMBABUoTGphdmEvbGFuZy9PYmplY3Q7KVoKADgAOQcAOgwAOwAGAQAoY29tL251b3Zvb3JkaW5lL3F1ZXN0cy9TaG9wQnJvd3NlckNsaWVudAEAB3ByZXBhcmUIAD0BABJRdWVzdCBOdW92byBPcmRpbmUKAA4APwwAQABBAQAJZ2V0TG9nZ2VyAQAtKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1N5c3RlbSRMb2dnZXI7CQBDAEQHAEUMAEYARwEAHWphdmEvbGFuZy9TeXN0ZW0kTG9nZ2VyJExldmVsAQAESU5GTwEAH0xqYXZhL2xhbmcvU3lzdGVtJExvZ2dlciRMZXZlbDsIAEkBAChCcmlkZ2UgTUNFRiBxdWVzdCByZWdpc3RyYXRvIGluIGFudGljaXBvCwBLAEwHAE0MAE4ATwEAF2phdmEvbGFuZy9TeXN0ZW0kTG9nZ2VyAQADbG9nAQA0KExqYXZhL2xhbmcvU3lzdGVtJExvZ2dlciRMZXZlbDtMamF2YS9sYW5nL1N0cmluZzspVgcAUQEAE2phdmEvbGFuZy9UaHJvd2FibGUKAAgAUwwAVAAGAQAScHJlcGFyZUJyaWRnZUVhcmx5BwBWAQA7bmV0L21pbmVjcmFmdGZvcmdlL2NsaWVudC9ldmVudC9SZWdpc3RlckNsaWVudENvbW1hbmRzRXZlbnQIAFgBAA1nZXREaXNwYXRjaGVyBwBaAQAmY29tL21vamFuZy9icmlnYWRpZXIvQ29tbWFuZERpc3BhdGNoZXIKAAgAXAwAXQBeAQAIcmVnaXN0ZXIBACsoTGNvbS9tb2phbmcvYnJpZ2FkaWVyL0NvbW1hbmREaXNwYXRjaGVyOylWBwBgAQAmamF2YS9sYW5nL1JlZmxlY3RpdmVPcGVyYXRpb25FeGNlcHRpb24HAGIBAB9qYXZhL2xhbmcvSWxsZWdhbFN0YXRlRXhjZXB0aW9uCABkAQAWQ2Fubm90IHJlZ2lzdGVyIC9xdWVzdAoAYQBmDAAFAGcBACooTGphdmEvbGFuZy9TdHJpbmc7TGphdmEvbGFuZy9UaHJvd2FibGU7KVYIAGkBAAVxdWVzdAoAawBsBwBtDABuAG8BADNjb20vbW9qYW5nL2JyaWdhZGllci9idWlsZGVyL0xpdGVyYWxBcmd1bWVudEJ1aWxkZXIBAAdsaXRlcmFsAQBJKExqYXZhL2xhbmcvU3RyaW5nOylMY29tL21vamFuZy9icmlnYWRpZXIvYnVpbGRlci9MaXRlcmFsQXJndW1lbnRCdWlsZGVyOxIAAABxDAByAHMBAANydW4BACAoKUxjb20vbW9qYW5nL2JyaWdhZGllci9Db21tYW5kOwoAawB1DAB2AHcBAAhleGVjdXRlcwEAVShMY29tL21vamFuZy9icmlnYWRpZXIvQ29tbWFuZDspTGNvbS9tb2phbmcvYnJpZ2FkaWVyL2J1aWxkZXIvTGl0ZXJhbEFyZ3VtZW50QnVpbGRlcjsKAFkAeQwAXQB6AQBJKExjb20vbW9qYW5nL2JyaWdhZGllci9idWlsZGVyL0xpdGVyYWxBcmd1bWVudEJ1aWxkZXI7KUxqYXZhL2xhbmcvT2JqZWN0OwkAfAB9BwB+DAB/AIABADJuZXQvbWluZWNyYWZ0Zm9yZ2UvZXZlbnQvVGlja0V2ZW50JENsaWVudFRpY2tFdmVudAEABXBoYXNlAQAqTG5ldC9taW5lY3JhZnRmb3JnZS9ldmVudC9UaWNrRXZlbnQkUGhhc2U7CQCCAIMHAIQMAIUAgAEAKG5ldC9taW5lY3JhZnRmb3JnZS9ldmVudC9UaWNrRXZlbnQkUGhhc2UBAANFTkQKADgAhwwAiAAGAQAEdGljawoAigCHBwCLAQAlY29tL251b3Zvb3JkaW5lL3F1ZXN0cy9DbGllbnRUcmFuc2ZlcgkACACNDACOAAwBAAtwZW5kaW5nT3BlbgoAigCQDACRAAYBAAdyZXF1ZXN0BwCTAQATamF2YS9sYW5nL0V4Y2VwdGlvbgcAlQEAFmphdmEvbGFuZy9MaW5rYWdlRXJyb3IHAJcBACtqYXZhL2xhbmcvcmVmbGVjdC9JbnZvY2F0aW9uVGFyZ2V0RXhjZXB0aW9uCgBQAJkMAJoAmwEACGdldENhdXNlAQAXKClMamF2YS9sYW5nL1Rocm93YWJsZTsJAEMAnQwAngBHAQAFRVJST1IIAKABAB5JbXBvc3NpYmlsZSBhcHJpcmUgbGEgbm9xdWVzdHMLAEsAogwATgCjAQBJKExqYXZhL2xhbmcvU3lzdGVtJExvZ2dlciRMZXZlbDtMamF2YS9sYW5nL1N0cmluZztMamF2YS9sYW5nL1Rocm93YWJsZTspVgoAAgClDACmAKcBAAhnZXRDbGFzcwEAEygpTGphdmEvbGFuZy9DbGFzczsKABwAqQwAqgCrAQANZ2V0U2ltcGxlTmFtZQEAFCgpTGphdmEvbGFuZy9TdHJpbmc7EgABAK0MAK4ArwEAF21ha2VDb25jYXRXaXRoQ29uc3RhbnRzAQAmKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1N0cmluZzsKALEAsgcAswwAtAC1AQAkY29tL251b3Zvb3JkaW5lL3F1ZXN0cy9Ccm93c2VyQnJpZGdlAQALcmVwb3J0RXJyb3IBABUoTGphdmEvbGFuZy9TdHJpbmc7KVYKAIoAtwwAuAAGAQAGY2FuY2VsCgA4ALoMALsABgEABWNsZWFyAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEADVN0YWNrTWFwVGFibGUBABByZWdpc3RlckNvbW1hbmRzAQBAKExuZXQvbWluZWNyYWZ0Zm9yZ2UvY2xpZW50L2V2ZW50L1JlZ2lzdGVyQ2xpZW50Q29tbWFuZHNFdmVudDspVgEAGVJ1bnRpbWVWaXNpYmxlQW5ub3RhdGlvbnMBADBMbmV0L21pbmVjcmFmdGZvcmdlL2V2ZW50YnVzL2FwaS9TdWJzY3JpYmVFdmVudDsBAAlTaWduYXR1cmUBAD8oTGNvbS9tb2phbmcvYnJpZ2FkaWVyL0NvbW1hbmREaXNwYXRjaGVyPExqYXZhL2xhbmcvT2JqZWN0Oz47KVYBAApjbGllbnRUaWNrAQA3KExuZXQvbWluZWNyYWZ0Zm9yZ2UvZXZlbnQvVGlja0V2ZW50JENsaWVudFRpY2tFdmVudDspVgEABmxvZ291dAEASChMbmV0L21pbmVjcmFmdGZvcmdlL2NsaWVudC9ldmVudC9DbGllbnRQbGF5ZXJOZXR3b3JrRXZlbnQkTG9nZ2luZ091dDspVgEAEWxhbWJkYSRyZWdpc3RlciQwAQAwKExjb20vbW9qYW5nL2JyaWdhZGllci9jb250ZXh0L0NvbW1hbmRDb250ZXh0OylJAQAKRXhjZXB0aW9ucwEAClNvdXJjZUZpbGUBABFDbGllbnRFdmVudHMuamF2YQEANkxuZXQvbWluZWNyYWZ0Zm9yZ2UvZm1sL2NvbW1vbi9Nb2QkRXZlbnRCdXNTdWJzY3JpYmVyOwEABW1vZGlkAQAIbm9xdWVzdHMBAAV2YWx1ZQEAKExuZXQvbWluZWNyYWZ0Zm9yZ2UvYXBpL2Rpc3RtYXJrZXIvRGlzdDsBAAZDTElFTlQBAANidXMBADpMbmV0L21pbmVjcmFmdGZvcmdlL2ZtbC9jb21tb24vTW9kJEV2ZW50QnVzU3Vic2NyaWJlciRCdXM7AQAFRk9SR0UBABBCb290c3RyYXBNZXRob2RzEADKDwYA2goACADbDADJAMoIAN0BADBRdWVzdCBOdW92byBPcmRpbmU6IAEuIENvbnN1bHRhIGxvZ3MvbGF0ZXN0LmxvZy4PBgDfCgDgAOEHAOIMAOMA5AEAImphdmEvbGFuZy9pbnZva2UvTGFtYmRhTWV0YWZhY3RvcnkBAAttZXRhZmFjdG9yeQEAzChMamF2YS9sYW5nL2ludm9rZS9NZXRob2RIYW5kbGVzJExvb2t1cDtMamF2YS9sYW5nL1N0cmluZztMamF2YS9sYW5nL2ludm9rZS9NZXRob2RUeXBlO0xqYXZhL2xhbmcvaW52b2tlL01ldGhvZFR5cGU7TGphdmEvbGFuZy9pbnZva2UvTWV0aG9kSGFuZGxlO0xqYXZhL2xhbmcvaW52b2tlL01ldGhvZFR5cGU7KUxqYXZhL2xhbmcvaW52b2tlL0NhbGxTaXRlOw8GAOYKAOcA6AcA6QwArgDqAQAkamF2YS9sYW5nL2ludm9rZS9TdHJpbmdDb25jYXRGYWN0b3J5AQCYKExqYXZhL2xhbmcvaW52b2tlL01ldGhvZEhhbmRsZXMkTG9va3VwO0xqYXZhL2xhbmcvU3RyaW5nO0xqYXZhL2xhbmcvU3RyaW5nO0xqYXZhL2xhbmcvaW52b2tlL01ldGhvZFR5cGU7TGphdmEvbGFuZy9TdHJpbmc7W0xqYXZhL2xhbmcvT2JqZWN0OylMamF2YS9sYW5nL2ludm9rZS9DYWxsU2l0ZTsBAAxJbm5lckNsYXNzZXMBAAZMb2dnZXIBAAVMZXZlbAcA7wEAIm5ldC9taW5lY3JhZnRmb3JnZS9ldmVudC9UaWNrRXZlbnQBAA9DbGllbnRUaWNrRXZlbnQBAAVQaGFzZQcA8wEAQ25ldC9taW5lY3JhZnRmb3JnZS9jbGllbnQvZXZlbnQvQ2xpZW50UGxheWVyTmV0d29ya0V2ZW50JExvZ2dpbmdPdXQHAPUBADhuZXQvbWluZWNyYWZ0Zm9yZ2UvY2xpZW50L2V2ZW50L0NsaWVudFBsYXllck5ldHdvcmtFdmVudAEACkxvZ2dpbmdPdXQHAPgBADRuZXQvbWluZWNyYWZ0Zm9yZ2UvZm1sL2NvbW1vbi9Nb2QkRXZlbnRCdXNTdWJzY3JpYmVyBwD6AQAhbmV0L21pbmVjcmFmdGZvcmdlL2ZtbC9jb21tb24vTW9kAQASRXZlbnRCdXNTdWJzY3JpYmVyBwD9AQA4bmV0L21pbmVjcmFmdGZvcmdlL2ZtbC9jb21tb24vTW9kJEV2ZW50QnVzU3Vic2NyaWJlciRCdXMBAANCdXMHAQABACVqYXZhL2xhbmcvaW52b2tlL01ldGhvZEhhbmRsZXMkTG9va3VwBwECAQAeamF2YS9sYW5nL2ludm9rZS9NZXRob2RIYW5kbGVzAQAGTG9va3VwADEACAACAAAAAwAKAI4ADAAAAAoACwAMAAAACgAVABYAAAAHAAEABQAGAAEAvAAAAB0AAQABAAAABSq3AAGxAAAAAQC9AAAABgABAAAAEAAKAFQABgABALwAAADMAAQAAwAAAFmyAAeZAASxuAANPx6yABOUnAAEsR4UABdhswATEhm4ABtNsgAhLBInA70AHLYAKQEDvQACtgAttgAzmgAEsbgANwSzAAcSPLgAPrIAQhJIuQBKAwCnAARNsQACABwAPQBXAFAAPgBUAFcAUAACAL0AAAAyAAwAAAAWAAcAFwALABgAFAAZABwAGwAiABwAPgAdAEEAHgBFAB8AVAAjAFcAIQBYACQAvgAAABkABQf8AAwE/AApBwAc/wAYAAEEAAEHAFAAAAkAvwDAAAIAvAAAAHkABAADAAAAMLgAUhJVElcDvQActgApTCsqA70AArYALcAAWU0suABbpwAPTLsAYVkSYyu3AGW/sQABAAMAIAAjAF8AAgC9AAAAIgAIAAAAKAADACoADwAsABwALQAgADAAIwAuACQALwAvADEAvgAAAAcAAmMHAF8LAMEAAAAGAAEAwgAAAAgAXQBeAAIAvAAAADcAAwABAAAAEyoSaLgAaroAcAAAtgB0tgB4V7EAAAABAL0AAAASAAQAAAA0AAsANQAOADQAEgA6AMMAAAACAMQACQDFAMYAAgC8AAAA4AAEAAMAAABhKrQAe7IAgaUABLG4AFK4AIa4AImyAIyaAASxA7MAjLgAUrgAj6cAO0wrTSzBAJaZABIstgCYxgALLLYAmE2n/+0SPLgAPrIAnBKfLLkAoQQALLYApLYAqLoArAAAuACwsQACAB8AJQAoAJIAHwAlACgAlAACAL0AAABCABAAAAA+AAsAPwAOAEAAEQBBABQAQgAbAEMAHwBFACIARgAlAE8AKABHACkASAArAEkAOQBKAEEASwBRAE0AYABQAL4AAAAVAAYLD0wHAFD9AAIHAFAHAFAV+QAeAMEAAAAGAAEAwgAAAAkAxwDIAAIAvAAAAC8AAQABAAAACwOzAIy4ALa4ALmxAAAAAQC9AAAAEgAEAAAAVAAEAFUABwBWAAoAVwDBAAAABgABAMIAABAKAMkAygACALwAAAApAAEAAQAAAAm4AFIEswCMBKwAAAABAL0AAAAOAAMAAAA2AAMANwAHADgAywAAAAQAAQCSAAQAzAAAAAIAzQDBAAAAHAABAM4AAwDPcwDQANFbAAFlANIA0wDUZQDVANYA1wAAABIAAgDeAAMA2ADZANgA5QABANwA6w=='''
+          replacement=base64.b64decode(client_events_b64)
+
+          def patch_utf8(data, replacements):
+              if data[:4] != b'\xca\xfe\xba\xbe':
+                  raise ValueError('class file non valido')
+              cp_count=struct.unpack('>H', data[8:10])[0]
+              pos=10
+              result=bytearray(data[:10])
+              i=1
+              while i < cp_count:
+                  tag=data[pos]; result.append(tag); pos += 1
+                  if tag == 1:
+                      length=struct.unpack('>H',data[pos:pos+2])[0]
+                      raw=data[pos+2:pos+2+length]
+                      raw=replacements.get(raw,raw)
+                      result += struct.pack('>H',len(raw)) + raw
+                      pos += 2 + length
+                  elif tag in (3,4): result += data[pos:pos+4]; pos += 4
+                  elif tag in (5,6): result += data[pos:pos+8]; pos += 8; i += 1
+                  elif tag in (7,8,16,19,20): result += data[pos:pos+2]; pos += 2
+                  elif tag in (9,10,11,12,17,18): result += data[pos:pos+4]; pos += 4
+                  elif tag == 15: result += data[pos:pos+3]; pos += 3
+                  else: raise ValueError(f'tag constant pool sconosciuto {tag}')
+                  i += 1
+              result += data[pos:]
+              return bytes(result)
+
+          with ZipFile(src,'r') as zin, ZipFile(out,'w',ZIP_DEFLATED) as zout:
+              for info in zin.infolist():
+                  data=zin.read(info.filename)
+                  if info.filename == 'com/nuovoordine/quests/SiteArchive.class':
+                      data=patch_utf8(data,{b'noquests':b'quest'})
+                  elif info.filename == 'com/nuovoordine/quests/ClientEvents.class':
+                      data=replacement
+                  elif info.filename == 'META-INF/mods.toml':
+                      text=data.decode('utf-8').replace('version="1.1.0"','version="1.2.1"')
+                      text=text.replace('Quest giornaliere e settimanali Lootr/PvP con GUI web, bonus e ricompense TNE.',
+                                        'Quest Lootr/PvP con GUI web server/quest e bridge MCEF registrato in anticipo.')
+                      data=text.encode('utf-8')
+                  zi=ZipInfo(info.filename,info.date_time)
+                  zi.compress_type=ZIP_DEFLATED
+                  zi.external_attr=info.external_attr
+                  zi.comment=info.comment
+                  zi.extra=info.extra
+                  zout.writestr(zi,data)
+
+          with ZipFile(out,'r') as z:
+              assert z.testzip() is None
+              assert b'prepareBridgeEarly' in z.read('com/nuovoordine/quests/ClientEvents.class')
+              assert 'version="1.2.1"' in z.read('META-INF/mods.toml').decode('utf-8')
+          PY
+          unzip -t /tmp/nuovo-ordine-quests-1.2.1.jar
+          sha256sum /tmp/nuovo-ordine-quests-1.2.1.jar
+
+      - name: Install jar in repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin main
+          rm -f mods/nuovo-ordine-quests-1.1.0.jar mods/nuovo-ordine-quests-1.2.0.jar
+          cp /tmp/nuovo-ordine-quests-1.2.1.jar mods/nuovo-ordine-quests-1.2.1.jar
+          git add -A mods
+          if git diff --cached --quiet; then
+            echo 'Nessuna modifica da pubblicare'
+          else
+            git commit -m 'Aggiorna Nuovo Ordine Quests a 1.2.1'
+            git push origin main
+          fi
