@@ -22,9 +22,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f .github/loot-upload/part000.b64
+          compgen -G '.github/loot-upload/part*.b64' > /dev/null
           mkdir -p mods
-          base64 --decode .github/loot-upload/part000.b64 > mods/lootr-more-tactical-loot-1.1.12.jar
+          cat .github/loot-upload/part*.b64 | base64 --decode > mods/lootr-more-tactical-loot-1.1.12.jar
           echo '01935e4fdeb92ad5f6729ee1e8ef4ff054422aff6339e01ccd1da458b37cb89b  mods/lootr-more-tactical-loot-1.1.12.jar' | sha256sum -c -
           find mods -maxdepth 1 -type f -name 'lootr-more-tactical-loot-*.jar' ! -name 'lootr-more-tactical-loot-1.1.12.jar' -delete
           rm -rf .github/loot-upload
