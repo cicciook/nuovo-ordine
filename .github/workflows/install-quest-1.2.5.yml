@@ -1,0 +1,132 @@
+name: Installa quest vanilla bridge 1.2.5
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/quest-1.2.5/**'
+      - '.github/workflows/install-quest-1.2.5.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compile vanilla transport bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f mods/nuovo-ordine-quests-1.2.4.jar
+          rm -rf /tmp/noq125
+          mkdir -p /tmp/noq125/src/io/netty/buffer /tmp/noq125/classes
+          cat >/tmp/noq125/src/io/netty/buffer/ByteBuf.java <<'EOF'
+          package io.netty.buffer;
+          public abstract class ByteBuf {
+            public abstract ByteBuf writeLong(long v);
+            public abstract ByteBuf writeInt(int v);
+            public abstract ByteBuf writeBytes(byte[] v);
+            public abstract long readLong();
+            public abstract int readInt();
+            public abstract ByteBuf readBytes(byte[] v);
+            public abstract int readableBytes();
+          }
+          EOF
+          javac --release 17 \
+            -cp mods/nuovo-ordine-quests-1.2.4.jar \
+            -d /tmp/noq125/classes \
+            /tmp/noq125/src/io/netty/buffer/ByteBuf.java \
+            projects/quest-1.2.5/Network.java \
+            projects/quest-1.2.5/ShopBrowserClient.java
+
+      - name: Assemble 1.2.5 JAR and update launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib, json, re
+
+          src=Path('mods/nuovo-ordine-quests-1.2.4.jar')
+          out=Path('mods/nuovo-ordine-quests-1.2.5.jar')
+          classes=Path('/tmp/noq125/classes/com/nuovoordine/quests')
+          sources=Path('projects/quest-1.2.5')
+
+          with ZipFile(src) as zin, ZipFile(out,'w',ZIP_DEFLATED) as zout:
+              for item in zin.infolist():
+                  n=item.filename
+                  if n.endswith('.class') and (n.startswith('com/nuovoordine/quests/Network') or n.startswith('com/nuovoordine/quests/ShopBrowserClient')):
+                      continue
+                  if n in ('META-INF/quest-sources/com/nuovoordine/quests/Network.java',
+                           'META-INF/quest-sources/com/nuovoordine/quests/ShopBrowserClient.java'):
+                      continue
+                  data=zin.read(n)
+                  if n == 'META-INF/mods.toml':
+                      text=data.decode('utf-8')
+                      text=re.sub(r'version="1\.2\.[0-9]+"','version="1.2.5"',text,count=1)
+                      text=re.sub(r'description="[^"]*"',
+                          'description="Quest giornaliere e settimanali Lootr/PvP con GUI web e bridge MCEF; stato e claim usano trasporto vanilla Minecraft compatibile Mohist/Connector."',
+                          text,count=1)
+                      data=text.encode('utf-8')
+                  zout.writestr(item,data)
+              for pattern in ('Network*.class','ShopBrowserClient*.class'):
+                  for f in sorted(classes.glob(pattern)):
+                      zout.write(f,'com/nuovoordine/quests/'+f.name)
+              zout.writestr('META-INF/quest-sources/com/nuovoordine/quests/Network.java',(sources/'Network.java').read_bytes())
+              zout.writestr('META-INF/quest-sources/com/nuovoordine/quests/ShopBrowserClient.java',(sources/'ShopBrowserClient.java').read_bytes())
+
+          with ZipFile(out) as z:
+              assert z.testzip() is None
+              mods=z.read('META-INF/mods.toml').decode('utf-8')
+              assert 'version="1.2.5"' in mods
+              net=z.read('com/nuovoordine/quests/Network.class')
+              bridge=z.read('com/nuovoordine/quests/ShopBrowserClient.class')
+              for needle in (b'~NOQ125~',b'__NOQUESTS125_RES__',b'richiesta vanilla ricevuta',b'risposta vanilla inviata'):
+                  assert needle in net, needle
+              assert b'Bridge /quest 1.2.5 pronto' in bridge
+              assert b'risposta vanilla ricevuta' in bridge
+
+          size=out.stat().st_size
+          sha=hashlib.sha256(out.read_bytes()).hexdigest()
+          print('JAR',size,sha)
+
+          p=Path('pack-settings.json')
+          cfg=json.loads(p.read_text('utf-8'))
+          files=[x for x in cfg.get('external_files',[]) if not x.get('path','').startswith('mods/nuovo-ordine-quests-')]
+          files.append({
+              'path':'mods/nuovo-ordine-quests-1.2.5.jar',
+              'size':size,
+              'sha256':sha,
+              'mode':'replace',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-quests-1.2.5.jar'
+          })
+          cfg['external_files']=files
+          cfg['news']='Nuovo Ordine — Quest 1.2.5: bridge /quest su trasporto vanilla compatibile Mohist/Connector'
+          p.write_text(json.dumps(cfg,ensure_ascii=False,indent=2)+'\n','utf-8')
+          PY
+          rm -f mods/nuovo-ordine-quests-1.2.4.jar mods/nuovo-ordine-quests-1.2.3.jar mods/nuovo-ordine-quests-1.2.2.jar
+
+      - name: Commit built mod and launcher manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/ pack-settings.json
+          if git diff --cached --quiet; then
+            echo 'Nothing to commit'
+            exit 0
+          fi
+          git commit -m 'Use vanilla transport for /quest 1.2.5'
+          git push
