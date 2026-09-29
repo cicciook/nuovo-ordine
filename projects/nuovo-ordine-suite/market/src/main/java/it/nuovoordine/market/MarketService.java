@@ -84,7 +84,10 @@ public final class MarketService {
         JsonObject out=new JsonObject();out.addProperty("ok",true);out.addProperty("me",a.id);out.addProperty("now",now);
         if(action.equals("view")){
             JsonObject p=post(next,text(q,"post",36)).deepCopy();JsonObject all=p.getAsJsonObject("threads");
-            if(!str(p,"owner").equals(a.id)){JsonObject own=new JsonObject();if(all.has(a.id))own.add(a.id,all.get(a.id));p.add("threads",own);}out.add("post",p);
+            if(!str(p,"owner").equals(a.id)){JsonObject own=new JsonObject();if(all.has(a.id))own.add(a.id,all.get(a.id));p.add("threads",own);}
+            else if(q.has("conversation")){String buyer=text(q,"conversation",36);JsonObject one=new JsonObject();if(all.has(buyer))one.add(buyer,all.get(buyer));p.add("threads",one);}
+            else for(var entry:all.entrySet()){JsonObject t=entry.getValue().getAsJsonObject();JsonArray messages=t.getAsJsonArray("messages");if(messages.size()>5){JsonArray recent=new JsonArray();for(int i=messages.size()-5;i<messages.size();i++)recent.add(messages.get(i));t.add("messages",recent);t.addProperty("hasMore",true);}}
+            out.add("post",p);
         }else if(!action.equals("meetings")){
             int page=q.has("page")?q.get("page").getAsInt():0;page=Math.max(0,Math.min(page,100));
             List<JsonObject> visible=new ArrayList<>();String search=q.has("search")?text(q,"search",80).toLowerCase(Locale.ROOT):"";

@@ -2,7 +2,7 @@ name: Nuovo Ordine suite - build and test
 on:
   push:
     branches: [main, feature/market-cosmetics-towny-pvp]
-    paths: ['projects/nuovo-ordine-suite/**', '.github/workflows/build-suite.yml']
+    paths: ['projects/nuovo-ordine-suite/**', 'tools/test_market_ui.cjs', '.github/workflows/build-suite.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,3 +26,21 @@ jobs:
             projects/nuovo-ordine-suite/*/build/libs/*.jar
             projects/nuovo-ordine-suite/*/build/reports/tests/test/**
           if-no-files-found: error
+
+  market-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: node tools/test_market_ui.cjs
+        env:
+          MARKET_SCREENSHOT: market-ui.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: market-ui-preview
+          path: market-ui.png
