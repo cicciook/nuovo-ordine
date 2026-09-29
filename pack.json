@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.29-ext-8",
+  "version": "2026.09.29-loot-1.1.12",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Benvenuto su Nuovo Ordine — quest giornaliere e settimanali aggiornate",
+  "news": "Nuovo Ordine — loot 1.1.12: aggiunti oggetti e granate LesRaisins, C4 escluso",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -3155,13 +3155,6 @@
       "sha256": "01200ee5889e6bcc3c5fa8f32b7b49a4bd58e653699eeb655c6f2dd314e3ce51",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/01200ee5889e6bcc3c5fa8f32b7b49a4bd58e653699eeb655c6f2dd314e3ce51.bin"
-    },
-    {
-      "path": "mods/lootr-more-tactical-loot-1.1.10.jar",
-      "size": 16641,
-      "sha256": "e5d749f5290932ee76ff1b95e12d2f79871e638b5434c7cf369b7e1ec2ee7114",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/e5d749f5290932ee76ff1b95e12d2f79871e638b5434c7cf369b7e1ec2ee7114.bin"
     },
     {
       "path": "mods/lootrbiggerchest-1.0.2.jar",
@@ -32100,6 +32093,13 @@
       "sha256": "7fbe46299aaaa53e3c1d670abe730924d56ffa9d9d2efc2e3b617e2e92494817",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2dea2a0aaafa87b5cf9d34c7b58f6a65a3648674/mods/nuovo-ordine-quests-1.1.0.jar"
+    },
+    {
+      "path": "mods/lootr-more-tactical-loot-1.1.12.jar",
+      "size": 31886,
+      "sha256": "01935e4fdeb92ad5f6729ee1e8ef4ff054422aff6339e01ccd1da458b37cb89b",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.12.jar"
     }
   ],
   "archives": {
