@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.2.1 con ricerca addon TACZ",
+  "news": "Nuovo Ordine — Lootr Tactical 1.1.17: addon TACZ ed Endless Ammo nelle casse",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -57,18 +57,11 @@
       "url": "https://edge.forgecdn.net/files/8298/042/%5BTacz1.1.8%2B%5DMS-Mobius%20Gunspack%20v1.5.8.zip"
     },
     {
-      "path": "mods/lootr-more-tactical-loot-1.1.16.jar",
-      "size": 47578,
-      "sha256": "c4bd20d939125eee5e9491ec69467a81d1cef849172f1b2c7bc0ee820a225470",
+      "path": "mods/lootr-more-tactical-loot-1.1.17.jar",
+      "size": 48797,
+      "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.16.jar"
-    },
-    {
-      "path": "mods/armeria-browser-1.2.1.jar",
-      "size": 99568,
-      "sha256": "1479cb773def13bd94ceda2648354c5b23a89f5cc45fae54eb7454760ba3c5d7",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.2.1.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
     }
   ]
 }
