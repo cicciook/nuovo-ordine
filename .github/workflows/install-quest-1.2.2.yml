@@ -1,0 +1,78 @@
+name: Installa quest Brigadier fix 1.2.2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-quest-1.2.2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch ClientEvents for runtime Brigadier ABI
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
+          import base64
+
+          src = Path('mods/nuovo-ordine-quests-1.2.1.jar')
+          out = Path('mods/nuovo-ordine-quests-1.2.2.jar')
+          if not src.exists():
+              raise SystemExit('nuovo-ordine-quests-1.2.1.jar mancante')
+
+          client_events_b64 = '''yv66vgAAAD0BOwoAAgADBwAEDAAFAAYBABBqYXZhL2xhbmcvT2JqZWN0AQAGPGluaXQ+AQADKClWCQAIAAkHAAoMAAsADAEAI2NvbS9udW92b29yZGluZS9xdWVzdHMvQ2xpZW50RXZlbnRzAQALYnJpZGdlUmVhZHkBAAFaCgAOAA8HABAMABEAEgEAEGphdmEvbGFuZy9TeXN0ZW0BAAhuYW5vVGltZQEAAygpSgkACAAUDAAVABYBABFuZXh0QnJpZGdlQXR0ZW1wdAEAAUoFAAAAAA7msoAIABoBABdjb20uY2luZW1hbW9kLm1jZWYuTUNFRgoAHAAdBwAeDAAfACABAA9qYXZhL2xhbmcvQ2xhc3MBAAdmb3JOYW1lAQAlKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL0NsYXNzOwkAIgAjBwAkDAAlACYBABFqYXZhL2xhbmcvQm9vbGVhbgEABFRSVUUBABNMamF2YS9sYW5nL0Jvb2xlYW47CAAoAQANaXNJbml0aWFsaXplZAoAHAAqDAArACwBAAlnZXRNZXRob2QBAEAoTGphdmEvbGFuZy9TdHJpbmc7W0xqYXZhL2xhbmcvQ2xhc3M7KUxqYXZhL2xhbmcvcmVmbGVjdC9NZXRob2Q7CgAuAC8HADAMADEAMgEAGGphdmEvbGFuZy9yZWZsZWN0L01ldGhvZAEABmludm9rZQEAOShMamF2YS9sYW5nL09iamVjdDtbTGphdmEvbGFuZy9PYmplY3Q7KUxqYXZhL2xhbmcvT2JqZWN0OwoAIgA0DAA1ADYBAAZlcXVhbHMBABUoTGphdmEvbGFuZy9PYmplY3Q7KVoKADgAOQcAOgwAOwAGAQAoY29tL251b3Zvb3JkaW5lL3F1ZXN0cy9TaG9wQnJvd3NlckNsaWVudAEAB3ByZXBhcmUIAD0BABJRdWVzdCBOdW92byBPcmRpbmUKAA4APwwAQABBAQAJZ2V0TG9nZ2VyAQAtKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1N5c3RlbSRMb2dnZXI7CQBDAEQHAEUMAEYARwEAHWphdmEvbGFuZy9TeXN0ZW0kTG9nZ2VyJExldmVsAQAESU5GTwEAH0xqYXZhL2xhbmcvU3lzdGVtJExvZ2dlciRMZXZlbDsIAEkBAChCcmlkZ2UgTUNFRiBxdWVzdCByZWdpc3RyYXRvIGluIGFudGljaXBvCwBLAEwHAE0MAE4ATwEAF2phdmEvbGFuZy9TeXN0ZW0kTG9nZ2VyAQADbG9nAQA0KExqYXZhL2xhbmcvU3lzdGVtJExvZ2dlciRMZXZlbDtMamF2YS9sYW5nL1N0cmluZzspVgcAUQEAE2phdmEvbGFuZy9UaHJvd2FibGUKAAgAUwwAVAAGAQAScHJlcGFyZUJyaWRnZUVhcmx5BwBWAQA7bmV0L21pbmVjcmFmdGZvcmdlL2NsaWVudC9ldmVudC9SZWdpc3RlckNsaWVudENvbW1hbmRzRXZlbnQIAFgBAA1nZXREaXNwYXRjaGVyCgAIAFoMAFsAXAEACHJlZ2lzdGVyAQAVKExqYXZhL2xhbmcvT2JqZWN0OylWBwBeAQAmamF2YS9sYW5nL1JlZmxlY3RpdmVPcGVyYXRpb25FeGNlcHRpb24HAGABAB9qYXZhL2xhbmcvSWxsZWdhbFN0YXRlRXhjZXB0aW9uCABiAQAWQ2Fubm90IHJlZ2lzdGVyIC9xdWVzdAoAXwBkDAAFAGUBACooTGphdmEvbGFuZy9TdHJpbmc7TGphdmEvbGFuZy9UaHJvd2FibGU7KVYIAGcBADNjb20ubW9qYW5nLmJyaWdhZGllci5idWlsZGVyLkxpdGVyYWxBcmd1bWVudEJ1aWxkZXIIAGkBAAdsaXRlcmFsBwBrAQAQamF2YS9sYW5nL1N0cmluZwgAbQEABXF1ZXN0CABvAQAcY29tLm1vamFuZy5icmlnYWRpZXIuQ29tbWFuZAoAHABxDAByAHMBAA5nZXRDbGFzc0xvYWRlcgEAGSgpTGphdmEvbGFuZy9DbGFzc0xvYWRlcjsSAAAAdQwAMQB2AQAnKClMamF2YS9sYW5nL3JlZmxlY3QvSW52b2NhdGlvbkhhbmRsZXI7CgB4AHkHAHoMAHsAfAEAF2phdmEvbGFuZy9yZWZsZWN0L1Byb3h5AQAQbmV3UHJveHlJbnN0YW5jZQEAYihMamF2YS9sYW5nL0NsYXNzTG9hZGVyO1tMamF2YS9sYW5nL0NsYXNzO0xqYXZhL2xhbmcvcmVmbGVjdC9JbnZvY2F0aW9uSGFuZGxlcjspTGphdmEvbGFuZy9PYmplY3Q7CAB+AQAIZXhlY3V0ZXMKAAIAgAwAgQCCAQAIZ2V0Q2xhc3MBABMoKUxqYXZhL2xhbmcvQ2xhc3M7CgAcAIQMAIUAhgEACmdldE1ldGhvZHMBAB0oKVtMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwoALgCIDACJAIoBAAdnZXROYW1lAQAUKClMamF2YS9sYW5nL1N0cmluZzsIAFsKAGoANAoALgCODACPAJABABFnZXRQYXJhbWV0ZXJDb3VudAEAAygpSQoALgCSDACTAJQBABFnZXRQYXJhbWV0ZXJUeXBlcwEAFCgpW0xqYXZhL2xhbmcvQ2xhc3M7CgAcAJYMAJcAmAEAEGlzQXNzaWduYWJsZUZyb20BABQoTGphdmEvbGFuZy9DbGFzczspWgcAmgEAH2phdmEvbGFuZy9Ob1N1Y2hNZXRob2RFeGNlcHRpb24IAJwBACRCcmlnYWRpZXIgQ29tbWFuZERpc3BhdGNoZXIucmVnaXN0ZXIKAJkAngwABQCfAQAVKExqYXZhL2xhbmcvU3RyaW5nOylWCQChAKIHAKMMAKQApQEAMm5ldC9taW5lY3JhZnRmb3JnZS9ldmVudC9UaWNrRXZlbnQkQ2xpZW50VGlja0V2ZW50AQAFcGhhc2UBACpMbmV0L21pbmVjcmFmdGZvcmdlL2V2ZW50L1RpY2tFdmVudCRQaGFzZTsJAKcAqAcAqQwAqgClAQAobmV0L21pbmVjcmFmdGZvcmdlL2V2ZW50L1RpY2tFdmVudCRQaGFzZQEAA0VORAoAOACsDACtAAYBAAR0aWNrCgCvAKwHALABACVjb20vbnVvdm9vcmRpbmUvcXVlc3RzL0NsaWVudFRyYW5zZmVyCQAIALIMALMADAEAC3BlbmRpbmdPcGVuCgCvALUMALYABgEAB3JlcXVlc3QHALgBABNqYXZhL2xhbmcvRXhjZXB0aW9uBwC6AQAWamF2YS9sYW5nL0xpbmthZ2VFcnJvcgcAvAEAK2phdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25UYXJnZXRFeGNlcHRpb24KAFAAvgwAvwDAAQAIZ2V0Q2F1c2UBABcoKUxqYXZhL2xhbmcvVGhyb3dhYmxlOwkAQwDCDADDAEcBAAVFUlJPUggAxQEAG0ltcG9zc2liaWxlIGFwcmlyZSBsYSBxdWVzdAsASwDHDABOAMgBAEkoTGphdmEvbGFuZy9TeXN0ZW0kTG9nZ2VyJExldmVsO0xqYXZhL2xhbmcvU3RyaW5nO0xqYXZhL2xhbmcvVGhyb3dhYmxlOylWCgAcAMoMAMsAigEADWdldFNpbXBsZU5hbWUSAAEAzQwAzgDPAQAXbWFrZUNvbmNhdFdpdGhDb25zdGFudHMBACYoTGphdmEvbGFuZy9TdHJpbmc7KUxqYXZhL2xhbmcvU3RyaW5nOwoA0QDSBwDTDADUAJ8BACRjb20vbnVvdm9vcmRpbmUvcXVlc3RzL0Jyb3dzZXJCcmlkZ2UBAAtyZXBvcnRFcnJvcgoArwDWDADXAAYBAAZjYW5jZWwKADgA2QwA2gAGAQAFY2xlYXIIANwBAANydW4KAN4A3wcA4AwA4QDiAQARamF2YS9sYW5nL0ludGVnZXIBAAd2YWx1ZU9mAQAWKEkpTGphdmEvbGFuZy9JbnRlZ2VyOwgA5AEACHRvU3RyaW5nCADmAQAXTnVvdm9PcmRpbmVRdWVzdENvbW1hbmQIAOgBAAhoYXNoQ29kZQoADgDqDADrAOwBABBpZGVudGl0eUhhc2hDb2RlAQAVKExqYXZhL2xhbmcvT2JqZWN0OylJCAA1CgAiAO8MAOEA8AEAFihaKUxqYXZhL2xhbmcvQm9vbGVhbjsBAARDb2RlAQAPTGluZU51bWJlclRhYmxlAQANU3RhY2tNYXBUYWJsZQEAEHJlZ2lzdGVyQ29tbWFuZHMBAEAoTG5ldC9taW5lY3JhZnRmb3JnZS9jbGllbnQvZXZlbnQvUmVnaXN0ZXJDbGllbnRDb21tYW5kc0V2ZW50OylWAQAZUnVudGltZVZpc2libGVBbm5vdGF0aW9ucwEAMExuZXQvbWluZWNyYWZ0Zm9yZ2UvZXZlbnRidXMvYXBpL1N1YnNjcmliZUV2ZW50OwcA+QEAG1tMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwEACkV4Y2VwdGlvbnMBAApjbGllbnRUaWNrAQA3KExuZXQvbWluZWNyYWZ0Zm9yZ2UvZXZlbnQvVGlja0V2ZW50JENsaWVudFRpY2tFdmVudDspVgEABmxvZ291dAEASChMbmV0L21pbmVjcmFmdGZvcmdlL2NsaWVudC9ldmVudC9DbGllbnRQbGF5ZXJOZXR3b3JrRXZlbnQkTG9nZ2luZ091dDspVgEAEWxhbWJkYSRyZWdpc3RlciQwAQBTKExqYXZhL2xhbmcvT2JqZWN0O0xqYXZhL2xhbmcvcmVmbGVjdC9NZXRob2Q7W0xqYXZhL2xhbmcvT2JqZWN0OylMamF2YS9sYW5nL09iamVjdDsHAQIBABNbTGphdmEvbGFuZy9PYmplY3Q7AQAKU291cmNlRmlsZQEAEUNsaWVudEV2ZW50cy5qYXZhAQA2TG5ldC9taW5lY3JhZnRmb3JnZS9mbWwvY29tbW9uL01vZCRFdmVudEJ1c1N1YnNjcmliZXI7AQAFbW9kaWQBAAhub3F1ZXN0cwEABXZhbHVlAQAoTG5ldC9taW5lY3JhZnRmb3JnZS9hcGkvZGlzdG1hcmtlci9EaXN0OwEABkNMSUVOVAEAA2J1cwEAOkxuZXQvbWluZWNyYWZ0Zm9yZ2UvZm1sL2NvbW1vbi9Nb2QkRXZlbnRCdXNTdWJzY3JpYmVyJEJ1czsBAAVGT1JHRQEAEEJvb3RzdHJhcE1ldGhvZHMQAQAPBgERCgAIARIMAP8BAAgBFAEAMFF1ZXN0IE51b3ZvIE9yZGluZTogAS4gQ29uc3VsdGEgbG9ncy9sYXRlc3QubG9nLg8GARYKARcBGAcBGQwBGgEbAQAiamF2YS9sYW5nL2ludm9rZS9MYW1iZGFN...TRUNCATED_FOR_BREVITY_IN_THIS_TRANSCRIPT...''' 
+          client_events = base64.b64decode(client_events_b64)
+
+          with ZipFile(src, 'r') as zin, ZipFile(out, 'w', ZIP_DEFLATED) as zout:
+              for info in zin.infolist():
+                  data = zin.read(info.filename)
+                  if info.filename == 'com/nuovoordine/quests/ClientEvents.class':
+                      data = client_events
+                  elif info.filename == 'META-INF/mods.toml':
+                      text = data.decode('utf-8')
+                      text = text.replace('version="1.2.1"', 'version="1.2.2"')
+                      data = text.encode('utf-8')
+                  zi = ZipInfo(info.filename, info.date_time)
+                  zi.compress_type = ZIP_DEFLATED
+                  zi.external_attr = info.external_attr
+                  zi.comment = info.comment
+                  zi.extra = info.extra
+                  zout.writestr(zi, data)
+
+          with ZipFile(out, 'r') as z:
+              assert z.testzip() is None
+              mods = z.read('META-INF/mods.toml').decode('utf-8')
+              assert 'version="1.2.2"' in mods
+          src.unlink()
+          PY
+
+          unzip -t mods/nuovo-ordine-quests-1.2.2.jar >/dev/null
+          javap -classpath mods/nuovo-ordine-quests-1.2.2.jar -p -c com.nuovoordine.quests.ClientEvents > /tmp/clientevents.txt
+          if grep -q 'LiteralArgumentBuilder.executes' /tmp/clientevents.txt; then
+            echo 'ERRORE: chiamata Brigadier fragile ancora presente' >&2
+            exit 1
+          fi
+          sha256sum mods/nuovo-ordine-quests-1.2.2.jar
+
+      - name: Commit fixed jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/install-quest-1.2.2.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix quest Brigadier ABI crash 1.2.2'
+          git pull --rebase origin main
+          git push origin main
