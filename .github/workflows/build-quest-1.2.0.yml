@@ -1,0 +1,93 @@
+name: Build quest mod 1.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-quest-1.2.0.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quest JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
+          import struct
+
+          src=Path('mods/nuovo-ordine-quests-1.1.0.jar')
+          out=Path('nuovo-ordine-quests-1.2.0.jar')
+
+          def patch_utf8(data, replacements):
+              if data[:4] != b'\xca\xfe\xba\xbe':
+                  raise ValueError('class file non valido')
+              cp_count=struct.unpack('>H', data[8:10])[0]
+              pos=10
+              result=bytearray(data[:10])
+              i=1
+              while i < cp_count:
+                  tag=data[pos]; result.append(tag); pos += 1
+                  if tag == 1:
+                      length=struct.unpack('>H',data[pos:pos+2])[0]
+                      raw=data[pos+2:pos+2+length]
+                      raw=replacements.get(raw,raw)
+                      result += struct.pack('>H',len(raw)) + raw
+                      pos += 2 + length
+                  elif tag in (3,4):
+                      result += data[pos:pos+4]; pos += 4
+                  elif tag in (5,6):
+                      result += data[pos:pos+8]; pos += 8; i += 1
+                  elif tag in (7,8,16,19,20):
+                      result += data[pos:pos+2]; pos += 2
+                  elif tag in (9,10,11,12,17,18):
+                      result += data[pos:pos+4]; pos += 4
+                  elif tag == 15:
+                      result += data[pos:pos+3]; pos += 3
+                  else:
+                      raise ValueError(f'tag constant pool sconosciuto {tag}')
+                  i += 1
+              result += data[pos:]
+              return bytes(result)
+
+          with ZipFile(src,'r') as zin, ZipFile(out,'w',ZIP_DEFLATED) as zout:
+              for info in zin.infolist():
+                  data=zin.read(info.filename)
+                  if info.filename == 'com/nuovoordine/quests/SiteArchive.class':
+                      data=patch_utf8(data,{b'noquests':b'quest'})
+                  elif info.filename == 'META-INF/mods.toml':
+                      text=data.decode('utf-8').replace('version="1.1.0"','version="1.2.0"')
+                      text=text.replace('Quest giornaliere e settimanali Lootr/PvP con GUI web, bonus e ricompense TNE.',
+                                        'Quest giornaliere e settimanali Lootr/PvP con GUI web in server/quest, bonus e ricompense TNE.')
+                      data=text.encode('utf-8')
+                  zi=ZipInfo(info.filename,info.date_time)
+                  zi.compress_type=ZIP_DEFLATED
+                  zi.external_attr=info.external_attr
+                  zi.comment=info.comment
+                  zi.extra=info.extra
+                  zout.writestr(zi,data)
+
+          with ZipFile(out,'r') as z:
+              site=z.read('com/nuovoordine/quests/SiteArchive.class')
+              mods=z.read('META-INF/mods.toml').decode('utf-8')
+              assert b'quest' in site
+              assert 'version="1.2.0"' in mods
+              assert z.testzip() is None
+          print(out, out.stat().st_size)
+          PY
+      - name: Check JAR
+        run: |
+          unzip -t nuovo-ordine-quests-1.2.0.jar
+          sha256sum nuovo-ordine-quests-1.2.0.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuovo-ordine-quests-1.2.0
+          path: nuovo-ordine-quests-1.2.0.jar
+          if-no-files-found: error
