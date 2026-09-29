@@ -1,0 +1,22 @@
+pool	base_item	weight	nbt
+COMMON	lrtactical:consumable	3	{ConsumableId:"lrtactical:ai2"}
+COMMON	lrtactical:consumable	4	{ConsumableId:"lrtactical:amoxycillin"}
+COMMON	lrtactical:consumable	3	{ConsumableId:"lrtactical:blood_pack"}
+COMMON	lrtactical:consumable	4	{ConsumableId:"lrtactical:carfak"}
+COMMON	lrtactical:consumable	2	{ConsumableId:"lrtactical:cms"}
+COMMON	lrtactical:consumable	4	{ConsumableId:"lrtactical:condensed_milk"}
+COMMON	lrtactical:consumable	2	{ConsumableId:"lrtactical:goldenstar"}
+COMMON	lrtactical:consumable	5	{ConsumableId:"lrtactical:ibuprofen"}
+COMMON	lrtactical:consumable	2	{ConsumableId:"lrtactical:surv12"}
+COMMON	lrtactical:consumable	4	{ConsumableId:"lrtactical:vaseline"}
+WEAPONS	lrtactical:melee	18	{MeleeWeaponId:"lrtactical:baseball_bat"}
+WEAPONS	lrtactical:melee	12	{MeleeWeaponId:"lrtactical:dagger"}
+WEAPONS	lrtactical:melee	10	{MeleeWeaponId:"lrtactical:karambit"}
+ACCESSORIES	lrtactical:throwable	35	{ThrowableId:"lrtactical:m67"}
+ACCESSORIES	lrtactical:throwable	35	{ThrowableId:"lrtactical:rgn"}
+ACCESSORIES	lrtactical:throwable	35	{ThrowableId:"lrtactical:smoke_grenade"}
+ACCESSORIES	lrtactical:throwable	35	{ThrowableId:"lrtactical:flash_grenade"}
+ACCESSORIES	lrtactical:throwable	30	{ThrowableId:"lrtactical:molotov"}
+ACCESSORIES	lrtactical:flash_shield	8	
+EXCLUDED	lrtactical:throwable	0	{ThrowableId:"lrtactical:c4"}
+EXCLUDED	lrtactical:detonator	0	C4 detonator

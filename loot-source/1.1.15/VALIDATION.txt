@@ -1,0 +1,14 @@
+Java bytecode target: 17 (major 61)
+1.1.12 patch inspection PASS
+Marker lootr_more_loot_injected_1112 PASS
+Seen file lootr_more_loot_seen_1112.txt PASS
+LesRaisins consumables: 10
+LesRaisins melee: 3
+LesRaisins grenades: 5 (M67, RGN, smoke, flash, molotov)
+LesRaisins flash shield: 1
+LesRaisins C4: EXCLUDED
+LesRaisins detonator: EXCLUDED
+Existing 1.1.11 pools and balancing preserved.
+Full Minecraft/Mohist server not run in build environment: verify in game.
+
+1.1.13: correct LesRaisins NBT keys are ConsumableId, MeleeWeaponId and ThrowableId. C4 excluded.

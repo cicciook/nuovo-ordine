@@ -1,0 +1,23 @@
+superbwarfare:handgun_ammo	8	20	24	
+superbwarfare:rifle_ammo	7	20	24	
+superbwarfare:shotgun_ammo	5	20	24	
+tacz:ammo	9	20	24	{AmmoId:"tacz:9mm"}
+tacz:ammo	7	20	24	{AmmoId:"tacz:45acp"}
+tacz:ammo	8	20	24	{AmmoId:"tacz:556x45"}
+tacz:ammo	7	20	24	{AmmoId:"tacz:762x39"}
+tacz:ammo	5	20	24	{AmmoId:"tacz:12g"}
+tacz:ammo	4	20	24	{AmmoId:"tacz:545x39"}
+tacz:ammo	4	20	24	{AmmoId:"tacz:57x28"}
+tacz:ammo	4	20	24	{AmmoId:"tacz:46x30"}
+tacz:ammo	3	20	24	{AmmoId:"tacz:308"}
+tacz:ammo	2	20	24	{AmmoId:"tacz:792x57"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:22wmr"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:30_06"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:357mag"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:45_70"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:500mag"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:50ae"}
+tacz:ammo	3	20	32	{AmmoId:"tacz:58x42"}
+superbwarfare:sniper_ammo	2	20	32	
+superbwarfare:heavy_ammo	2	20	32	
+superbwarfare:taser_electrode	2	20	32	

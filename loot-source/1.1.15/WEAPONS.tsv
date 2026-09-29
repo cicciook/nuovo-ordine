@@ -1,0 +1,94 @@
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:aa12",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:ak47",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:aug",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:b93r",GunFireMode:"BURST",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:cz75",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:db_long",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:db_short",GunFireMode:"BURST",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:deagle",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:deagle_golden",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:fn_evolys",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:fn_fal",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:g36k",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:glock_17",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:hk416d",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:hk_g3",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:hk_mk23",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	6	1	1	{GunId:"tacz:hk_mp5a5",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:kar98",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:lonetrail",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:m1014",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:m16a1",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:m16a4",GunFireMode:"BURST",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:m1911",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:m249",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	1	1	1	{GunId:"tacz:m320",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:m4a1",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:m700",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:m870",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:m9a4",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:mk14",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:p320",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	6	1	1	{GunId:"tacz:p90",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:qbz_191",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:qbz_95",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:rhino357",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:rpk",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:scar_h",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:scar_l",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:sks_tactical",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	5	1	1	{GunId:"tacz:spas_12",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:spr15hb",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	2	1	1	{GunId:"tacz:springfield1873",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:taurus500",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:taurus943",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	8	1	1	{GunId:"tacz:timeless50",GunFireMode:"SEMI",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	4	1	1	{GunId:"tacz:type_81",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	6	1	1	{GunId:"tacz:ump45",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	6	1	1	{GunId:"tacz:uzi",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+tacz:modern_kinetic_gun	6	1	1	{GunId:"tacz:vector45",GunFireMode:"AUTO",GunCurrentAmmoCount:8,HasBulletInBarrel:1b}
+superbwarfare:aa_12	5	1	1	
+superbwarfare:ak_12	4	1	1	
+superbwarfare:ak_47	4	1	1	
+superbwarfare:bocek	1	1	1	
+superbwarfare:devotion	2	1	1	
+superbwarfare:glock_17	8	1	1	
+superbwarfare:glock_18	8	1	1	
+superbwarfare:hk_416	4	1	1	
+superbwarfare:homemade_shotgun	5	1	1	
+superbwarfare:hunting_rifle	2	1	1	
+superbwarfare:igla_9k38	1	1	1	
+superbwarfare:insidious	4	1	1	
+superbwarfare:javelin	1	1	1	
+superbwarfare:k_98	2	1	1	
+superbwarfare:m_1911	8	1	1	
+superbwarfare:m_2_hb	2	1	1	
+superbwarfare:m_4	4	1	1	
+superbwarfare:m_60	2	1	1	
+superbwarfare:m_79	1	1	1	
+superbwarfare:m_870	5	1	1	
+superbwarfare:marlin	4	1	1	
+superbwarfare:mk_14	4	1	1	
+superbwarfare:mosin_nagant	2	1	1	
+superbwarfare:mp_443	8	1	1	
+superbwarfare:mp_5	6	1	1	
+superbwarfare:qbz_191	4	1	1	
+superbwarfare:qbz_95	4	1	1	
+superbwarfare:ql_1031	2	1	1	
+superbwarfare:rpk	2	1	1	
+superbwarfare:secondary_cataclysm	1	1	1	
+superbwarfare:sks	4	1	1	
+superbwarfare:super_star_shooter	1	1	1	
+superbwarfare:svd	2	1	1	
+superbwarfare:taser	1	1	1	
+superbwarfare:trachelium	8	1	1	
+superbwarfare:vector	6	1	1	
+superbwarfare:hand_grenade	1	1	1	
+superbwarfare:rgo_grenade	1	1	1	
+superbwarfare:m18_smoke_grenade	1	1	1	
+superbwarfare:claymore_mine	1	1	1	
+superbwarfare:c4_bomb	1	1	1	
+tacz:ammo	1	1	3	{AmmoId:"tacz:40mm"}
+superbwarfare:grenade_40mm	1	1	2	
+superbwarfare:javelin_missile	1	1	2	
+superbwarfare:medium_anti_air_missile	1	1	2	
