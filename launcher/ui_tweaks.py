@@ -40,4 +40,15 @@ def apply(ui_module):
         if pixmap is not None and not pixmap.isNull():
             self.logo.setPixmap(_rounded_pixmap(pixmap, 18))
 
+        # Firma GitHub sotto la versione, come richiesto.
+        for label in self.findChildren(ui_module.QLabel):
+            text = label.text()
+            if text.startswith("LAUNCHER ") and "Aggiornamento automatico attivo" in text:
+                label.setText(
+                    f"LAUNCHER {ui_module.VERSION}\n"
+                    "GITHUB • cicciook\n"
+                    "Aggiornamento automatico attivo"
+                )
+                break
+
     ui_module.Window.__init__ = patched_init
