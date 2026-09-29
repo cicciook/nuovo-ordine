@@ -1,0 +1,70 @@
+name: Installa Armeria Browser 1.2.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-armeria-1.2.1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Recupera il build verificato
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/cicciook/nuovo-ordine/git/blobs/7855045e4c3004a2bd9c504eaf2130429bb22904" \
+            | jq -r '.content' | base64 -d > /tmp/armeria-publish.zip
+          echo 'b1a94d5617cdc0cca41d3f9e2b926b1464fcdc25674a551b34fe8c983e3b9708  /tmp/armeria-publish.zip' | sha256sum -c -
+      - name: Installa JAR, sorgenti e manifest
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          root=Path.cwd()
+          with zipfile.ZipFile('/tmp/armeria-publish.zip') as archive:
+              assert archive.testzip() is None
+              for name in archive.namelist():
+                  assert name == 'mods/armeria-browser-1.2.1.jar' or name.startswith('projects/armeria-browser-1.2.1/')
+                  assert '..' not in Path(name).parts
+                  target=root/name
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(archive.read(name))
+          jar=root/'mods/armeria-browser-1.2.1.jar'
+          sha=hashlib.sha256(jar.read_bytes()).hexdigest()
+          assert sha == '1479cb773def13bd94ceda2648354c5b23a89f5cc45fae54eb7454760ba3c5d7'
+          entry={'path':'mods/armeria-browser-1.2.1.jar','size':jar.stat().st_size,'sha256':sha,
+                 'mode':'replace','url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.2.1.jar'}
+          for filename,key in [('pack.json','files'),('pack-settings.json','external_files')]:
+              path=root/filename
+              data=json.loads(path.read_text('utf-8'))
+              data[key]=[item for item in data[key] if not item['path'].startswith('mods/armeria-browser-')]
+              data[key].append(entry)
+              data['news']='Nuovo Ordine — Armeria 1.2.1 con ricerca addon TACZ'
+              if filename == 'pack.json':
+                  data['version']='2026.09.29-ext-11'
+              path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert sum(x['path'].startswith('mods/armeria-browser-') for x in json.loads((root/'pack.json').read_text())['files']) == 1
+          PY
+          unzip -t mods/armeria-browser-1.2.1.jar | tail -1
+      - name: Pubblica
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/armeria-browser-1.2.1.jar projects/armeria-browser-1.2.1 pack.json pack-settings.json
+          git commit -m 'Aggiorna Armeria Browser 1.2.1 con catalogo addon TACZ'
+          git push origin HEAD:main
