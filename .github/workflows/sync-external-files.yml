@@ -6,6 +6,7 @@ on:
     paths:
       - 'pack-settings.json'
       - 'kubejs/server_scripts/nuovo_ordine_respawn_kit.js'
+      - '.github/quest-upload/**'
       - '.github/workflows/sync-external-files.yml'
   workflow_dispatch:
 
@@ -19,6 +20,54 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Installa aggiornamento quest mod
+        shell: bash
+        run: |
+          if compgen -G '.github/quest-upload/part*.b64' > /dev/null; then
+            mkdir -p mods
+            cat .github/quest-upload/part*.b64 | base64 --decode > mods/nuovo-ordine-quests-1.1.0.jar
+            echo '7fbe46299aaaa53e3c1d670abe730924d56ffa9d9d2efc2e3b617e2e92494817  mods/nuovo-ordine-quests-1.1.0.jar' | sha256sum -c -
+            rm -f mods/nuovo-ordine-quests-1.0.0.jar
+            rm -f .github/quest-upload/part*.b64
+            echo "QUEST_UPLOAD_ACTIVE=1" >> "$GITHUB_ENV"
+
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('pack-settings.json')
+          settings = json.loads(path.read_text('utf-8'))
+
+          quest_item = {
+              'path': 'mods/nuovo-ordine-quests-1.1.0.jar',
+              'size': 92010,
+              'sha256': '7fbe46299aaaa53e3c1d670abe730924d56ffa9d9d2efc2e3b617e2e92494817',
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-quests-1.1.0.jar',
+          }
+
+          external = []
+          replaced = False
+          for item in settings.get('external_files', []):
+              p = item.get('path', '')
+              if p.startswith('mods/nuovo-ordine-quests-') and p.endswith('.jar'):
+                  if not replaced:
+                      external.append(quest_item)
+                      replaced = True
+              else:
+                  external.append(item)
+          if not replaced:
+              external.append(quest_item)
+
+          settings['external_files'] = external
+          settings['news'] = 'Benvenuto su Nuovo Ordine — quest giornaliere e settimanali aggiornate'
+          path.write_text(
+              json.dumps(settings, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          fi
 
       - name: Aggiorna hash, URL e pack.json dei file esterni
         shell: bash
@@ -39,6 +88,8 @@ jobs:
           repo = os.environ['GITHUB_REPOSITORY']
           commit = os.environ['GITHUB_SHA']
           raw_prefix = f'https://raw.githubusercontent.com/{repo}/'
+          upload_active = os.environ.get('QUEST_UPLOAD_ACTIVE') == '1'
+          quest_upload_path = 'mods/nuovo-ordine-quests-1.1.0.jar'
 
           old_external = settings.get('external_files', [])
           external = []
@@ -58,15 +109,16 @@ jobs:
                   item['sha256'] = actual_hash
 
                   # Gli URL raw dello stesso repository vengono fissati a un commit.
-                  # Se il file è cambiato rispetto al checksum configurato, spostiamo
-                  # anche un URL già pin-nato sul commit corrente. Se invece hash e
-                  # contenuto coincidono, manteniamo il pin esistente ed evitiamo loop.
+                  # Durante il primo passaggio della quest mod il JAR viene creato
+                  # nel workspace e non esiste ancora nel commit di trigger: in quel
+                  # solo caso manteniamo temporaneamente il ref main.
                   url = item.get('url', '')
                   if url.startswith(raw_prefix):
                       rest = url[len(raw_prefix):]
                       ref, sep, remote_path = rest.partition('/')
                       immutable_ref = bool(re.fullmatch(r'[0-9a-fA-F]{40}', ref))
-                      if sep and remote_path == rel and (not immutable_ref or configured_hash != actual_hash):
+                      can_pin = not (upload_active and rel == quest_upload_path)
+                      if can_pin and sep and remote_path == rel and (not immutable_ref or configured_hash != actual_hash):
                           item['url'] = f'{raw_prefix}{commit}/{rel}'
 
               external.append(item)
@@ -79,14 +131,32 @@ jobs:
                   encoding='utf-8',
               )
 
-          by_path = {item['path']: item for item in pack.get('files', [])}
+          # Quando viene scelta una nuova versione della quest mod, rimuove dal
+          # manifest tutte le versioni precedenti per evitare che il launcher
+          # scarichi due JAR della stessa mod.
+          quest_paths = {
+              item['path']
+              for item in external
+              if re.fullmatch(r'mods/nuovo-ordine-quests-[^/]+\.jar', item['path'])
+          }
+          current_files = pack.get('files', [])
+          if quest_paths:
+              current_files = [
+                  item for item in current_files
+                  if (
+                      not re.fullmatch(r'mods/nuovo-ordine-quests-[^/]+\.jar', item.get('path', ''))
+                      or item.get('path') in quest_paths
+                  )
+              ]
+
+          by_path = {item['path']: item for item in current_files}
           for item in external:
               by_path[item['path']] = item
 
           # Mantiene l'ordine precedente e aggiunge/sostituisce i file esterni.
           ordered = []
           seen = set()
-          for item in pack.get('files', []):
+          for item in current_files:
               path = item['path']
               ordered.append(by_path[path])
               seen.add(path)
@@ -111,12 +181,12 @@ jobs:
       - name: Pubblica manifest aggiornato
         shell: bash
         run: |
-          if git diff --quiet -- pack.json pack-settings.json; then
-            echo 'Manifest e file esterni già aggiornati.'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Manifest, mod quest e file esterni già aggiornati.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add pack.json pack-settings.json
-          git commit -m 'Aggiorna manifest con hash file esterni'
+          git commit -m 'Aggiorna quest mod alla 1.1.0'
           git push
