@@ -1,0 +1,79 @@
+name: Installa loot mod 1.1.15
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/loot-upload/ready115.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ricostruisci JAR 1.1.15
+        shell: bash
+        run: |
+          set -euo pipefail
+          compgen -G '.github/loot-upload/part*.b64' > /dev/null
+          mkdir -p mods
+          cat .github/loot-upload/part*.b64 | base64 --decode > mods/lootr-more-tactical-loot-1.1.15.jar
+          echo 'e9fb1f7e96d50ebc0a929c6c2f38549663a97c48ae83771d79c892a3932c1b05  mods/lootr-more-tactical-loot-1.1.15.jar' | sha256sum -c -
+          find mods -maxdepth 1 -type f -name 'lootr-more-tactical-loot-*.jar' ! -name 'lootr-more-tactical-loot-1.1.15.jar' -delete
+
+      - name: Aggiorna pack-settings
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('pack-settings.json')
+          settings = json.loads(path.read_text('utf-8'))
+          item = {
+              'path': 'mods/lootr-more-tactical-loot-1.1.15.jar',
+              'size': 33281,
+              'sha256': 'e9fb1f7e96d50ebc0a929c6c2f38549663a97c48ae83771d79c892a3932c1b05',
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.15.jar',
+          }
+
+          external = []
+          replaced = False
+          for old in settings.get('external_files', []):
+              p = old.get('path', '')
+              if p.startswith('mods/lootr-more-tactical-loot-') and p.endswith('.jar'):
+                  if not replaced:
+                      external.append(item)
+                      replaced = True
+              else:
+                  external.append(old)
+          if not replaced:
+              external.append(item)
+
+          settings['external_files'] = external
+          settings['news'] = 'Nuovo Ordine — loot 1.1.15: fix automatico TACZ/Mohist al login, LesRaisins e granate'
+          path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Pulisci upload temporaneo
+        shell: bash
+        run: |
+          rm -rf .github/loot-upload
+
+      - name: Pubblica aggiornamento
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Aggiorna loot mod alla 1.1.15 con fix TACZ login'
+          git push
