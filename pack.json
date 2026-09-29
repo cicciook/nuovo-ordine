@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.29-ext-12",
+  "version": "2026.09.29-ext-13",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Lootr Tactical 1.1.17: addon TACZ ed Endless Ammo nelle casse",
+  "news": "Nuovo Ordine — rimosso Gun Durability (gundb) per incompatibilità con TACZ",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -2987,13 +2987,6 @@
       "sha256": "cf8052ab3da121012efc59a20e731c24bfe7488dfa556c9b88809f42dea3b24a",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/cf8052ab3da121012efc59a20e731c24bfe7488dfa556c9b88809f42dea3b24a.bin"
-    },
-    {
-      "path": "mods/gundb-2.2.2-1.20.1.jar",
-      "size": 632182,
-      "sha256": "4bb49bd1e2a6c6f0d393b88af59da12db0f1c765801852ce1d15b87b7b33683d",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/4bb49bd1e2a6c6f0d393b88af59da12db0f1c765801852ce1d15b87b7b33683d.bin"
     },
     {
       "path": "mods/horror_element_mod-1.6.3-forge-1.20.1.jar",
