@@ -1,0 +1,30 @@
+name: Extract quest sources
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/extract-quest-sources.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract embedded quest sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf projects/quest-1.1.0-extracted
+          mkdir -p projects/quest-1.1.0-extracted
+          unzip -j mods/nuovo-ordine-quests-1.1.0.jar 'META-INF/quest-sources/com/nuovoordine/quests/*.java' -d projects/quest-1.1.0-extracted
+          unzip -p mods/nuovo-ordine-quests-1.1.0.jar META-INF/mods.toml > projects/quest-1.1.0-extracted/mods.toml
+          unzip -p mods/nuovo-ordine-quests-1.1.0.jar default-config.json > projects/quest-1.1.0-extracted/default-config.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/quest-1.1.0-extracted
+          git commit -m 'Extract Nuovo Ordine quest sources' || exit 0
+          git push
