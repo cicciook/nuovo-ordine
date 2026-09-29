@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.29-ext-10",
+  "version": "2026.09.29-ext-11",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — loot 1.1.14: fix armi TACZ generate, LesRaisins e granate",
+  "news": "Nuovo Ordine — Armeria 1.2.1 con ricerca addon TACZ",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -2595,20 +2595,6 @@
       "sha256": "218b471d0b8a1f6cda14cfc1beb9eeb0df54304500acc6c5613d9b88ec65d9af",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/218b471d0b8a1f6cda14cfc1beb9eeb0df54304500acc6c5613d9b88ec65d9af.bin"
-    },
-    {
-      "path": "mods/armeria-browser-1.0.0.jar",
-      "size": 83285,
-      "sha256": "a9bf124a9c48d0c2c04088a97691b6b0e19daccc6fefce8c8f41051cadaea68a",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/a9bf124a9c48d0c2c04088a97691b6b0e19daccc6fefce8c8f41051cadaea68a.bin"
-    },
-    {
-      "path": "mods/armeria-browser-1.1.0.jar",
-      "size": 85311,
-      "sha256": "639ca483ff0af986354022df0476afca427566dfc3fee0f9c563bb4b9053a033",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/639ca483ff0af986354022df0476afca427566dfc3fee0f9c563bb4b9053a033.bin"
     },
     {
       "path": "mods/balm-forge-1.20.1-7.3.43.jar",
@@ -32100,6 +32086,13 @@
       "sha256": "fe285d8b76b379caf27a477cd1b0c22aab1ea3a6a676e0a43a019e842e226d6d",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/083853bdb748a3d35fe5a7c4ed5641a0f636362c/mods/lootr-more-tactical-loot-1.1.14.jar"
+    },
+    {
+      "path": "mods/armeria-browser-1.2.1.jar",
+      "size": 99568,
+      "sha256": "1479cb773def13bd94ceda2648354c5b23a89f5cc45fae54eb7454760ba3c5d7",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.2.1.jar"
     }
   ],
   "archives": {
