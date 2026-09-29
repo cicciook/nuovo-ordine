@@ -1,0 +1,378 @@
+{
+  "timezone": "Europe/Rome",
+  "dailyMoney": 2500,
+  "weeklyMoney": 10000,
+  "dailyBonus": 10000,
+  "weeklyBonus": 100000,
+  "daily": [
+    {
+      "id": "scavenger",
+      "title": "Scavenger urbano",
+      "event": "loot:lootr_daily",
+      "target": 10
+    },
+    {
+      "id": "bounty",
+      "title": "Taglie attive",
+      "event": "pvp:kill",
+      "target": 2
+    },
+    {
+      "id": "firefight",
+      "title": "Scontro a fuoco",
+      "event": "pvp:damage",
+      "target": 60
+    }
+  ],
+  "weekly": [
+    {
+      "id": "redzone",
+      "title": "Zona rossa",
+      "event": "loot:lootr_weekly",
+      "target": 75
+    },
+    {
+      "id": "hunter",
+      "title": "Cacciatore di taglie",
+      "event": "pvp:kill",
+      "target": 12
+    },
+    {
+      "id": "attrition",
+      "title": "Guerra d’attrito",
+      "event": "pvp:damage",
+      "target": 500
+    }
+  ],
+  "weapons": [
+    {
+      "name": "TACZ AA12",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:aa12\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ AK47",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:ak47\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ AUG",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:aug\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ DEAGLE",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:deagle\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ G36K",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:g36k\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ GLOCK 17",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:glock_17\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ HK416D",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:hk416d\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ KAR98",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:kar98\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M1014",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m1014\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M16A4",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m16a4\",GunFireMode:\"BURST\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M1911",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m1911\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M249",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m249\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M4A1",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m4a1\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M700",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m700\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ M870",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:m870\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ P90",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:p90\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ RPK",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:rpk\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ SCAR H",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:scar_h\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ SCAR L",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:scar_l\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ SKS TACTICAL",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:sks_tactical\",GunFireMode:\"SEMI\"}}"
+      ]
+    },
+    {
+      "name": "TACZ UMP45",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:ump45\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ UZI",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:uzi\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "TACZ VECTOR45",
+      "items": [
+        "{id:\"tacz:modern_kinetic_gun\",Count:1b,tag:{GunId:\"tacz:vector45\",GunFireMode:\"AUTO\"}}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE AA 12",
+      "items": [
+        "{id:\"superbwarfare:aa_12\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE AK 12",
+      "items": [
+        "{id:\"superbwarfare:ak_12\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE AK 47",
+      "items": [
+        "{id:\"superbwarfare:ak_47\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE GLOCK 17",
+      "items": [
+        "{id:\"superbwarfare:glock_17\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE HK 416",
+      "items": [
+        "{id:\"superbwarfare:hk_416\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE M 1911",
+      "items": [
+        "{id:\"superbwarfare:m_1911\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE M 4",
+      "items": [
+        "{id:\"superbwarfare:m_4\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE M 60",
+      "items": [
+        "{id:\"superbwarfare:m_60\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE M 870",
+      "items": [
+        "{id:\"superbwarfare:m_870\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE MOSIN NAGANT",
+      "items": [
+        "{id:\"superbwarfare:mosin_nagant\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE MP 5",
+      "items": [
+        "{id:\"superbwarfare:mp_5\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE QBZ 191",
+      "items": [
+        "{id:\"superbwarfare:qbz_191\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE SKS",
+      "items": [
+        "{id:\"superbwarfare:sks\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE SVD",
+      "items": [
+        "{id:\"superbwarfare:svd\",Count:1b}"
+      ]
+    },
+    {
+      "name": "SUPERBWARFARE VECTOR",
+      "items": [
+        "{id:\"superbwarfare:vector\",Count:1b}"
+      ]
+    }
+  ],
+  "armor": [
+    {
+      "name": "Military",
+      "items": [
+        "{id:\"survival_instinct:military_helmet\",Count:1b}",
+        "{id:\"survival_instinct:military_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:military_leggings\",Count:1b}",
+        "{id:\"survival_instinct:military_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Black Rockie Armor",
+      "items": [
+        "{id:\"survival_instinct:black_rockie_armor_helmet\",Count:1b}",
+        "{id:\"survival_instinct:black_rockie_armor_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:black_rockie_armor_leggings\",Count:1b}",
+        "{id:\"survival_instinct:black_rockie_armor_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Green Rockie Armor",
+      "items": [
+        "{id:\"survival_instinct:green_rockie_armor_helmet\",Count:1b}",
+        "{id:\"survival_instinct:green_rockie_armor_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:green_rockie_armor_leggings\",Count:1b}",
+        "{id:\"survival_instinct:green_rockie_armor_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Desert Rockie Armor",
+      "items": [
+        "{id:\"survival_instinct:desert_rockie_armor_helmet\",Count:1b}",
+        "{id:\"survival_instinct:desert_rockie_armor_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:desert_rockie_armor_leggings\",Count:1b}",
+        "{id:\"survival_instinct:desert_rockie_armor_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Black Juggernaut",
+      "items": [
+        "{id:\"survival_instinct:black_juggernaut_helmet\",Count:1b}",
+        "{id:\"survival_instinct:black_juggernaut_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:black_juggernaut_leggings\",Count:1b}",
+        "{id:\"survival_instinct:black_juggernaut_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Green Juggernaut",
+      "items": [
+        "{id:\"survival_instinct:green_juggernaut_helmet\",Count:1b}",
+        "{id:\"survival_instinct:green_juggernaut_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:green_juggernaut_leggings\",Count:1b}",
+        "{id:\"survival_instinct:green_juggernaut_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Desert Juggernaut",
+      "items": [
+        "{id:\"survival_instinct:desert_juggernaut_helmet\",Count:1b}",
+        "{id:\"survival_instinct:desert_juggernaut_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:desert_juggernaut_leggings\",Count:1b}",
+        "{id:\"survival_instinct:desert_juggernaut_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Exo",
+      "items": [
+        "{id:\"survival_instinct:exo_helmet\",Count:1b}",
+        "{id:\"survival_instinct:exo_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:exo_leggings\",Count:1b}",
+        "{id:\"survival_instinct:exo_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Exo Heavy Black",
+      "items": [
+        "{id:\"survival_instinct:exo_heavy_black_helmet\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_black_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_black_leggings\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_black_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Exo Heavy Green",
+      "items": [
+        "{id:\"survival_instinct:exo_heavy_green_helmet\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_green_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_green_leggings\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_green_boots\",Count:1b}"
+      ]
+    },
+    {
+      "name": "Exo Heavy Desert",
+      "items": [
+        "{id:\"survival_instinct:exo_heavy_desert_helmet\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_desert_chestplate\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_desert_leggings\",Count:1b}",
+        "{id:\"survival_instinct:exo_heavy_desert_boots\",Count:1b}"
+      ]
+    }
+  ]
+}

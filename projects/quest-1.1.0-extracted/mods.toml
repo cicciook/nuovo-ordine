@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[47,48)"
+license="MIT"
+[[mods]]
+modId="noquests"
+version="1.1.0"
+displayName="Nuovo Ordine Quests"
+authors="OpenAI"
+description="Quest giornaliere e settimanali Lootr/PvP con GUI web, bonus e ricompense TNE."
+
+[[dependencies.noquests]]
+modId="forge"
+mandatory=true
+versionRange="[47,48)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.noquests]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.noquests]]
+modId="mcef"
+mandatory=true
+versionRange="[2.1.6-1.20.1]"
+ordering="AFTER"
+side="CLIENT"
+
