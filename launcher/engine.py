@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from minecraft_launcher_lib import command, install, mod_loader, runtime
+from minecraft_launcher_lib.exceptions import InvalidRefreshToken
 
 from . import VERSION, auth
 from .config import DATA, INSTANCE, manifest_url, validate_config
@@ -90,9 +91,23 @@ def play(cfg, session, report, progress, account_ready, offline_name=None):
     online = bool(refresh_token)
     if online:
         validate_config(cfg, require_login=True)
-        report("Verifica account e licenza Minecraft…")
-        session = auth.refresh(client_id, refresh_token, report)
-        account_ready(session)
+
+        # Se l'utente ha appena completato il login, la sessione Minecraft è
+        # già valida: non forziamo immediatamente un secondo refresh OAuth.
+        if auth.session_is_valid(session):
+            report("Account Microsoft verificato • avvio Minecraft…")
+            account_ready(session)
+        else:
+            report("Rinnovo accesso Microsoft e licenza Minecraft…")
+            try:
+                session = auth.refresh(client_id, refresh_token, report)
+            except InvalidRefreshToken:
+                # auth.refresh elimina il token non valido dal portachiavi.
+                # Svuotiamo anche la sessione UI così il pulsante Accedi torna
+                # subito disponibile senza dover riavviare il launcher.
+                account_ready({})
+                raise
+            account_ready(session)
     else:
         session = None
         if not re.fullmatch(r"[A-Za-z0-9_]{3,16}", offline_name or ""):
