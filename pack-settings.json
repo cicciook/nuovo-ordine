@@ -30,10 +30,10 @@
     },
     {
       "path": "mods/lootr-more-tactical-loot-1.1.13.jar",
-      "size": 32207,
-      "sha256": "1967266b3f4a0b8c5130616f1bf3037c38996ecc102d8bfcba5b3b70279b6ae0",
+      "size": 14998,
+      "sha256": "5626666879a847ab1121fba1c9c5757788ab328fecde9f3a30893d3420c2902a",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.13.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/b404e8ba8c10e719c08d9ef8d53fdb383c0a51fc/mods/lootr-more-tactical-loot-1.1.13.jar"
     }
   ]
 }
