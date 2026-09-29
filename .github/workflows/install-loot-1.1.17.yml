@@ -1,0 +1,90 @@
+name: Installa Lootr More Tactical Loot 1.1.17
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-loot-1.1.17.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Recupera il JAR e i sorgenti verificati
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/cicciook/nuovo-ordine/git/blobs/9802cd71b73b0a33064e1c2373ae2075bebf9d02" \
+            | jq -r '.content' | base64 -d > /tmp/lootr-publish.zip
+          echo 'cb19f574ad45edc3fca12a852d06926757b35d4100dca6767aba089639d6a381  /tmp/lootr-publish.zip' | sha256sum -c -
+      - name: Aggiorna mod e manifest del launcher
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, shutil, subprocess, zipfile
+          from pathlib import Path
+          root=Path.cwd()
+          with zipfile.ZipFile('/tmp/lootr-publish.zip') as archive:
+              assert archive.testzip() is None
+              for name in archive.namelist():
+                  assert name == 'mods/lootr-more-tactical-loot-1.1.17.jar' or name.startswith('loot-source/1.1.17/')
+                  assert '..' not in Path(name).parts
+                  target=root/name
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(archive.read(name))
+          jar=root/'mods/lootr-more-tactical-loot-1.1.17.jar'
+          sha=hashlib.sha256(jar.read_bytes()).hexdigest()
+          assert sha == 'b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee'
+          entry={'path':'mods/'+jar.name,'size':jar.stat().st_size,'sha256':sha,
+                 'mode':'replace','url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/'+jar.name}
+          old=json.loads(subprocess.check_output(['git','show','0d9548e:pack.json']))
+          armeria=next(x for x in old['files'] if x['path']=='mods/armeria-browser-1.1.0.jar')
+          settings_path=root/'pack-settings.json'
+          settings=json.loads(settings_path.read_text('utf-8'))
+          settings['external_files']=[x for x in settings['external_files']
+              if not x['path'].startswith(('mods/lootr-more-tactical-loot-','mods/armeria-browser-'))]+[entry]
+          news='Nuovo Ordine — Lootr Tactical 1.1.17: addon TACZ ed Endless Ammo nelle casse'
+          settings['news']=news
+          settings_path.write_text(json.dumps(settings,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          pack_path=root/'pack.json'
+          pack=json.loads(pack_path.read_text('utf-8'))
+          pack['version']='2026.09.29-ext-12'
+          pack['news']=news
+          pack['files']=[x for x in pack['files']
+              if not x['path'].startswith(('mods/lootr-more-tactical-loot-','mods/armeria-browser-'))]+[armeria]
+          seen={x['path'].casefold() for x in pack['files']}
+          for item in settings['external_files']:
+              if item['path'].casefold() not in seen:
+                  pack['files'].append(item)
+                  seen.add(item['path'].casefold())
+          pack_path.write_text(json.dumps(pack,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert [x['path'] for x in pack['files'] if x['path'].startswith('mods/lootr-more-tactical-loot-')] == [entry['path']]
+          assert [x['path'] for x in pack['files'] if x['path'].startswith('mods/armeria-browser-')] == [armeria['path']]
+          for item in settings['external_files']:
+              assert sum(x['path']==item['path'] for x in pack['files']) == 1
+          assert len(pack['files']) == len({x['path'].casefold() for x in pack['files']})
+          shutil.rmtree(root/'projects/armeria-browser-1.2.1',ignore_errors=True)
+          (root/'mods/armeria-browser-1.2.1.jar').unlink(missing_ok=True)
+          (root/'mods/lootr-more-tactical-loot-1.1.16.jar').unlink(missing_ok=True)
+          (root/'.github/workflows/install-armeria-1.2.1.yml').unlink(missing_ok=True)
+          PY
+          unzip -t mods/lootr-more-tactical-loot-1.1.17.jar | tail -1
+      - name: Pubblica
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A mods projects/armeria-browser-1.2.1 loot-source/1.1.17 pack.json pack-settings.json .github/workflows/install-armeria-1.2.1.yml
+          git commit -m 'Distribuisce Lootr Tactical 1.1.17 e corregge il manifest'
+          git push origin HEAD:main
