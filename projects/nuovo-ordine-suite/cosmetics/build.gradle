@@ -1,0 +1,2 @@
+jar { manifest { attributes 'MixinConfigs': 'nocosmetics.mixins.json' } }
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }

@@ -1,0 +1,31 @@
+package it.nuovoordine.cosmetics;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.network.*;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import java.util.*;
+import java.util.function.Supplier;
+
+@Mod("nocosmetics")
+public class CosmeticsMod {
+    static final SimpleChannel NET=NetworkRegistry.newSimpleChannel(new ResourceLocation("nocosmetics","main"),()->"1","1"::equals,"1"::equals);
+    static final Map<UUID,Appearance> active=new HashMap<>();static final Map<UUID,Long> last=new HashMap<>();
+    public CosmeticsMod(){
+        NET.registerMessage(0,Upload.class,Upload::encode,Upload::decode,CosmeticsMod::upload,Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        NET.registerMessage(1,Appearance.class,Appearance::encode,Appearance::decode,(p,c)->{c.get().enqueueWork(()->CosmeticsClient.receive(p));c.get().setPacketHandled(true);},Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        MinecraftForge.EVENT_BUS.addListener(this::login);MinecraftForge.EVENT_BUS.addListener(this::logout);MinecraftForge.EVENT_BUS.addListener(this::stop);
+    }
+    void login(PlayerEvent.PlayerLoggedInEvent e){if(e.getEntity() instanceof ServerPlayer p)for(var a:active.values())NET.send(PacketDistributor.PLAYER.with(()->p),a);}
+    void logout(PlayerEvent.PlayerLoggedOutEvent e){UUID id=e.getEntity().getUUID();active.remove(id);last.remove(id);NET.send(PacketDistributor.ALL.noArg(),new Appearance(id,new byte[0],new byte[0],false));}
+    void stop(ServerStoppedEvent e){active.clear();last.clear();}
+    record Upload(byte[] skin,byte[] cape,boolean slim){static void encode(Upload p,FriendlyByteBuf b){b.writeByteArray(p.skin);b.writeByteArray(p.cape);b.writeBoolean(p.slim);}static Upload decode(FriendlyByteBuf b){return new Upload(b.readByteArray(32768),b.readByteArray(32768),b.readBoolean());}}
+    record Appearance(UUID id,byte[] skin,byte[] cape,boolean slim){static void encode(Appearance p,FriendlyByteBuf b){b.writeUUID(p.id);b.writeByteArray(p.skin);b.writeByteArray(p.cape);b.writeBoolean(p.slim);}static Appearance decode(FriendlyByteBuf b){return new Appearance(b.readUUID(),b.readByteArray(32768),b.readByteArray(32768),b.readBoolean());}}
+    static void upload(Upload p,Supplier<NetworkEvent.Context> ctx){var c=ctx.get();c.enqueueWork(()->{var player=c.getSender();if(player==null)return;UUID id=player.getUUID();long now=System.currentTimeMillis();if(now-last.getOrDefault(id,0L)<5000)return;last.put(id,now);
+        try{Appearance a=new Appearance(id,PngGuard.validate(p.skin,true),PngGuard.validate(p.cape,false),p.slim);active.put(id,a);NET.send(PacketDistributor.ALL.noArg(),a);}catch(Exception ex){player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Skin/mantello rifiutato: PNG non valido o troppo grande"));}
+    });c.setPacketHandled(true);}
+}

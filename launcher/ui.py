@@ -314,6 +314,9 @@ class Window(QMainWindow):
         self.settings_button = QPushButton("Impostazioni")
         self.settings_button.clicked.connect(self.settings)
         side.addWidget(self.settings_button)
+        self.cosmetics_button = QPushButton("Skin e mantelli")
+        self.cosmetics_button.clicked.connect(self.cosmetics)
+        side.addWidget(self.cosmetics_button)
 
         folder = QPushButton("Apri cartella launcher")
         folder.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(DATA))))
@@ -650,6 +653,10 @@ class Window(QMainWindow):
         if self.cfg.get("offline_name"):
             allowed["offline_name"] = self.cfg["offline_name"]
         atomic_json(DATA / "settings.json", allowed)
+
+    def cosmetics(self):
+        from .cosmetics_ui import CosmeticsDialog
+        CosmeticsDialog(self).exec()
 
     def settings(self):
         dialog = Settings(self.cfg, self)

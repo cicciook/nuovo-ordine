@@ -11,3 +11,7 @@ modpack/**
 !modpack/README.md
 !modpack/mods/
 !modpack/mods/.gitkeep
+
+# Forge suite build products
+**/.gradle/
+**/build/

@@ -64,7 +64,7 @@ def normalize_content(data):
     events = _normalize_items(data.get("events"), "events")
     return {
         "discord_url": discord,
-        "changelog": changelog or list(DEFAULT_CONTENT["changelog"]),
+        "changelog": latest_changelog(changelog) or list(DEFAULT_CONTENT["changelog"]),
         "events": events or list(DEFAULT_CONTENT["events"]),
     }
 
@@ -90,9 +90,19 @@ def fetch_content(cfg, report=lambda text: None):
         return normalize_content(DEFAULT_CONTENT)
 
 
+def latest_changelog(items):
+    """Select one release numerically; feed order breaks ties / unknown labels."""
+    if not items:
+        return []
+    def key(item):
+        match = re.fullmatch(r"v?(\d+(?:\.\d+)*)(?:[-+].*)?", item.get("version", ""))
+        return tuple(map(int, match.group(1).split("."))) if match else ()
+    return [max(items, key=key)]
+
+
 def format_changelog(items):
     blocks = []
-    for item in items:
+    for item in latest_changelog(items):
         heading = " ".join(part for part in [item.get("version", ""), item.get("title", "")] if part).strip()
         body = item.get("body", "").strip()
         blocks.append((heading + ("\n" + body if body else "")).strip())
