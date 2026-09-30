@@ -1,0 +1,37 @@
+name: Pubblica Nuovo Ordine Suite
+on:
+  push:
+    branches: [main]
+    paths: ['projects/nuovo-ordine-suite/artifacts.json', '.github/workflows/publish-suite.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifica JAR e prepara pacchetto
+        run: |
+          python - <<'PY'
+          import hashlib,json,zipfile
+          from pathlib import Path
+          root=Path('projects/nuovo-ordine-suite')
+          entries=json.loads((root/'artifacts.json').read_text())
+          with zipfile.ZipFile('Nuovo-Ordine-Suite-1.0.0.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for e in entries:
+                  p=Path(e['path']);data=p.read_bytes()
+                  assert len(data)==e['size'] and hashlib.sha256(data).hexdigest()==e['sha256']
+                  with zipfile.ZipFile(p) as jar:
+                      assert jar.testzip() is None
+                      assert 'META-INF/mods.toml' in jar.namelist()
+                  z.write(p,'mods/'+p.name)
+              for name in ['README.md','VALIDATION.md','artifacts.json']:
+                  z.write(root/name,name)
+          PY
+      - name: Pubblica release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create suite-v1.0.0 Nuovo-Ordine-Suite-1.0.0.zip mods/nuovo-ordine-market-1.0.0.jar mods/nuovo-ordine-cosmetics-1.0.0.jar mods/nuovo-ordine-townnames-1.0.0.jar mods/nuovo-ordine-pvp-1.0.0.jar --target "$GITHUB_SHA" --title 'Nuovo Ordine Suite 1.0.0' --notes-file projects/nuovo-ordine-suite/RELEASE_NOTES.md --latest=false
