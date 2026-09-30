@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.29-ext-13",
+  "version": "2026.09.30-suite-1.0.0",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — rimosso Gun Durability (gundb) per incompatibilità con TACZ",
+  "news": "Nuovo Ordine — Mercato Nero, skin e mantelli, nomi Towny e bilanciamento PvP",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32114,6 +32114,34 @@
       "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
+      "size": 15368,
+      "sha256": "1eadc134a70209c0c522763b15cb1236c2ab1bf1b4199d3af199cd8a9a36cdf6",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2f57f1759e1ab4a904131ddeac73b0d378765d54/mods/nuovo-ordine-cosmetics-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-market-1.0.0.jar",
+      "size": 33490,
+      "sha256": "a3aa2f561d8a56a79bad1b67d52c10c218958298fdc985d5738b87ae0d725af8",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2f57f1759e1ab4a904131ddeac73b0d378765d54/mods/nuovo-ordine-market-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-pvp-1.0.0.jar",
+      "size": 10137,
+      "sha256": "8d2975a74dd2cf6e25d064b41e7c6c0f2491dc7b378cc191d266ce21436bf753",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2f57f1759e1ab4a904131ddeac73b0d378765d54/mods/nuovo-ordine-pvp-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-townnames-1.0.0.jar",
+      "size": 9262,
+      "sha256": "c6635cd6b4c56dfdac103f5137f618499bb219c67b5b7222d8fe8858558a277c",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2f57f1759e1ab4a904131ddeac73b0d378765d54/mods/nuovo-ordine-townnames-1.0.0.jar"
     }
   ],
   "archives": {
