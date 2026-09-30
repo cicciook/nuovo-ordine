@@ -12,7 +12,7 @@ def update(root, commit):
     root = Path(root)
     if not re.fullmatch(r'[a-f0-9]{40}', commit):
         raise ValueError('Expected immutable source commit')
-    artifacts = json.loads((root / 'projects/nuovo-ordine-suite/artifacts.json').read_text())
+    artifacts = json.loads((root / 'projects/nuovo-ordine-suite/artifacts.json').read_text(encoding='utf-8'))
     entries = []
     for artifact in artifacts:
         path = artifact['path']
@@ -26,7 +26,7 @@ def update(root, commit):
         raise ValueError('Expected four suite artifacts')
     for name, key in [('pack.json', 'files'), ('pack-settings.json', 'external_files')]:
         path = root / name
-        doc = json.loads(path.read_text())
+        doc = json.loads(path.read_text(encoding='utf-8'))
         doc[key] = [e for e in doc.get(key, []) if not e.get('path', '').startswith(PREFIXES)] + entries
         if name == 'pack.json':
             doc['version'] = '2026.09.30-suite-1.0.0'
