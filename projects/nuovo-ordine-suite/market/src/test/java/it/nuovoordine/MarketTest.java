@@ -24,5 +24,7 @@ public class MarketTest {
     @Test public void failedWriteDoesNotMutate()throws Exception{Files.delete(file);Files.createDirectory(file);Files.writeString(file.resolve("block"),"x");try{s.handle(seller,q("close"));fail();}catch(java.io.IOException expected){}assertEquals(id,s.handle(seller,q("view")).getAsJsonObject("post").get("id").getAsString());}
     @Test(expected=IllegalArgumentException.class) public void oversizedReply()throws Exception{reply(buyer,"x".repeat(801));}
     @Test public void closeCancelsMeeting()throws Exception{reply(buyer,"hi");s.handle(buyer,q("meet"));s.handle(seller,q("accept"));s.handle(seller,q("close"));assertEquals(0,s.handle(buyer,q("meetings")).getAsJsonArray("meetings").size());}
+    @Test(expected=IllegalArgumentException.class) public void expiredPostCannotBeViewed()throws Exception{now.addAndGet(8L*86400000);s.handle(buyer,q("view"));}
+    @Test public void summariesDoNotTrimStoredConversations()throws Exception{for(int i=0;i<8;i++)reply(buyer,"message "+i);var summary=s.handle(seller,q("view"));assertEquals(5,summary.getAsJsonObject("post").getAsJsonObject("threads").getAsJsonObject(buyer.id()).getAsJsonArray("messages").size());var full=q("view");full.addProperty("conversation",buyer.id());assertEquals(8,s.handle(seller,full).getAsJsonObject("post").getAsJsonObject("threads").getAsJsonObject(buyer.id()).getAsJsonArray("messages").size());}
     @Test public void pageDoesNotLeakReplies()throws Exception{reply(buyer,"TOP_SECRET");assertFalse(s.handle(other,q("list")).toString().contains("TOP_SECRET"));}
 }

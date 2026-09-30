@@ -24,7 +24,7 @@ public final class MarketService {
         return s;
     }
     private static String str(JsonObject o,String k){return o.get(k).getAsString();}
-    private JsonObject post(JsonObject s,String id){for(JsonElement e:s.getAsJsonArray("posts")){JsonObject p=e.getAsJsonObject();if(str(p,"id").equals(id))return p;}throw new IllegalArgumentException("Annuncio non trovato o scaduto");}
+    private JsonObject post(JsonObject s,String id){for(JsonElement e:s.getAsJsonArray("posts")){JsonObject p=e.getAsJsonObject();if(str(p,"id").equals(id)&&p.get("expires").getAsLong()>=clock.getAsLong())return p;}throw new IllegalArgumentException("Annuncio non trovato o scaduto");}
     private JsonObject thread(JsonObject p,Actor a,JsonObject q,boolean create){
         String buyer=str(p,"owner").equals(a.id)?text(q,"buyer",36):a.id;
         if(buyer.equals(str(p,"owner")))throw new IllegalArgumentException("Non puoi rispondere al tuo annuncio");
@@ -38,15 +38,20 @@ public final class MarketService {
     }
     private void save(JsonObject next)throws Exception{
         Files.createDirectories(file.getParent());Path temp=file.resolveSibling(file.getFileName()+".tmp");
-        Files.writeString(temp,next.toString(),StandardCharsets.UTF_8);
+        byte[] encoded=next.toString().getBytes(StandardCharsets.UTF_8);
+        if(encoded.length>8*1024*1024)throw new IllegalArgumentException("Archivio pieno: chiudi gli annunci non più necessari");
+        Files.write(temp,encoded);
         try{Files.move(temp,file,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);}
         catch(AtomicMoveNotSupportedException ex){Files.move(temp,file,StandardCopyOption.REPLACE_EXISTING);}
         state=next;
     }
     public JsonObject handle(Actor a,JsonObject q)throws Exception{
         String action=text(q,"action",20);long now=clock.getAsLong();
-        JsonObject next=state.deepCopy();JsonArray posts=next.getAsJsonArray("posts");
-        posts.asList().removeIf(e->e.getAsJsonObject().get("expires").getAsLong()<now);
+        boolean writing=Set.of("create","reply","meet","accept","cancelMeet","close").contains(action);
+        JsonObject next=writing?state.deepCopy():state;
+        JsonArray posts=new JsonArray();
+        for(JsonElement entry:next.getAsJsonArray("posts"))if(entry.getAsJsonObject().get("expires").getAsLong()>=now)posts.add(entry);
+        if(writing)next.add("posts",posts);
         boolean changed=false;
         if(action.equals("create")){
             if(a.item==null||a.item.isBlank())throw new IllegalArgumentException("Tieni in mano l'oggetto da pubblicizzare");
@@ -91,7 +96,7 @@ public final class MarketService {
         }else if(!action.equals("meetings")){
             int page=q.has("page")?q.get("page").getAsInt():0;page=Math.max(0,Math.min(page,100));
             List<JsonObject> visible=new ArrayList<>();String search=q.has("search")?text(q,"search",80).toLowerCase(Locale.ROOT):"";
-            for(int i=posts.size()-1;i>=0;i--){JsonObject p=posts.get(i).getAsJsonObject();if(!search.isEmpty()&&!(str(p,"title")+str(p,"item")).toLowerCase(Locale.ROOT).contains(search))continue;JsonObject summary=p.deepCopy();summary.remove("threads");visible.add(summary);}
+            for(int i=posts.size()-1;i>=0;i--){JsonObject p=posts.get(i).getAsJsonObject();if(!search.isEmpty()&&!(str(p,"title")+str(p,"item")).toLowerCase(Locale.ROOT).contains(search))continue;JsonObject summary=new JsonObject();for(var field:p.entrySet())if(!field.getKey().equals("threads"))summary.add(field.getKey(),field.getValue());visible.add(summary);}
             JsonArray list=new JsonArray();for(int i=page*20;i<Math.min(visible.size(),page*20+20);i++)list.add(visible.get(i));out.add("posts",list);out.addProperty("total",visible.size());out.addProperty("page",page);
         }
         JsonArray meetings=new JsonArray();
