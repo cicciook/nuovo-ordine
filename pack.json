@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "2026.09.30-suite-1.0.0",
+  "version": "2026.09.30-worldedit-1",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
@@ -32142,6 +32142,13 @@
       "sha256": "504fbbec5afd7fbe7885ff45a8a4d01b9d5cfe0d3e59d0b52938b305abeadd35",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-townnames-1.0.0.jar"
+    },
+    {
+      "path": "mods/worldedit-mod-7.2.15.jar",
+      "size": 5825402,
+      "sha256": "17db6b3e94f52d25426684663e1e1846823cbb7907f1c365ac329e5bc7bfaf2c",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/worldedit-mod-7.2.15.jar"
     }
   ],
   "archives": {

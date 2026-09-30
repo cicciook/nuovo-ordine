@@ -97,6 +97,13 @@
       "sha256": "f5eca8463dedfdcddf33efe9cd8de68887a795cb02bd50247c716c06b8e29b28",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/4961/385/voicechat-forge-1.20.1-2.4.32.jar"
+    },
+    {
+      "path": "mods/worldedit-mod-7.2.15.jar",
+      "size": 5825402,
+      "sha256": "17db6b3e94f52d25426684663e1e1846823cbb7907f1c365ac329e5bc7bfaf2c",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/worldedit-mod-7.2.15.jar"
     }
   ]
 }
