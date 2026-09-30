@@ -90,6 +90,13 @@
       "sha256": "504fbbec5afd7fbe7885ff45a8a4d01b9d5cfe0d3e59d0b52938b305abeadd35",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-townnames-1.0.0.jar"
+    },
+    {
+      "path": "mods/voicechat-forge-1.20.1-2.4.32.jar",
+      "size": 7660001,
+      "sha256": "f5eca8463dedfdcddf33efe9cd8de68887a795cb02bd50247c716c06b8e29b28",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/4961/385/voicechat-forge-1.20.1-2.4.32.jar"
     }
   ]
 }

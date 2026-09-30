@@ -3472,11 +3472,11 @@
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/30c909bee218458756ec8fe54d66eae2862d2735900b9d10c3c443f973f098ce.bin"
     },
     {
-      "path": "mods/voicechat-forge-1.20.1-2.6.24.jar",
-      "size": 4939841,
-      "sha256": "72fd45aa54616000be2808054258455d0c965897a27608299762f7957ff9ffdd",
+      "path": "mods/voicechat-forge-1.20.1-2.4.32.jar",
+      "size": 7660001,
+      "sha256": "f5eca8463dedfdcddf33efe9cd8de68887a795cb02bd50247c716c06b8e29b28",
       "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/72fd45aa54616000be2808054258455d0c965897a27608299762f7957ff9ffdd.bin"
+      "url": "https://mediafilez.forgecdn.net/files/4961/385/voicechat-forge-1.20.1-2.4.32.jar"
     },
     {
       "path": "mods/watermedia-3.0.0.23.jar",

@@ -34,6 +34,8 @@ def import_zip(archive, destination):
                 continue
             if name in EXCLUDE:
                 continue
+            if name.startswith('mods/voicechat-') and name.endswith('.jar'):
+                continue
             if parts[0] == "mods" and (len(parts) != 2 or not name.endswith(".jar")):
                 continue
             if stat.S_ISLNK(member.external_attr >> 16):
