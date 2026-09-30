@@ -5,7 +5,7 @@ on:
     paths: ['projects/nuovo-ordine-suite/**', 'tools/test_market_ui.cjs', 'tools/smoke_suite.sh', '.github/workflows/build-suite.yml']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   forge:
     runs-on: ubuntu-latest
@@ -18,6 +18,23 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew && ./gradlew --no-daemon test build
         working-directory: projects/nuovo-ordine-suite
+      - name: Validate Forge resource metadata
+        run: |
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+
+          root = Path('projects/nuovo-ordine-suite')
+          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+              jar_path = root / name / 'build' / 'libs' / f'nuovo-ordine-{name}-1.0.0.jar'
+              with zipfile.ZipFile(jar_path) as jar:
+                  assert jar.testzip() is None, f'Corrupt JAR: {jar_path}'
+                  names = set(jar.namelist())
+                  assert 'META-INF/mods.toml' in names, f'Missing mods.toml: {jar_path}'
+                  assert 'pack.mcmeta' in names, f'Missing pack.mcmeta: {jar_path}'
+                  meta = json.loads(jar.read('pack.mcmeta').decode('utf-8'))
+                  assert meta.get('pack', {}).get('pack_format') == 15, f'Invalid pack_format: {jar_path}'
+          PY
       - name: Dedicated Forge mod-loading smoke test
         run: bash tools/smoke_suite.sh
       - uses: actions/upload-artifact@v4
@@ -28,6 +45,11 @@ jobs:
             projects/nuovo-ordine-suite/*/build/libs/*.jar
             projects/nuovo-ordine-suite/*/build/reports/tests/test/**
             /tmp/nuovoordine-smoke/smoke.log
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuovo-ordine-suite-jars
+          path: projects/nuovo-ordine-suite/*/build/libs/*.jar
           if-no-files-found: error
 
   market-ui:
@@ -47,3 +69,96 @@ jobs:
         with:
           name: market-ui-preview
           path: market-ui.png
+
+  publish-artifacts:
+    needs: [forge, market-ui]
+    if: ${{ github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuovo-ordine-suite-jars
+          path: /tmp/nuovo-ordine-suite-jars
+      - name: Install verified JARs and update launcher manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, shutil, zipfile
+          from pathlib import Path
+
+          artifact_root = Path('/tmp/nuovo-ordine-suite-jars')
+          repo = Path('.')
+          mods = repo / 'mods'
+          suite = repo / 'projects' / 'nuovo-ordine-suite'
+          entries = []
+
+          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+              filename = f'nuovo-ordine-{name}-1.0.0.jar'
+              hits = list(artifact_root.rglob(filename))
+              assert len(hits) == 1, f'Expected exactly one {filename}, found {len(hits)}'
+              src = hits[0]
+              with zipfile.ZipFile(src) as jar:
+                  assert jar.testzip() is None
+                  meta = json.loads(jar.read('pack.mcmeta').decode('utf-8'))
+                  assert meta.get('pack', {}).get('pack_format') == 15
+              dst = mods / filename
+              shutil.copy2(src, dst)
+              data = dst.read_bytes()
+              entries.append({
+                  'path': f'mods/{filename}',
+                  'size': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+              })
+
+          (suite / 'artifacts.json').write_text(
+              json.dumps(entries, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/nuovo-ordine-cosmetics-1.0.0.jar \
+                  mods/nuovo-ordine-market-1.0.0.jar \
+                  mods/nuovo-ordine-pvp-1.0.0.jar \
+                  mods/nuovo-ordine-townnames-1.0.0.jar \
+                  projects/nuovo-ordine-suite/artifacts.json
+
+          if git diff --cached --quiet; then
+            echo 'No artifact changes to publish.'
+            exit 0
+          fi
+
+          git commit -m 'Rebuild Nuovo Ordine suite with valid resource metadata'
+          artifact_commit="$(git rev-parse HEAD)"
+          python tools/install_suite_manifest.py --commit "$artifact_commit"
+          git add pack.json pack-settings.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Distribute corrected Nuovo Ordine suite through launcher manifest'
+          fi
+          git push origin HEAD:main
+
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+
+          root = Path('projects/nuovo-ordine-suite')
+          entries = json.loads((root / 'artifacts.json').read_text(encoding='utf-8'))
+          with zipfile.ZipFile('Nuovo-Ordine-Suite-1.0.0.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              for entry in entries:
+                  p = Path(entry['path'])
+                  z.write(p, 'mods/' + p.name)
+              for name in ('README.md', 'VALIDATION.md', 'artifacts.json'):
+                  z.write(root / name, name)
+          PY
+
+          gh release upload suite-v1.0.0 \
+            Nuovo-Ordine-Suite-1.0.0.zip \
+            mods/nuovo-ordine-market-1.0.0.jar \
+            mods/nuovo-ordine-cosmetics-1.0.0.jar \
+            mods/nuovo-ordine-townnames-1.0.0.jar \
+            mods/nuovo-ordine-pvp-1.0.0.jar \
+            --clobber
