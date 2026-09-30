@@ -1,0 +1,80 @@
+name: Installa WorldEdit 7.2.15
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-worldedit-7.2.15.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scarica e verifica WorldEdit 7.2.15
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mods
+          curl -fL --retry 4 --retry-delay 2 \
+            'https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar' \
+            -o mods/worldedit-mod-7.2.15.jar
+          test "$(stat -c%s mods/worldedit-mod-7.2.15.jar)" = '5825402'
+          echo '17db6b3e94f52d25426684663e1e1846823cbb7907f1c365ac329e5bc7bfaf2c  mods/worldedit-mod-7.2.15.jar' | sha256sum -c -
+
+      - name: Aggiorna launcher e manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          rel = 'mods/worldedit-mod-7.2.15.jar'
+          entry = {
+              'path': rel,
+              'size': 5825402,
+              'sha256': '17db6b3e94f52d25426684663e1e1846823cbb7907f1c365ac329e5bc7bfaf2c',
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/' + rel,
+          }
+
+          settings_path = Path('pack-settings.json')
+          settings = json.loads(settings_path.read_text('utf-8'))
+          external = [
+              item for item in settings.get('external_files', [])
+              if not re.fullmatch(r'mods/worldedit(?:-mod)?-[^/]+\\.jar', item.get('path', ''))
+          ]
+          external.append(entry)
+          settings['external_files'] = external
+          settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          pack_path = Path('pack.json')
+          pack = json.loads(pack_path.read_text('utf-8'))
+          files = [
+              item for item in pack.get('files', [])
+              if not re.fullmatch(r'mods/worldedit(?:-mod)?-[^/]+\\.jar', item.get('path', ''))
+          ]
+          files.append(entry)
+          pack['files'] = files
+          pack['version'] = '2026.09.30-worldedit-' + os.environ.get('GITHUB_RUN_NUMBER', '1')
+          pack_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Pubblica nel repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -f .github/workflows/install-worldedit-7.2.15.yml
+          git add mods/worldedit-mod-7.2.15.jar pack-settings.json pack.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Aggiungi WorldEdit 7.2.15 al modpack'
+          git push origin HEAD:main
