@@ -1,10 +1,10 @@
 # Verifica release 1.0.0 / launcher 1.2.0
 
-Sorgenti compilati: commit `6de7e2c759c6f9888342a509bb11898b925b1142`.
-Build GitHub Actions: https://github.com/cicciook/nuovo-ordine/actions/runs/36643553184
+Sorgenti compilati: commit `17908f5dcb86cb96e7c3e1ea93120e3cf97c8709`.
+Build GitHub Actions: https://github.com/cicciook/nuovo-ordine/actions/runs/36670064478
 
-- **42 test Python superati** sul launcher, inclusi selezione dell'ultima versione, importazioni PNG, errori e conservazione del file precedente.
-- **27 test Java superati**: 12 mercato, 8 bilanciamento danni, 7 validazione PNG.
+- **44 test Python superati** sul launcher, inclusi selezione dell'ultima versione, importazioni PNG, errori e conservazione del file precedente.
+- **29 test Java superati**: 14 mercato, 8 bilanciamento danni, 7 validazione PNG.
 - **Quattro JAR compilati e reobfuscati** con ForgeGradle su Java 17. I JAR distribuiti sono quelli della build CI, non copie ricompilate con stub.
 - **Test browser automatizzato superato**: elenco annunci, dettaglio, risposta privata, proposta di appuntamento, creazione annuncio, escaping del testo HTML e assenza di errori JavaScript. Backend simulato per questa prova.
 - **Avvio preliminare Forge dedicato completato fino al controllo EULA**, senza errori di risoluzione mod rilevati. Non è stato accettato l'EULA né avviato un mondo: questo controllo non certifica tutte le inizializzazioni o il gameplay.

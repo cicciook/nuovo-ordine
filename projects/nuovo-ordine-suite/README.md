@@ -1,6 +1,6 @@
 # Nuovo Ordine — mercato, aspetto, Towny e PvP
 
-Minecraft **1.20.1**, Forge **47.4.13+**, Java **17**. Integrazioni esaminate sul pack: MCEF 2.1.6, TACZ 1.1.8-hotfix, Superb Warfare 0.8.9.1-hotfix, Xaero Minimap 26.5.0 e World Map 1.46.0. Towny richiede il server ibrido Mohist già usato dal progetto.
+Minecraft **1.20.1**, Forge **47.4.x** (compilato e verificato con 47.4.13), Java **17**. Integrazioni esaminate sul pack: MCEF 2.1.6, TACZ 1.1.8-hotfix, Superb Warfare 0.8.9.1-hotfix, Xaero Minimap 26.5.0 e World Map 1.46.0. Towny richiede il server ibrido Mohist già usato dal progetto.
 
 ## Installazione
 
@@ -25,7 +25,7 @@ Dopo la conferma, **«Attiva waypoint temporaneo Xaero»** abilita il segnaposto
 
 **Gli scambi avvengono di persona.** L'annuncio non trasferisce, prenota o trattiene oggetti e non addebita denaro; il prezzo è una proposta di scambio. Usa i normali strumenti del server per consegnare oggetti e pagare. Non c'è acquisto automatico né garanzia di disponibilità dopo la pubblicazione.
 
-Dati nel salvataggio del mondo, `nuovoordine/market.json`, conservati al riavvio. Scrittura temporanea seguita da sostituzione del file; se il salvataggio fallisce, l'operazione non viene applicata in memoria. Gli annunci scaduti sono esclusi immediatamente e rimossi al successivo salvataggio.
+Archivio limitato a 8 MiB per contenere uso di memoria e tempi di salvataggio. Le letture periodiche non clonano le conversazioni. Dati nel salvataggio del mondo, `nuovoordine/market.json`, conservati al riavvio. Scrittura temporanea seguita da sostituzione del file; se il salvataggio fallisce, l'operazione non viene applicata in memoria. Gli annunci scaduti sono esclusi immediatamente e rimossi al successivo salvataggio.
 
 ## Skin e laboratorio mantelli — launcher 1.2.0
 

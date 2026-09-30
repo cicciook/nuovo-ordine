@@ -70,4 +70,4 @@ jobs:
             VERSION=$(python -c "from launcher import VERSION; print(VERSION)")
             RELEASE_TAG="launcher-v$VERSION"
           fi
-          gh release create "$RELEASE_TAG" artifacts/* --target "$GITHUB_SHA" --title "Nuovo Ordine $RELEASE_TAG" --notes "Launcher Nuovo Ordine per Windows, macOS e Linux. Login Microsoft via browser/device-code, modalità offline con nickname personalizzato e aggiornamento automatico. Estrarre l'intero archivio."
+          gh release create "$RELEASE_TAG" artifacts/* --target "$GITHUB_SHA" --title "Nuovo Ordine $RELEASE_TAG" --notes-file .github/launcher-release-notes.md

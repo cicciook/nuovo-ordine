@@ -11,4 +11,4 @@ Installare i quattro JAR del pacchetto nella cartella `mods` del server e dei cl
 
 Il launcher 1.2.0 aggiunge importazione skin, creazione/disegno mantelli e changelog limitato all'ultima versione. È pubblicato separatamente nella release `launcher-v1.2.0`.
 
-Verifiche: 42 test Python, 27 test Java, test browser del mercato e avvio preliminare Forge fino al controllo EULA. La prova multiplayer sul server Mohist reale rimane da eseguire. Vedi `VALIDATION.md` e `README.md` per limiti, configurazioni e installazione.
+Verifiche: 44 test Python, 29 test Java, test browser del mercato e avvio preliminare Forge fino al controllo EULA. La prova multiplayer sul server Mohist reale rimane da eseguire. Vedi `VALIDATION.md` e `README.md` per limiti, configurazioni e installazione.

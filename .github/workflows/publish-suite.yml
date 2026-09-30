@@ -35,3 +35,14 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           gh release create suite-v1.0.0 Nuovo-Ordine-Suite-1.0.0.zip mods/nuovo-ordine-market-1.0.0.jar mods/nuovo-ordine-cosmetics-1.0.0.jar mods/nuovo-ordine-townnames-1.0.0.jar mods/nuovo-ordine-pvp-1.0.0.jar --target "$GITHUB_SHA" --title 'Nuovo Ordine Suite 1.0.0' --notes-file projects/nuovo-ordine-suite/RELEASE_NOTES.md --latest=false
+      - name: Aggiorna distribuzione launcher
+        run: |
+          python tools/install_suite_manifest.py --commit "$GITHUB_SHA"
+          git add pack.json pack-settings.json
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Distribute verified Nuovo Ordine suite through launcher manifest'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
