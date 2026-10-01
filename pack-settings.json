@@ -136,6 +136,13 @@
       "sha256": "05c7c5f0f7124b3dab7cfcf915ecb8737e273ccb3c990c4c031730c69d881ba2",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-townnames-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
+      "size": 59932,
+      "sha256": "948995c653ff893f927016cda93b8c559a2f6f0523e77f24cf1bf9971ea9cfef",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     }
   ]
 }
