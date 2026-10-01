@@ -1,0 +1,45 @@
+name: Patch pack Core 0.2.2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-pack-core-0.2.2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add Core 0.2.2 to launcher manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('pack.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          files = data.setdefault('files', [])
+          files[:] = [x for x in files if not x.get('path','').startswith('mods/nuovo-ordine-core-')]
+          files.append({
+              'path': 'mods/nuovo-ordine-core-0.2.1.jar',
+              'size': 18844,
+              'sha256': '77950ad50ca9738f5cc9fa8746bfad5024f0857398dc14f153d254ba161634ce',
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-core-0.2.2.jar'
+          })
+          data['version'] = '2026.10.01-core-0.2.2'
+          p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Commit manifest
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pack.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Make launcher update Nuovo Ordine Core to 0.2.2'
+          git push
