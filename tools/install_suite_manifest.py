@@ -5,8 +5,10 @@ import json
 import re
 from pathlib import Path
 
-SUITE_MODULES = ('market', 'cosmetics', 'gameplay', 'townnames', 'pvp')
+# gameplay is intentionally no longer distributed: Nuovo Ordine Complete supersedes it.
+SUITE_MODULES = ('market', 'cosmetics', 'townnames', 'pvp')
 PREFIXES = tuple('mods/nuovo-ordine-' + name + '-' for name in SUITE_MODULES)
+OBSOLETE_PREFIXES = ('mods/nuovo-ordine-gameplay-',)
 
 
 def update(root, commit):
@@ -25,13 +27,11 @@ def update(root, commit):
         entries.append({**artifact, 'mode': 'replace', 'url': f'https://raw.githubusercontent.com/cicciook/nuovo-ordine/{commit}/{path}'})
     if len(entries) != len(SUITE_MODULES) or len({e['path'] for e in entries}) != len(SUITE_MODULES):
         raise ValueError(f'Expected {len(SUITE_MODULES)} suite artifacts')
+    managed = PREFIXES + OBSOLETE_PREFIXES
     for name, key in [('pack.json', 'files'), ('pack-settings.json', 'external_files')]:
         path = root / name
         doc = json.loads(path.read_text(encoding='utf-8'))
-        doc[key] = [e for e in doc.get(key, []) if not e.get('path', '').startswith(PREFIXES)] + entries
-        if name == 'pack.json':
-            doc['version'] = '2026.10.01-gameplay-1.0.0'
-            doc['news'] = 'Nuovo Ordine — Ferite, reputazione, medico, classifiche e convogli player-driven'
+        doc[key] = [e for e in doc.get(key, []) if not e.get('path', '').startswith(managed)] + entries
         # Keep all existing settings and unrelated entries unchanged.
         path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
