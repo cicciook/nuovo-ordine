@@ -60,11 +60,11 @@ jobs:
               'mode': 'replace',
               'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar',
           }
-          prefix = 'mods/nuovo-ordine-complete-'
+          managed_prefixes = ('mods/nuovo-ordine-complete-', 'mods/nuovo-ordine-gameplay-')
           for filename, key in [('pack.json','files'), ('pack-settings.json','external_files')]:
               path = Path(filename)
               doc = json.loads(path.read_text(encoding='utf-8'))
-              doc[key] = [x for x in doc.get(key,[]) if not x.get('path','').startswith(prefix)] + [entry]
+              doc[key] = [x for x in doc.get(key,[]) if not x.get('path','').startswith(managed_prefixes)] + [entry]
               if filename == 'pack.json':
                   doc['version'] = '2026.10.01-complete-1.0.0'
                   doc['news'] = 'Nuovo Ordine — territori, eventi, contratti, reputazione, ferite, convogli, airdrop, garage/usato e classifiche live'
