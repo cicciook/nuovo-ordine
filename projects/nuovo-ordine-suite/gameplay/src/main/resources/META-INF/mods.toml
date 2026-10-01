@@ -1,0 +1,20 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="nogameplay"
+version="1.0.0"
+displayName="Nuovo Ordine gameplay"
+description="Ferite, reputazione, classifiche e convogli per Nuovo Ordine."
+[[dependencies.nogameplay]]
+modId="forge"
+mandatory=true
+versionRange="[47.4,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.nogameplay]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
