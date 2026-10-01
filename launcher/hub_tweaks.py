@@ -46,7 +46,8 @@ def _safe_hub_url(cfg: dict) -> str:
         host = server.rsplit(":", 1)[0]
     if not host or any(ch in host for ch in "/?#"):
         return ""
-    return f"http://{host}:8765/api/all"
+    url_host = f"[{host}]" if ":" in host else host
+    return f"http://{url_host}:8765/api/all"
 
 
 def _age_label(timestamp_ms) -> str:
