@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "2026.10.01-core-0.2.2-r2",
+  "version": "2026.10.01-core-0.2.2-java17-r3",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
@@ -32187,8 +32187,8 @@
     },
     {
       "path": "mods/nuovo-ordine-core-0.2.2.jar",
-      "size": 18844,
-      "sha256": "77950ad50ca9738f5cc9fa8746bfad5024f0857398dc14f153d254ba161634ce",
+      "size": 18794,
+      "sha256": "303babbe4e7b20a328cd9df862d7fc53cb16d17da517ac1b18878e882bface8d",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-core-0.2.2.jar"
     }
