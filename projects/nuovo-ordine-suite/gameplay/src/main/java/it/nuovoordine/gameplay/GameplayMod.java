@@ -5,14 +5,12 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -109,27 +107,29 @@ public final class GameplayMod {
         event.getDispatcher().register(Commands.literal("ferite")
                 .executes(ctx -> injuryStatus(ctx.getSource().getPlayerOrException())));
 
-        event.getDispatcher().register(Commands.literal("reputazione")
-                .executes(ctx -> reputationStatus(ctx.getSource().getPlayerOrException()))
-                .then(Commands.literal("admin").requires(src -> src.hasPermission(2))
-                        .then(Commands.literal("add")
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .then(Commands.argument("tipo", StringArgumentType.word())
-                                                .then(Commands.argument("valore", IntegerArgumentType.integer(-1000, 1000))
-                                                        .executes(ctx -> reputationAdmin(
-                                                                EntityArgument.getPlayer(ctx, "player"),
-                                                                StringArgumentType.getString(ctx, "tipo"),
-                                                                IntegerArgumentType.getInteger(ctx, "valore"),
-                                                                false)))))
-                        .then(Commands.literal("set")
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .then(Commands.argument("tipo", StringArgumentType.word())
-                                                .then(Commands.argument("valore", IntegerArgumentType.integer(-1000, 1000))
-                                                        .executes(ctx -> reputationAdmin(
-                                                                EntityArgument.getPlayer(ctx, "player"),
-                                                                StringArgumentType.getString(ctx, "tipo"),
-                                                                IntegerArgumentType.getInteger(ctx, "valore"),
-                                                                true)))))));
+        var reputation = Commands.literal("reputazione")
+                .executes(ctx -> reputationStatus(ctx.getSource().getPlayerOrException()));
+        var reputationAdmin = Commands.literal("admin").requires(src -> src.hasPermission(2));
+        reputationAdmin.then(Commands.literal("add")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("tipo", StringArgumentType.word())
+                                .then(Commands.argument("valore", IntegerArgumentType.integer(-1000, 1000))
+                                        .executes(ctx -> reputationAdmin(
+                                                EntityArgument.getPlayer(ctx, "player"),
+                                                StringArgumentType.getString(ctx, "tipo"),
+                                                IntegerArgumentType.getInteger(ctx, "valore"),
+                                                false))))));
+        reputationAdmin.then(Commands.literal("set")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("tipo", StringArgumentType.word())
+                                .then(Commands.argument("valore", IntegerArgumentType.integer(-1000, 1000))
+                                        .executes(ctx -> reputationAdmin(
+                                                EntityArgument.getPlayer(ctx, "player"),
+                                                StringArgumentType.getString(ctx, "tipo"),
+                                                IntegerArgumentType.getInteger(ctx, "valore"),
+                                                true))))));
+        reputation.then(reputationAdmin);
+        event.getDispatcher().register(reputation);
 
         event.getDispatcher().register(Commands.literal("medico")
                 .executes(ctx -> startMedic(ctx.getSource().getPlayerOrException())));
