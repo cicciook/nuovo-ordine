@@ -25,7 +25,7 @@ jobs:
           from pathlib import Path
 
           root = Path('projects/nuovo-ordine-suite')
-          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+          for name in ('cosmetics', 'gameplay', 'market', 'pvp', 'townnames'):
               jar_path = root / name / 'build' / 'libs' / f'nuovo-ordine-{name}-1.0.0.jar'
               with zipfile.ZipFile(jar_path) as jar:
                   assert jar.testzip() is None, f'Corrupt JAR: {jar_path}'
@@ -95,7 +95,7 @@ jobs:
           suite = repo / 'projects' / 'nuovo-ordine-suite'
           entries = []
 
-          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+          for name in ('cosmetics', 'gameplay', 'market', 'pvp', 'townnames'):
               filename = f'nuovo-ordine-{name}-1.0.0.jar'
               hits = list(artifact_root.rglob(filename))
               assert len(hits) == 1, f'Expected exactly one {filename}, found {len(hits)}'
@@ -122,6 +122,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add mods/nuovo-ordine-cosmetics-1.0.0.jar \
+                  mods/nuovo-ordine-gameplay-1.0.0.jar \
                   mods/nuovo-ordine-market-1.0.0.jar \
                   mods/nuovo-ordine-pvp-1.0.0.jar \
                   mods/nuovo-ordine-townnames-1.0.0.jar \
@@ -132,12 +133,12 @@ jobs:
             exit 0
           fi
 
-          git commit -m 'Rebuild Nuovo Ordine suite with valid resource metadata'
+          git commit -m 'Rebuild Nuovo Ordine suite with gameplay systems'
           artifact_commit="$(git rev-parse HEAD)"
           python tools/install_suite_manifest.py --commit "$artifact_commit"
           git add pack.json pack-settings.json
           if ! git diff --cached --quiet; then
-            git commit -m 'Distribute corrected Nuovo Ordine suite through launcher manifest'
+            git commit -m 'Distribute updated Nuovo Ordine suite through launcher manifest'
           fi
           git push origin HEAD:main
 
@@ -159,6 +160,7 @@ jobs:
             Nuovo-Ordine-Suite-1.0.0.zip \
             mods/nuovo-ordine-market-1.0.0.jar \
             mods/nuovo-ordine-cosmetics-1.0.0.jar \
+            mods/nuovo-ordine-gameplay-1.0.0.jar \
             mods/nuovo-ordine-townnames-1.0.0.jar \
             mods/nuovo-ordine-pvp-1.0.0.jar \
             --clobber
