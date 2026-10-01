@@ -32158,13 +32158,6 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-cosmetics-1.0.0.jar"
     },
     {
-      "path": "mods/nuovo-ordine-gameplay-1.0.0.jar",
-      "size": 29423,
-      "sha256": "3f3b590100520d1c7ea53dc83254fbc1c256c64e012f73b722c75589646b0f7b",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-gameplay-1.0.0.jar"
-    },
-    {
       "path": "mods/nuovo-ordine-market-1.0.0.jar",
       "size": 33685,
       "sha256": "d42cfdc80c9fbfdb1b97651e6b285cfcf52cf40cbcddb98580abb73664459809",
@@ -32188,7 +32181,7 @@
     {
       "path": "mods/nuovo-ordine-complete-1.0.0.jar",
       "size": 59044,
-      "sha256": "28404169d41966c0c6b4582f25ed818575f9cd088ce46bfddf443fd5d9655d9c",
+      "sha256": "5a815d267d491356a2ea5eb0743abed2c7ea195e0b5d0fbf199a4db391346943",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     }
