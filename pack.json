@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "2026.10.01-core-0.2.2",
+  "version": "2026.10.01-core-0.2.2-r2",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
@@ -32186,7 +32186,7 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     },
     {
-      "path": "mods/nuovo-ordine-core-0.2.1.jar",
+      "path": "mods/nuovo-ordine-core-0.2.2.jar",
       "size": 18844,
       "sha256": "77950ad50ca9738f5cc9fa8746bfad5024f0857398dc14f153d254ba161634ce",
       "mode": "replace",
