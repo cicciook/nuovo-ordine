@@ -2,16 +2,16 @@
   "discord_url": "https://discord.gg/f4MnwkcGu",
   "changelog": [
     {
-      "version": "v1.2.0",
-      "title": "Skin personalizzate e laboratorio mantelli",
-      "body": "Nuovo pannello Skin e mantelli: importa skin 64×64 classiche o Alex, crea un mantello con colori e motivi e disegnalo pixel per pixel. La mod Nuovo Ordine Cosmetics condivide il tuo aspetto con gli altri giocatori del server. Il pannello changelog mostra soltanto le note dell’ultima versione."
+      "version": "v1.3.0",
+      "title": "Hub live Nuovo Ordine",
+      "body": "Nuove sezioni SERVER, CLASSIFICHE e MERCATO: stato live del server, influenza e Legacy, statistiche player, contratti aperti e mercato veicoli usati. I dati si aggiornano automaticamente e il launcher segnala chiaramente quando il server live non è raggiungibile. Restano skin, mantelli, login Microsoft e aggiornamento automatico del modpack."
     }
   ],
   "events": [
     {
       "date": "",
-      "title": "Nessun evento programmato",
-      "body": "Quando pubblicherai un evento del server, comparirà qui automaticamente."
+      "title": "Eventi automatici in gioco",
+      "body": "Gli eventi strategici, gli airdrop e i convogli automatici sono mostrati in tempo reale nella scheda SERVER del launcher. Questa bacheca resta disponibile per gli eventi speciali programmati dallo staff."
     }
   ]
 }
