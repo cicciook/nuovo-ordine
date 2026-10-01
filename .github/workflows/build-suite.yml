@@ -16,7 +16,12 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew && ./gradlew --no-daemon test build
+      - name: Build and test Forge modules
+        shell: bash
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon test build 2>&1 | tee /tmp/nuovoordine-gradle-build.log
         working-directory: projects/nuovo-ordine-suite
       - name: Validate Forge resource metadata
         run: |
@@ -44,8 +49,9 @@ jobs:
           path: |
             projects/nuovo-ordine-suite/*/build/libs/*.jar
             projects/nuovo-ordine-suite/*/build/reports/tests/test/**
+            /tmp/nuovoordine-gradle-build.log
             /tmp/nuovoordine-smoke/smoke.log
-          if-no-files-found: error
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: nuovo-ordine-suite-jars
