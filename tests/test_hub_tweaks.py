@@ -7,7 +7,7 @@ def test_hub_url_prefers_explicit_setting():
 
 def test_hub_url_derives_host_from_minecraft_server():
     assert hub_tweaks._safe_hub_url({"server": "mc.example:25565"}) == "http://mc.example:8765/api/all"
-    assert hub_tweaks._safe_hub_url({"server": "[2001:db8::10]:25565"}) == "http://2001:db8::10:8765/api/all"
+    assert hub_tweaks._safe_hub_url({"server": "[2001:db8::10]:25565"}) == "http://[2001:db8::10]:8765/api/all"
 
 
 def test_live_views_render_real_payload():
