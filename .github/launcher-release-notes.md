@@ -1,11 +1,10 @@
-Nuovo Ordine Launcher 1.2.0 — Windows, macOS e Linux.
+Nuovo Ordine Launcher 1.3.0 — Windows, macOS e Linux.
 
-- Importazione skin PNG 64×64, classiche e Alex.
-- Laboratorio mantelli: colori, motivi e disegno pixel per pixel, oltre all'importazione PNG 64×32.
-- Sincronizzazione dell'aspetto in gioco tramite Nuovo Ordine Cosmetics, da installare anche sul server.
-- Il pannello changelog mostra solo le note dell'ultima versione.
-- Login Microsoft e aggiornamento automatico del modpack conservati.
+- Aggiunte le sezioni SERVER, CLASSIFICHE e MERCATO con dati live dal server Nuovo Ordine.
+- Classifiche live per influenza/Legacy e statistiche player; mercato usato e numero contratti aperti visibili dal launcher.
+- Stato server con giocatori online, evento strategico, convoglio, airdrop e denaro rimosso dall'economia.
+- Refresh automatico ogni 30 secondi e stato chiaro quando l'API server non è raggiungibile.
+- Restano disponibili skin personalizzate, laboratorio mantelli, login Microsoft e aggiornamento automatico del modpack.
+- Il pannello changelog mostra solo le note di questa ultima versione.
 
-Estrarre l'intero archivio. Applicare le modifiche all'aspetto rientrando nel server. I mantelli devono essere abilitati nelle impostazioni skin di Minecraft.
-
-Le quattro nuove mod e le istruzioni server sono nella release Suite 1.0.0. Gli scambi del Mercato Nero avvengono di persona, senza acquisto automatico.
+Il server deve avere Nuovo Ordine Complete 1.0.0. Di default il launcher prova http://HOST_SERVER:8765/api/all; l'indirizzo può essere impostato manualmente nelle Impostazioni.
