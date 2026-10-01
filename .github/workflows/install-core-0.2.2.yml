@@ -1,0 +1,36 @@
+name: Install Nuovo Ordine Core 0.2.2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-core-0.2.2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assemble Core 0.2.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mods
+          cat staging/core-0.2.2/part-*.b64 | tr -d '\n\r' | base64 -d > mods/nuovo-ordine-core-0.2.2.jar
+          echo '77950ad50ca9738f5cc9fa8746bfad5024f0857398dc14f153d254ba161634ce  mods/nuovo-ordine-core-0.2.2.jar' | sha256sum -c -
+          rm -f mods/nuovo-ordine-core-0.2.1.jar
+      - name: Commit Core 0.2.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A mods
+          git diff --cached --quiet && exit 0
+          git commit -m 'Update Nuovo Ordine Core to 0.2.2'
+          git push
