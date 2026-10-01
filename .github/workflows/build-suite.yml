@@ -2,7 +2,7 @@ name: Nuovo Ordine suite - build and test
 on:
   push:
     branches: [main, feature/market-cosmetics-towny-pvp]
-    paths: ['projects/nuovo-ordine-suite/**', 'tools/test_market_ui.cjs', 'tools/smoke_suite.sh', '.github/workflows/build-suite.yml']
+    paths: ['projects/nuovo-ordine-suite/**', 'tools/install_suite_manifest.py', 'tools/test_market_ui.cjs', 'tools/smoke_suite.sh', '.github/workflows/build-suite.yml']
   workflow_dispatch:
 permissions:
   contents: write
