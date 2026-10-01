@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.09.30-doxcore-1",
+  "version": "2026.10.01-gameplay-1.0.0",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Mercato Nero, skin e mantelli, nomi Towny e bilanciamento PvP",
+  "news": "Nuovo Ordine — Ferite, reputazione, medico, classifiche e convogli player-driven",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32116,34 +32116,6 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
     },
     {
-      "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
-      "size": 15563,
-      "sha256": "cdc1f6320146cdaa0a628cbe33b7cc99009a60a148b01b0d329210b0cb0c561c",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-cosmetics-1.0.0.jar"
-    },
-    {
-      "path": "mods/nuovo-ordine-market-1.0.0.jar",
-      "size": 33685,
-      "sha256": "17973236339330e6930b1390b0428d02200e01b4528a0f883fd3f7273ef99359",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-market-1.0.0.jar"
-    },
-    {
-      "path": "mods/nuovo-ordine-pvp-1.0.0.jar",
-      "size": 10332,
-      "sha256": "b23c88c4d60026eb656f34e26a44115beab58a99bd43bc6121ce4cad0346d92c",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-pvp-1.0.0.jar"
-    },
-    {
-      "path": "mods/nuovo-ordine-townnames-1.0.0.jar",
-      "size": 9457,
-      "sha256": "504fbbec5afd7fbe7885ff45a8a4d01b9d5cfe0d3e59d0b52938b305abeadd35",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/4550c7c22209151f500f0cd6c76749099012ad70/mods/nuovo-ordine-townnames-1.0.0.jar"
-    },
-    {
       "path": "mods/worldedit-mod-7.2.15.jar",
       "size": 5825402,
       "sha256": "17db6b3e94f52d25426684663e1e1846823cbb7907f1c365ac329e5bc7bfaf2c",
@@ -32177,6 +32149,41 @@
       "size": 10545,
       "sha256": "5a41e7ce5fe9522ec28dae551897f68b1344a9527b34ec73c0e896c78c3d8c3a",
       "mode": "replace"
+    },
+    {
+      "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
+      "size": 15563,
+      "sha256": "eb8a478baa3518b984c788d51b496b7630546d01fae1571aeb1870af65b9efcf",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-cosmetics-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-gameplay-1.0.0.jar",
+      "size": 29423,
+      "sha256": "3f3b590100520d1c7ea53dc83254fbc1c256c64e012f73b722c75589646b0f7b",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-gameplay-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-market-1.0.0.jar",
+      "size": 33685,
+      "sha256": "d42cfdc80c9fbfdb1b97651e6b285cfcf52cf40cbcddb98580abb73664459809",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-market-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-pvp-1.0.0.jar",
+      "size": 10332,
+      "sha256": "3c053af08e8eb6718a7edea7566f4fe99f862a9701f7ff081aa9897278382283",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-pvp-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-townnames-1.0.0.jar",
+      "size": 9457,
+      "sha256": "05c7c5f0f7124b3dab7cfcf915ecb8737e273ccb3c990c4c031730c69d881ba2",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/e4f81e5eb10af55186d551e53c5c61c104ecdc9e/mods/nuovo-ordine-townnames-1.0.0.jar"
     }
   ],
   "archives": {
