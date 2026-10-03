@@ -1,22 +1,22 @@
 [
   {
     "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
-    "size": 17681,
-    "sha256": "dbb6648429c9bdf4ea1ad01251b0beea741f8357a32d7b53c266e1728d1c945c"
+    "size": 17545,
+    "sha256": "10f8994a4e6aeb1bcad8d132144f4cf181713fb160f9c3e30bac36735f837982"
   },
   {
     "path": "mods/nuovo-ordine-market-1.0.0.jar",
     "size": 33685,
-    "sha256": "c5c5d1a63813ae257c7a313346c8af53b7eed9c54f5249cdb1cedc4d739d2946"
+    "sha256": "0cbba6b6d7adc0adb54f2bdaea2ca50fbad49d57a89b831e5c98a962c2c93f16"
   },
   {
     "path": "mods/nuovo-ordine-pvp-1.0.0.jar",
     "size": 10332,
-    "sha256": "7b220c89f1d89d92c28a06e075678910199fc97f8f8c4ef138a75517b623b52f"
+    "sha256": "335e945975b138eb1311126cf3f7064ab4e55ce7349d9ad159411e44ed106672"
   },
   {
     "path": "mods/nuovo-ordine-townnames-1.0.0.jar",
     "size": 9457,
-    "sha256": "11f273236058fd59bdf36e94eb8479de9b3b2a496eda4f67e5f71136160fcdb2"
+    "sha256": "46d213581cb7a5aa0d44cc40fd544d34426652f33487eb78d04692bd21627481"
   }
 ]
