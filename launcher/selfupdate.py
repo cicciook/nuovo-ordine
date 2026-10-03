@@ -42,25 +42,39 @@ def current_install_path():
 def _asset_for_release(release):
     system = platform_name()
     machine = platform.machine().lower()
+
+    def pick(candidates):
+        if not candidates:
+            return None
+        aliases = {machine}
+        if machine in ("amd64", "x86_64"):
+            aliases.update({"amd64", "x86_64"})
+        elif machine in ("arm64", "aarch64"):
+            aliases.update({"arm64", "aarch64"})
+        for asset in candidates:
+            lower = asset["name"].lower()
+            if any(alias in lower for alias in aliases):
+                return asset
+        return candidates[0]
+
+    assets = release.get("assets", [])
+    if system == "windows":
+        installers = [
+            asset for asset in assets
+            if asset.get("name", "").startswith("NuovoOrdine-Setup-windows-")
+            and asset.get("name", "").endswith(".exe")
+        ]
+        selected = pick(installers)
+        if selected:
+            return selected
+
     suffix = ".zip" if system in ("windows", "macos") else ".tar.gz"
-    candidates = [
-        asset for asset in release.get("assets", [])
+    archives = [
+        asset for asset in assets
         if asset.get("name", "").startswith(f"NuovoOrdine-{system}-")
         and asset.get("name", "").endswith(suffix)
     ]
-    if not candidates:
-        return None
-    aliases = {machine}
-    if machine in ("amd64", "x86_64"):
-        aliases.update({"amd64", "x86_64"})
-    elif machine in ("arm64", "aarch64"):
-        aliases.update({"arm64", "aarch64"})
-    for asset in candidates:
-        lower = asset["name"].lower()
-        if any(alias in lower for alias in aliases):
-            return asset
-    return candidates[0]
-
+    return pick(archives)
 
 def _safe_zip_extract(archive, destination):
     destination = Path(destination).resolve()
@@ -156,6 +170,13 @@ def prepare_update(cfg, report=lambda text: None):
         report(f"Nuovo launcher {'.'.join(map(str, latest))} disponibile. Download automatico…")
         _download(asset, archive, report)
 
+        if sys.platform == "win32" and asset["name"].lower().endswith(".exe"):
+            return {
+                "version": ".".join(map(str, latest)),
+                "installer": str(archive),
+                "target": str(current_install_path()),
+            }
+
         stage = update_root / "stage"
         stage.mkdir()
         if sys.platform == "darwin":
@@ -201,6 +222,53 @@ def apply_update(update):
     installation directory. Renaming the whole PyInstaller folder is unreliable on
     Windows because loaded DLLs and antivirus/indexers can keep directory handles open.
     """
+    if "installer" in update:
+        installer = Path(update["installer"]).resolve()
+        if sys.platform != "win32" or not installer.is_file() or installer.suffix.lower() != ".exe":
+            raise RuntimeError("Installer aggiornamento non valido.")
+
+        DATA.mkdir(parents=True, exist_ok=True)
+        pid = os.getpid()
+        script = DATA / "apply-launcher-installer.ps1"
+        log = DATA / "launcher-update.log"
+        local_app_data = Path(os.environ.get("LOCALAPPDATA", DATA))
+        installed_exe = local_app_data / "Programs" / "NuovoOrdine" / "NuovoOrdine.exe"
+        body = f"""$ErrorActionPreference = 'Stop'
+$log = '{_ps_quote(log)}'
+$setup = '{_ps_quote(installer)}'
+$exe = '{_ps_quote(installed_exe)}'
+function Write-UpdateLog([string]$message) {{
+    try {{ Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $message) }} catch {{ }}
+}}
+try {{
+    Write-UpdateLog 'Installer updater avviato.'
+    $pidToWait = {pid}
+    while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
+    Start-Sleep -Milliseconds 500
+    $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Wait -PassThru
+    if ($process.ExitCode -ne 0) {{ throw ('Installer exit code ' + $process.ExitCode) }}
+    if (-not (Test-Path -LiteralPath $exe)) {{ throw 'NuovoOrdine.exe non trovato dopo installazione.' }}
+    Write-UpdateLog 'Installazione completata; riavvio launcher.'
+    Start-Process -FilePath $exe -WorkingDirectory (Split-Path -Parent $exe) | Out-Null
+}} catch {{
+    Write-UpdateLog ('ERRORE installer: ' + $_)
+    exit 1
+}}
+Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
+"""
+        script.write_text(body, encoding="utf-8-sig")
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+        subprocess.Popen(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            cwd=str(DATA),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=flags,
+            close_fds=True,
+        )
+        return
+
     payload = Path(update["payload"]).resolve()
     target = Path(update["target"]).resolve()
     if not payload.exists() or not target.exists():
