@@ -326,7 +326,7 @@ class Window(QMainWindow):
         self.releases.clicked.connect(self.open_releases)
         side.addWidget(self.releases)
 
-        version = QLabel(f"LAUNCHER {VERSION}\nAggiornamento automatico attivo")
+        version = QLabel(f"LAUNCHER {VERSION}\nAggiornamenti tramite installer")
         version.setObjectName("muted")
         side.addWidget(version)
         row.addWidget(sidebar)
