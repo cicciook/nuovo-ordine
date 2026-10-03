@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 # gameplay is intentionally no longer distributed: Nuovo Ordine Complete supersedes it.
-SUITE_MODULES = ('market', 'cosmetics', 'townnames', 'pvp')
+SUITE_MODULES = ('market', 'cosmetics', 'townnames', 'pvp', 'taczfix')
 PREFIXES = tuple('mods/nuovo-ordine-' + name + '-' for name in SUITE_MODULES)
 OBSOLETE_PREFIXES = ('mods/nuovo-ordine-gameplay-',)
 
