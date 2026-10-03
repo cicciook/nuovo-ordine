@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-mods-20",
+  "version": "2026.10.03-hotfix-21",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Lootr Tactical 1.1.19: zaini/upgrades Sophisticated e bolt-action bilanciati",
+  "news": "Nuovo Ordine — hotfix updater: Create Contraption Terminals e JRFTL da Modrinth; Easy Gunpowder sostituito da ricetta KubeJS.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32215,7 +32215,7 @@
       "size": 88862,
       "sha256": "b4ef1e5cc4bef1c6c8bb24c080f2ff585ad21bc6ce8d8caaebe156fb1e00ab22",
       "mode": "replace",
-      "url": "https://mediafilez.forgecdn.net/files/6252/786/createcontraptionterminals-1.20-1.2.0.jar"
+      "url": "https://cdn.modrinth.com/data/gOPAFzp0/versions/Rdo5tUmb/createcontraptionterminals-1.20-1.2.0.jar"
     },
     {
       "path": "mods/CreateCyberGoggles-1.20.1-7.2.3-Forge.jar",
@@ -32232,13 +32232,6 @@
       "url": "https://mediafilez.forgecdn.net/files/8463/638/createfisheryindustry-1.20-5.0.3.jar"
     },
     {
-      "path": "mods/Easy Gunpowder 1.0-1.20.1.jar",
-      "size": 5443,
-      "sha256": "8589154a63378091530ee481c4feb61e1fe6df5f406ab960ff7a6c237fb5d6f3",
-      "mode": "replace",
-      "url": "https://mediafilez.forgecdn.net/files/4834/711/Easy%20Gunpowder%201.0-1.20.1.jar"
-    },
-    {
       "path": "mods/immersive_paintings-0.6.13+1.20.1-forge.jar",
       "size": 4856103,
       "sha256": "069d5dffa4060d965899e607fad725c4d80a8086cef64f1d7563259b0a070633",
@@ -32250,7 +32243,7 @@
       "size": 14541,
       "sha256": "521258f9b254b2be0205b40db882cbcdc26cf87babc8449939646f75d8e6c3b3",
       "mode": "replace",
-      "url": "https://mediafilez.forgecdn.net/files/4594/475/JRFTL-1.20.1-1.6.0.jar"
+      "url": "https://cdn.modrinth.com/data/8nIicBYu/versions/lHLTx4dM/JRFTL-1.20.1-1.6.0.jar"
     },
     {
       "path": "mods/mekanism_ponders-1.0.3-1.20.1.jar",
@@ -32279,6 +32272,13 @@
       "sha256": "a789d1519fd4033334d0e217b252c557095b8007922247bfe53ee9db4f76a63d",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/7344/584/tfmg-1.0.2f.jar"
+    },
+    {
+      "path": "kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js",
+      "size": 434,
+      "sha256": "3cbc1443331e987001a760c93b74f40fb67b6e0855bc5d5e387a1ad8886b74de",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     }
   ],
   "archives": {
