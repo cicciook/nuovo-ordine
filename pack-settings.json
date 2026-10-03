@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — hotfix rendering: rimosso Oculus/Flywheel Compat 2.0.3 incompatibile con Flywheel 1.0.6/Create 6.0.8.",
+  "news": "Nuovo Ordine — Armeria 1.3.1: fix Mohist/Gson, catalogo oggetti e prezzi ripristinati.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -234,6 +234,13 @@
       "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
+    },
+    {
+      "path": "mods/armeria-browser-1.3.1.jar",
+      "size": 95786,
+      "sha256": "a1a15a6bbd92e5fffd71f67eba99d6d5c239de3ee7c687f5bbd9b457aa7e1778",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.1.jar"
     }
   ],
   "exclude_paths": [
