@@ -6,7 +6,7 @@ import javax.imageio.ImageIO;
 
 public final class PngGuard {
     public static final int MAX_SKIN_BYTES = 32768;
-    public static final int MAX_CAPE_BYTES = 900 * 1024;
+    public static final int MAX_CAPE_BYTES = 4 * 1024 * 1024;
     public static final int MAX_CAPE_FRAMES = 24;
     public static final Set<Integer> CAPE_WIDTHS = Set.of(64, 128, 256, 512);
 
@@ -44,9 +44,9 @@ public final class PngGuard {
         if (image == null || image.getWidth() != w || image.getHeight() != h)
             throw new IOException("Invalid PNG");
 
-        var out = new ByteArrayOutputStream();
-        ImageIO.write(image, "PNG", out);
-        if (out.size() > max) throw new IOException("PNG size");
-        return out.toByteArray();
+        // The image was decoded successfully and its dimensions were checked.
+        // Keep the original compressed bytes: re-encoding multi-frame HD+ sheets
+        // with ImageIO can inflate them significantly for no validation benefit.
+        return data;
     }
 }
