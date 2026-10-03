@@ -20,9 +20,15 @@ public class CosmeticsClient {
     public record Textures(ResourceLocation skin, List<ResourceLocation> capes, boolean slim) {}
 
     public static final Map<UUID, Textures> TEXTURES = new HashMap<>();
+    static final Map<UUID, IncomingAppearance> INCOMING = new HashMap<>();
+
     static boolean sent;
     static int ticks;
     static long animationTicks;
+
+    static byte[] outboundCape;
+    static int outboundChunk;
+    static int outboundChunks;
 
     static byte[] read(Path p, int max) throws IOException {
         if (!Files.isRegularFile(p)) return new byte[0];
@@ -35,6 +41,10 @@ public class CosmeticsClient {
         sent = false;
         ticks = 0;
         animationTicks = 0;
+        outboundCape = null;
+        outboundChunk = 0;
+        outboundChunks = 0;
+        INCOMING.clear();
     }
 
     @SubscribeEvent
@@ -43,18 +53,49 @@ public class CosmeticsClient {
         animationTicks++;
 
         var mc = Minecraft.getInstance();
-        if (mc.player == null || sent || ++ticks < 40) return;
-        sent = true;
+        if (mc.player == null || mc.getConnection() == null) return;
         if (!CosmeticsMod.NET.isRemotePresent(mc.getConnection().getConnection())) return;
+
+        // Send large cape uploads gradually instead of one oversized custom payload.
+        if (outboundCape != null) {
+            for (int sentNow = 0; sentNow < 8 && outboundChunk < outboundChunks; sentNow++) {
+                int start = outboundChunk * CosmeticsMod.CHUNK_BYTES;
+                int end = Math.min(start + CosmeticsMod.CHUNK_BYTES, outboundCape.length);
+                CosmeticsMod.NET.sendToServer(
+                    new CosmeticsMod.UploadChunk(
+                        outboundChunk,
+                        outboundChunks,
+                        Arrays.copyOfRange(outboundCape, start, end)
+                    )
+                );
+                outboundChunk++;
+            }
+            if (outboundChunk >= outboundChunks) {
+                outboundCape = null;
+                outboundChunk = 0;
+                outboundChunks = 0;
+            }
+        }
+
+        if (sent || ++ticks < 40) return;
+        sent = true;
 
         try {
             Path root = mc.gameDirectory.toPath().resolve("config/nuovoordine-cosmetics");
             boolean slim = Files.exists(root.resolve("slim"));
-            CosmeticsMod.NET.sendToServer(new CosmeticsMod.Upload(
-                read(root.resolve("skin.png"), PngGuard.MAX_SKIN_BYTES),
-                read(root.resolve("cape.png"), PngGuard.MAX_CAPE_BYTES),
-                slim
-            ));
+            byte[] skin = read(root.resolve("skin.png"), PngGuard.MAX_SKIN_BYTES);
+            byte[] cape = read(root.resolve("cape.png"), PngGuard.MAX_CAPE_BYTES);
+            int chunks = CosmeticsMod.expectedChunks(cape.length);
+
+            CosmeticsMod.NET.sendToServer(
+                new CosmeticsMod.UploadStart(skin, slim, cape.length, chunks)
+            );
+
+            if (cape.length > 0) {
+                outboundCape = cape;
+                outboundChunk = 0;
+                outboundChunks = chunks;
+            }
         } catch (Exception ex) {
             mc.player.displayClientMessage(
                 net.minecraft.network.chat.Component.literal(
@@ -149,11 +190,112 @@ public class CosmeticsClient {
         }
     }
 
+    static void beginAppearance(CosmeticsMod.AppearanceHeader p) {
+        try {
+            if (p.capeBytes() < 0 || p.capeBytes() > PngGuard.MAX_CAPE_BYTES)
+                throw new IOException("Cape size");
+            if (p.capeChunks() != CosmeticsMod.expectedChunks(p.capeBytes()))
+                throw new IOException("Cape chunks");
+
+            INCOMING.remove(p.id());
+            if (p.capeBytes() == 0) {
+                receive(new CosmeticsMod.Appearance(p.id(), p.skin(), new byte[0], p.slim()));
+                return;
+            }
+            INCOMING.put(
+                p.id(),
+                new IncomingAppearance(p.skin(), p.slim(), p.capeBytes(), p.capeChunks())
+            );
+        } catch (Exception ex) {
+            INCOMING.remove(p.id());
+            System.getLogger("nocosmetics").log(
+                System.Logger.Level.WARNING, "Header mantello rifiutato", ex
+            );
+        }
+    }
+
+    static void receiveAppearanceChunk(CosmeticsMod.AppearanceChunk p) {
+        IncomingAppearance incoming = INCOMING.get(p.id());
+        if (incoming == null) return;
+        try {
+            if (!incoming.accept(p)) throw new IOException("Cape chunk");
+            if (!incoming.complete()) return;
+
+            INCOMING.remove(p.id());
+            receive(
+                new CosmeticsMod.Appearance(
+                    p.id(),
+                    incoming.skin,
+                    incoming.join(),
+                    incoming.slim
+                )
+            );
+        } catch (Exception ex) {
+            INCOMING.remove(p.id());
+            System.getLogger("nocosmetics").log(
+                System.Logger.Level.WARNING, "Chunk mantello rifiutato", ex
+            );
+        }
+    }
+
+    static void removeAppearance(UUID id) {
+        INCOMING.remove(id);
+        release(TEXTURES.remove(id));
+    }
+
+    static final class IncomingAppearance {
+        final byte[] skin;
+        final boolean slim;
+        final int totalBytes;
+        final byte[][] chunks;
+        int received;
+
+        IncomingAppearance(byte[] skin, boolean slim, int totalBytes, int totalChunks) {
+            this.skin = skin;
+            this.slim = slim;
+            this.totalBytes = totalBytes;
+            this.chunks = new byte[totalChunks][];
+        }
+
+        boolean accept(CosmeticsMod.AppearanceChunk chunk) {
+            if (chunk.total() != chunks.length) return false;
+            if (chunk.index() < 0 || chunk.index() >= chunks.length) return false;
+            if (chunk.data().length == 0 || chunk.data().length > CosmeticsMod.CHUNK_BYTES)
+                return false;
+            if (chunks[chunk.index()] == null) {
+                chunks[chunk.index()] = chunk.data();
+                received++;
+            }
+            return true;
+        }
+
+        boolean complete() {
+            return received == chunks.length;
+        }
+
+        byte[] join() throws IOException {
+            byte[] result = new byte[totalBytes];
+            int offset = 0;
+            for (byte[] chunk : chunks) {
+                if (chunk == null) throw new IOException("Missing cape chunk");
+                if (offset + chunk.length > result.length) throw new IOException("Cape size");
+                System.arraycopy(chunk, 0, result, offset, chunk.length);
+                offset += chunk.length;
+            }
+            if (offset != result.length) throw new IOException("Cape size");
+            return result;
+        }
+    }
+
     @SubscribeEvent
     public static void logout(ClientPlayerNetworkEvent.LoggingOut e) {
         TEXTURES.values().forEach(CosmeticsClient::release);
         TEXTURES.clear();
+        INCOMING.clear();
         sent = false;
         animationTicks = 0;
+        outboundCape = null;
+        outboundChunk = 0;
+        outboundChunks = 0;
     }
 }
