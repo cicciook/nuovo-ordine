@@ -148,6 +148,11 @@ jobs:
               for item in external
               if re.fullmatch(r'mods/ammocompat-[^/]+\.jar', item['path'])
           }
+          armeria_paths = {
+              item['path']
+              for item in external
+              if re.fullmatch(r'mods/armeria-browser-[^/]+\.jar', item['path'])
+          }
 
           excluded = set(settings.get('exclude_paths', []))
           current_files = [
@@ -176,6 +181,14 @@ jobs:
                   if (
                       not re.fullmatch(r'mods/ammocompat-[^/]+\.jar', item.get('path', ''))
                       or item.get('path') in ammo_compat_paths
+                  )
+              ]
+          if armeria_paths:
+              current_files = [
+                  item for item in current_files
+                  if (
+                      not re.fullmatch(r'mods/armeria-browser-[^/]+\.jar', item.get('path', ''))
+                      or item.get('path') in armeria_paths
                   )
               ]
 
