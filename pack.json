@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-16",
+  "version": "2026.10.03-ext-17",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Oculus sostituito con Luxium 2.8.0 pre-alpha.",
+  "news": "Nuovo Ordine — rimosso Create Better FPS dal client.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -2749,13 +2749,6 @@
       "sha256": "a39c71185ef168b896d1711d8b8955be5261258ad8d8d9592397bcf9863b65dd",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/a39c71185ef168b896d1711d8b8955be5261258ad8d8d9592397bcf9863b65dd.bin"
-    },
-    {
-      "path": "mods/createbetterfps-1.20.1-1.1.2.jar",
-      "size": 25214,
-      "sha256": "6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3.bin"
     },
     {
       "path": "mods/createbigcannons-5.11.4-mc.1.20.1-forge.jar",
