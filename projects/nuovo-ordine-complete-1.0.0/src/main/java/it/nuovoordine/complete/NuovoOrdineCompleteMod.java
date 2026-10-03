@@ -47,6 +47,7 @@ public final class NuovoOrdineCompleteMod {
         if(state.nextAirdropAt<=now)state.nextAirdropAt=now+min("airdrop.everyMinutes",90)*60_000L;
         if(state.nextConvoyAt<=now)state.nextConvoyAt=now+min("convoy.everyMinutes",120)*60_000L;
         if(cfg.b("hub.enabled",true))hub.start(cfg.s("hub.bind","0.0.0.0"),cfg.i("hub.port",8765,1024,65535),cfg.s("hub.cors","*"),this::hubJson);
+        applyTaczShootCompatibilityFix();
         broadcast("§8[§cNuovo Ordine§8] §7Complete §f"+VERSION+" §7attivo. Towny="+(townyAvailable()?"§aOK":"§eFallback")+" §7Economia="+(economy.ready()?"§aVault/TNE OK":"§cnon trovata"));
         dirty=true;save();
     }
@@ -183,6 +184,17 @@ public final class NuovoOrdineCompleteMod {
     private Models.Rep repOf(UUID id){return state.reputation.computeIfAbsent(id,k->new Models.Rep());}
     private int vehicleCount(UUID id){return state.vehicles.getOrDefault(id,Map.of()).size();}
     private boolean townyAvailable(){try{Class.forName("com.palmergames.bukkit.towny.TownyAPI");return true;}catch(Throwable e){return false;}}
+
+    private void applyTaczShootCompatibilityFix(){
+        try{
+            Class.forName("com.tacz.guns.GunMod");
+            int result=runCommand("tacz config serverShootNetworkCheck false");
+            if(result>0)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato per evitare il blocco iniziale dello sparo.");
+            else LOG.log(System.Logger.Level.WARNING,"TaCZ rilevato ma il fix serverShootNetworkCheck non e' stato applicato.");
+        }catch(Throwable ignored){
+            LOG.log(System.Logger.Level.INFO,"TaCZ non rilevato: fix sparo non necessario.");
+        }
+    }
 
     private int runCommand(String cmd){if(server==null)return 0;try{Object source=R.call(server,"createCommandSourceStack");Object commands=R.call(server,"getCommands");for(String method:List.of("performPrefixedCommand","performCommand","m_230957_"))try{Object r=R.call(commands,method,source,cmd);return r instanceof Number n?n.intValue():1;}catch(Exception ignored){}return 0;}catch(Exception e){return 0;}}
     private void broadcast(String text){if(server==null){LOG.log(System.Logger.Level.INFO,text.replaceAll("§.",""));return;}try{Object pl=R.call(server,"getPlayerList");Object c=R.component(text);for(Method m:pl.getClass().getMethods())if(m.getName().equals("broadcastSystemMessage")&&m.getParameterCount()==2){try{m.invoke(pl,c,false);return;}catch(Exception ignored){}}}catch(Exception ignored){}for(Object p:online())send(p,text);}
