@@ -1,4 +1,4 @@
-# Nuovo Ordine — mercato, aspetto, Towny e PvP
+# Nuovo Ordine — mercato, aspetto, Towny, PvP e compatibilità TaCZ
 
 Minecraft **1.20.1**, Forge **47.4.x** (compilato e verificato con 47.4.13), Java **17**. Integrazioni esaminate sul pack: MCEF 2.1.6, TACZ 1.1.8-hotfix, Superb Warfare 0.8.9.1-hotfix, Xaero Minimap 26.5.0 e World Map 1.46.0. Towny richiede il server ibrido Mohist già usato dal progetto.
 
@@ -10,6 +10,7 @@ Minecraft **1.20.1**, Forge **47.4.x** (compilato e verificato con 47.4.13), Jav
 | nuovo-ordine-cosmetics-1.0.0.jar | Sì | Sì |
 | nuovo-ordine-townnames-1.0.0.jar | Sì | Sì, con Towny |
 | nuovo-ordine-pvp-1.0.0.jar | Facoltativo | Sì |
+| nuovo-ordine-taczfix-1.0.0.jar | Sì, con TaCZ | Facoltativo |
 
 Copia i JAR in `mods/`, non in `plugins/`. Riavvia client e server insieme dopo l'installazione. Il launcher distribuisce i file elencati in `pack.json`; il server va aggiornato separatamente.
 
@@ -27,13 +28,17 @@ Dopo la conferma, **«Attiva waypoint temporaneo Xaero»** abilita il segnaposto
 
 Archivio limitato a 8 MiB per contenere uso di memoria e tempi di salvataggio. Le letture periodiche non clonano le conversazioni. Dati nel salvataggio del mondo, `nuovoordine/market.json`, conservati al riavvio. Scrittura temporanea seguita da sostituzione del file; se il salvataggio fallisce, l'operazione non viene applicata in memoria. Gli annunci scaduti sono esclusi immediatamente e rimossi al successivo salvataggio.
 
-## Skin e laboratorio mantelli — launcher 1.2.0
+## Skin e laboratorio mantelli — launcher 1.4.0
 
-Il pulsante **Skin e mantelli** importa una skin PNG **64×64**, classica o Alex, e mantelli PNG **64×32** (massimo 32 KB ciascuno). Il laboratorio permette colori, motivi iniziali e disegno pixel per pixel su retro e interno del mantello. Si applicano al successivo ingresso nel server.
+Il pulsante **Skin e mantelli** importa skin PNG **64×64** e mantelli statici o animati. Per i mantelli il launcher accetta **PNG 64×32**, sprite-sheet verticali **64×(32×frame)**, **GIF, APNG e WebP animati**; l'import viene normalizzato in una sprite-sheet PNG sicura con massimo **64 frame**. Il laboratorio mostra l'anteprima animata e consente di impostare la velocità fra **1 e 25 FPS**.
 
-Il launcher salva i PNG in `minecraft/config/nuovoordine-cosmetics/`. La mod invia solo il proprio aspetto tramite la connessione Minecraft autenticata: nessun hosting immagini né cambio dell'account Microsoft. Tutti i giocatori con la mod vedono skin e mantelli personalizzati. «Ripristina originale» rimuove la personalizzazione al prossimo ingresso. Il mantello deve essere abilitato anche nelle opzioni di personalizzazione skin di Minecraft.
+Il launcher salva la texture in `minecraft/config/nuovoordine-cosmetics/cape.png` e la velocità in `cape.frame_ms`. La mod Cosmetics 1.0.0 con protocollo rete v2 invia texture e durata dei frame tramite la connessione Minecraft; gli altri client Nuovo Ordine ricostruiscono l'animazione con una DynamicTexture, senza hosting immagini o WebView. Il mantello deve essere abilitato anche nelle opzioni di personalizzazione skin di Minecraft.
 
-I file rimangono sul client e vengono reinviati a ogni collegamento. Sul server sono conservati in memoria per la sessione. Skin/mantelli ufficiali rimangono il fallback. Il changelog mostra soltanto l'ultima versione del launcher.
+Le skin restano limitate a 32 KiB. I mantelli normalizzati sono limitati a 512 KiB e i file sorgente importati a 8 MiB. «Ripristina originale» rimuove la personalizzazione al prossimo ingresso.
+
+## TaCZ Sync Fix
+
+`nuovo-ordine-taczfix-1.0.0.jar` interviene sul bug TaCZ 1.20.1 in cui, dopo alcuni ingressi nel server, il client non riesce a sparare finché non esegue il melee su **V**. Circa tre secondi dopo il login il modulo ritenta la sincronizzazione timestamp di TaCZ e reinvia lo stato dell'arma impugnata usando le API/pacchetti TaCZ già previsti. **Non simula V, non esegue un colpo melee e non bypassa i controlli di sparo del server.**
 
 ## Nomi Towny
 
