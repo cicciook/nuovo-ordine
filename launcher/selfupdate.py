@@ -1,4 +1,4 @@
-"""Launcher self-update from public GitHub Releases."""
+"""Launcher updates from public GitHub Releases, preferring native installers."""
 import hashlib
 import os
 import platform
@@ -15,7 +15,7 @@ import requests
 from . import VERSION
 from .config import DATA, validate_config
 
-MAX_UPDATE = 500 * 1024 * 1024
+MAX_UPDATE = 700 * 1024 * 1024
 
 
 def version_tuple(value):
@@ -39,27 +39,49 @@ def current_install_path():
     return executable.parent
 
 
-def _asset_for_release(release):
-    system = platform_name()
+def _machine_aliases():
     machine = platform.machine().lower()
-    suffix = ".zip" if system in ("windows", "macos") else ".tar.gz"
-    candidates = [
-        asset for asset in release.get("assets", [])
-        if asset.get("name", "").startswith(f"NuovoOrdine-{system}-")
-        and asset.get("name", "").endswith(suffix)
-    ]
-    if not candidates:
-        return None
     aliases = {machine}
     if machine in ("amd64", "x86_64"):
         aliases.update({"amd64", "x86_64"})
     elif machine in ("arm64", "aarch64"):
         aliases.update({"arm64", "aarch64"})
+    return aliases
+
+
+def _pick(candidates):
+    if not candidates:
+        return None
+    aliases = _machine_aliases()
     for asset in candidates:
-        lower = asset["name"].lower()
+        lower = asset.get("name", "").lower()
         if any(alias in lower for alias in aliases):
             return asset
     return candidates[0]
+
+
+def _installer_asset_for_release(release):
+    system = platform_name()
+    suffix = {"windows": ".exe", "macos": ".pkg", "linux": ".deb"}[system]
+    prefix = f"NuovoOrdine-Setup-{system}-"
+    return _pick([
+        asset for asset in release.get("assets", [])
+        if asset.get("name", "").startswith(prefix) and asset.get("name", "").endswith(suffix)
+    ])
+
+
+def _legacy_asset_for_release(release):
+    system = platform_name()
+    suffix = ".zip" if system in ("windows", "macos") else ".tar.gz"
+    return _pick([
+        asset for asset in release.get("assets", [])
+        if asset.get("name", "").startswith(f"NuovoOrdine-{system}-")
+        and asset.get("name", "").endswith(suffix)
+    ])
+
+
+def _asset_for_release(release):
+    return _installer_asset_for_release(release) or _legacy_asset_for_release(release)
 
 
 def _safe_zip_extract(archive, destination):
@@ -86,9 +108,7 @@ def _download(asset, target, report):
     downloaded = 0
     hasher = hashlib.sha256()
     with requests.get(
-        asset["browser_download_url"],
-        timeout=(15, 90),
-        stream=True,
+        asset["browser_download_url"], timeout=(15, 90), stream=True,
         headers={"Accept": "application/octet-stream", "User-Agent": f"NuovoOrdine/{VERSION}"},
     ) as response:
         response.raise_for_status()
@@ -108,13 +128,13 @@ def _download(asset, target, report):
         raise ValueError("Integrità aggiornamento launcher non valida.")
 
 
-def prepare_update(cfg, report=lambda text: None):
-    """Return a staged update dict, or None when already current/unavailable.
+def _is_installer(path):
+    return Path(path).suffix.lower() in {".exe", ".pkg", ".deb"}
 
-    Network failures never block launching the game; they are reported and ignored.
-    """
+
+def prepare_update(cfg, report=lambda text: None):
     if not getattr(sys, "frozen", False):
-        report("Modalità sviluppo: aggiornamento automatico launcher non applicato.")
+        report("Modalità sviluppo: aggiornamento launcher non applicato.")
         return None
     try:
         validate_config(cfg)
@@ -122,23 +142,23 @@ def prepare_update(cfg, report=lambda text: None):
         api = f"https://api.github.com/repos/{repo}/releases?per_page=30"
         report("Controllo aggiornamenti del launcher…")
         with requests.get(
-            api,
-            timeout=(10, 30),
+            api, timeout=(10, 30),
             headers={"Accept": "application/vnd.github+json", "User-Agent": f"NuovoOrdine/{VERSION}"},
         ) as response:
             response.raise_for_status()
             releases = response.json()
 
-        launcher_releases = []
+        available = []
         for release in releases if isinstance(releases, list) else []:
-            parsed = version_tuple(release.get("tag_name", ""))
-            if parsed and str(release.get("tag_name", "")).startswith("launcher-v"):
-                launcher_releases.append((parsed, release))
+            tag = str(release.get("tag_name", ""))
+            parsed = version_tuple(tag)
+            if parsed and tag.startswith("launcher-v"):
+                available.append((parsed, release))
         current = version_tuple(VERSION)
-        if not launcher_releases or not current:
+        if not available or not current:
             report(f"Launcher {VERSION} aggiornato.")
             return None
-        latest, release = max(launcher_releases, key=lambda item: item[0])
+        latest, release = max(available, key=lambda item: item[0])
         if latest <= current:
             report(f"Launcher {VERSION} aggiornato.")
             return None
@@ -153,18 +173,18 @@ def prepare_update(cfg, report=lambda text: None):
             shutil.rmtree(update_root, ignore_errors=True)
         update_root.mkdir(parents=True, exist_ok=True)
         archive = update_root / asset["name"]
-        report(f"Nuovo launcher {'.'.join(map(str, latest))} disponibile. Download automatico…")
+        report(f"Nuovo launcher {'.'.join(map(str, latest))} disponibile. Download…")
         _download(asset, archive, report)
+
+        if _is_installer(archive):
+            report("Installer aggiornamento pronto.")
+            return {"version": ".".join(map(str, latest)), "installer": str(archive)}
 
         stage = update_root / "stage"
         stage.mkdir()
         if sys.platform == "darwin":
-            subprocess.run(
-                ["ditto", "-x", "-k", str(archive), str(stage)],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
+            subprocess.run(["ditto", "-x", "-k", str(archive), str(stage)], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             payload = stage / "NuovoOrdine.app"
         elif asset["name"].endswith(".zip"):
             _safe_zip_extract(archive, stage)
@@ -172,15 +192,9 @@ def prepare_update(cfg, report=lambda text: None):
         else:
             _safe_tar_extract(archive, stage)
             payload = stage / "NuovoOrdine"
-
         if not payload.exists():
             raise RuntimeError("Il pacchetto dell'aggiornamento non contiene il launcher atteso.")
-
-        return {
-            "version": ".".join(map(str, latest)),
-            "payload": str(payload),
-            "target": str(current_install_path()),
-        }
+        return {"version": ".".join(map(str, latest)), "payload": str(payload), "target": str(current_install_path())}
     except Exception as exc:
         report(f"Aggiornamento launcher non disponibile ({type(exc).__name__}); continuo con la versione attuale.")
         return None
@@ -194,131 +208,108 @@ def _sh_quote(value):
     return "'" + str(value).replace("'", "'\"'\"'") + "'"
 
 
-def apply_update(update):
-    """Spawn a detached helper that applies the staged launcher after this process exits.
-
-    Windows deliberately updates files in-place instead of renaming the running
-    installation directory. Renaming the whole PyInstaller folder is unreliable on
-    Windows because loaded DLLs and antivirus/indexers can keep directory handles open.
-    """
-    payload = Path(update["payload"]).resolve()
-    target = Path(update["target"]).resolve()
-    if not payload.exists() or not target.exists():
-        raise RuntimeError("Aggiornamento preparato non valido.")
-
+def _apply_installer(update):
+    installer = Path(update["installer"]).resolve()
+    if not installer.is_file():
+        raise RuntimeError("Installer aggiornamento non valido.")
     DATA.mkdir(parents=True, exist_ok=True)
     pid = os.getpid()
 
     if sys.platform == "win32":
-        script = DATA / "apply-launcher-update.ps1"
+        script = DATA / "apply-launcher-installer.ps1"
         log = DATA / "launcher-update.log"
-        backup = DATA / "launcher-update-backup"
-        exe = target / "NuovoOrdine.exe"
+        local = Path(os.environ.get("LOCALAPPDATA", DATA))
+        installed_exe = local / "Programs" / "NuovoOrdine" / "NuovoOrdine.exe"
+        old_exe = Path(sys.executable).resolve()
         body = f"""$ErrorActionPreference = 'Stop'
+$installer = '{_ps_quote(installer)}'
+$installedExe = '{_ps_quote(installed_exe)}'
+$oldExe = '{_ps_quote(old_exe)}'
 $log = '{_ps_quote(log)}'
-$src = '{_ps_quote(payload)}'
-$dst = '{_ps_quote(target)}'
-$backup = '{_ps_quote(backup)}'
-$exe = '{_ps_quote(exe)}'
-function Write-UpdateLog([string]$message) {{
-    Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $message)
-}}
-function Invoke-Robocopy([string]$from, [string]$to, [string]$name) {{
-    New-Item -ItemType Directory -Force -Path $to | Out-Null
-    & robocopy.exe $from $to /MIR /COPY:DAT /DCOPY:DAT /R:8 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-    $code = $LASTEXITCODE
-    if ($code -ge 8) {{ throw "$name robocopy failed with exit code $code" }}
-}}
-function Restore-Backup() {{
-    if (Test-Path -LiteralPath $backup) {{
-        Write-UpdateLog 'Restoring previous launcher.'
-        Invoke-Robocopy $backup $dst 'rollback'
-    }}
-}}
+function Log([string]$m) {{ Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $m) }}
 try {{
-    Write-UpdateLog 'Updater started.'
-    $pidToWait = {pid}
-    while (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
-    Start-Sleep -Milliseconds 750
-
-    if (-not (Test-Path -LiteralPath $src)) {{ throw 'Staged launcher is missing.' }}
-    if (Test-Path -LiteralPath $backup) {{ Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction Stop }}
-
-    Write-UpdateLog 'Creating backup.'
-    Invoke-Robocopy $dst $backup 'backup'
-
-    Write-UpdateLog 'Installing new launcher in-place.'
-    Invoke-Robocopy $src $dst 'install'
-    if (-not (Test-Path -LiteralPath $exe)) {{ throw 'New executable missing after update.' }}
-
-    Write-UpdateLog 'Starting updated launcher.'
-    $newProcess = Start-Process -FilePath $exe -WorkingDirectory $dst -PassThru
-    Start-Sleep -Seconds 6
-    $newProcess.Refresh()
-    if ($newProcess.HasExited) {{
-        Write-UpdateLog ('New launcher exited early with code ' + $newProcess.ExitCode + '. Rolling back.')
-        Restore-Backup
-        if (-not (Test-Path -LiteralPath $exe)) {{ throw 'Executable missing after rollback.' }}
-        Start-Process -FilePath $exe -WorkingDirectory $dst | Out-Null
-        throw 'Updated launcher exited during startup; rollback completed.'
-    }}
-
-    Remove-Item -LiteralPath $backup -Recurse -Force -ErrorAction SilentlyContinue
-    Write-UpdateLog 'Update completed successfully.'
+  while (Get-Process -Id {pid} -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
+  Start-Sleep -Milliseconds 400
+  Log 'Avvio installer Nuovo Ordine.'
+  $args = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS','/SP-')
+  $p = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru
+  if ($p.ExitCode -ne 0) {{ throw ('Installer exit code ' + $p.ExitCode) }}
+  if (Test-Path -LiteralPath $installedExe) {{
+    Start-Process -FilePath $installedExe -WorkingDirectory (Split-Path $installedExe) | Out-Null
+  }} elseif (Test-Path -LiteralPath $oldExe) {{
+    Start-Process -FilePath $oldExe -WorkingDirectory (Split-Path $oldExe) | Out-Null
+  }}
+  Log 'Aggiornamento tramite installer completato.'
 }} catch {{
-    Write-UpdateLog ('ERROR: ' + $_)
-    try {{
-        if (-not (Test-Path -LiteralPath $exe) -and (Test-Path -LiteralPath $backup)) {{ Restore-Backup }}
-        if (Test-Path -LiteralPath $exe) {{
-            $already = Get-Process -Name 'NuovoOrdine' -ErrorAction SilentlyContinue
-            if (-not $already) {{ Start-Process -FilePath $exe -WorkingDirectory $dst | Out-Null }}
-        }}
-    }} catch {{ Write-UpdateLog ('Rollback/restart failed: ' + $_) }}
-    exit 1
+  Log ('ERROR: ' + $_)
+  if (Test-Path -LiteralPath $oldExe) {{ Start-Process -FilePath $oldExe -WorkingDirectory (Split-Path $oldExe) | Out-Null }}
+  exit 1
 }}
 Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
 """
-        # Windows PowerShell 5.1 reliably detects UTF-8 when a BOM is present.
         script.write_text(body, encoding="utf-8-sig")
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
         subprocess.Popen(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)],
-            cwd=str(DATA),
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=flags,
-            close_fds=True,
+            cwd=str(DATA), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=flags, close_fds=True,
         )
         return
 
-    script = DATA / "apply-launcher-update.sh"
-    log = DATA / "launcher-update.log"
-    backup = target.with_name(target.name + ".old")
     if sys.platform == "darwin":
-        relaunch = f"open {_sh_quote(target)}"
-    else:
-        relaunch = f"nohup {_sh_quote(target / 'NuovoOrdine')} >/dev/null 2>&1 &"
+        subprocess.Popen(["open", str(installer)], stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True, close_fds=True)
+        return
+
+    opener = shutil.which("xdg-open")
+    if not opener:
+        raise RuntimeError("Impossibile aprire il pacchetto .deb: xdg-open non disponibile.")
+    subprocess.Popen([opener, str(installer)], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True, close_fds=True)
+
+
+def _apply_legacy(update):
+    payload = Path(update["payload"]).resolve()
+    target = Path(update["target"]).resolve()
+    if not payload.exists() or not target.exists():
+        raise RuntimeError("Aggiornamento preparato non valido.")
+    DATA.mkdir(parents=True, exist_ok=True)
+    pid = os.getpid()
+    if sys.platform == "win32":
+        script = DATA / "apply-launcher-update.ps1"
+        exe = target / "NuovoOrdine.exe"
+        body = f"""$ErrorActionPreference='Stop'
+while (Get-Process -Id {pid} -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 250 }}
+& robocopy.exe '{_ps_quote(payload)}' '{_ps_quote(target)}' /MIR /R:8 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+if ($LASTEXITCODE -ge 8) {{ exit 1 }}
+Start-Process -FilePath '{_ps_quote(exe)}' -WorkingDirectory '{_ps_quote(target)}' | Out-Null
+Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
+"""
+        script.write_text(body, encoding="utf-8-sig")
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+        subprocess.Popen(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+                         cwd=str(DATA), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         creationflags=flags, close_fds=True)
+        return
+    script = DATA / "apply-launcher-update.sh"
+    relaunch = f"open {_sh_quote(target)}" if sys.platform == "darwin" else f"nohup {_sh_quote(target / 'NuovoOrdine')} >/dev/null 2>&1 &"
     body = f"""#!/bin/sh
 set -eu
-log={_sh_quote(log)}
-echo "$(date -Iseconds) Updater avviato." >> "$log"
 while kill -0 {pid} 2>/dev/null; do sleep 0.25; done
-sleep 0.5
 src={_sh_quote(payload)}
 dst={_sh_quote(target)}
-old={_sh_quote(backup)}
+old={_sh_quote(target.with_name(target.name + '.old'))}
 rm -rf "$old"
-if mv "$dst" "$old" && mv "$src" "$dst"; then
-  echo "$(date -Iseconds) Aggiornamento installato, riavvio launcher." >> "$log"
+mv "$dst" "$old"
+if mv "$src" "$dst"; then
   {relaunch}
-  sleep 3
+  sleep 2
   rm -rf "$old"
-  echo "$(date -Iseconds) Aggiornamento completato." >> "$log"
 else
-  echo "$(date -Iseconds) Aggiornamento fallito; tento rollback." >> "$log"
   rm -rf "$dst" || true
-  if [ -e "$old" ]; then mv "$old" "$dst" || true; fi
+  mv "$old" "$dst" || true
   {relaunch} || true
   exit 1
 fi
@@ -326,12 +317,12 @@ rm -f "$0"
 """
     script.write_text(body, encoding="utf-8")
     script.chmod(0o700)
-    subprocess.Popen(
-        ["/bin/sh", str(script)],
-        cwd=str(DATA),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-        close_fds=True,
-    )
+    subprocess.Popen(["/bin/sh", str(script)], cwd=str(DATA), stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True, close_fds=True)
+
+
+def apply_update(update):
+    if update.get("installer"):
+        return _apply_installer(update)
+    return _apply_legacy(update)
