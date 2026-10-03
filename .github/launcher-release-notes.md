@@ -1,12 +1,9 @@
-Nuovo Ordine Launcher 1.4.0 — Windows, macOS e Linux.
+Nuovo Ordine Launcher 1.4.1 — mantelli HD.
 
-- Aggiunti i mantelli animati: puoi importare PNG statici, GIF animate e APNG dal laboratorio mantelli.
-- Le animazioni vengono convertite in sprite-sheet 64×32, fino a 24 frame, e riprodotte in game a 10 FPS da Nuovo Ordine Cosmetics.
-- I mantelli statici esistenti restano compatibili.
-- Su Windows è disponibile un vero installer Nuovo Ordine con installazione per utente, collegamento Start e collegamento desktop opzionale.
-- Gli aggiornamenti del launcher su Windows preferiscono automaticamente il nuovo installer e lo eseguono in modalità silenziosa, riaprendo il launcher al termine.
-- Aggiunto un fix di compatibilità TaCZ/Mohist per il caso in cui le armi risultano bloccate finché non viene forzato un aggiornamento input; il controllo server-side della cadenza di fuoco resta attivo.
-- Restano disponibili skin personalizzate, login Microsoft, aggiornamento automatico del modpack, SERVER, CLASSIFICHE e MERCATO.
-- Il pannello changelog mostra solo le note dell’ultima versione.
-
-Il server deve distribuire la versione aggiornata di Nuovo Ordine Cosmetics e Nuovo Ordine Complete tramite il manifest del launcher.
+- Mantelli statici e animati supportati in 64×32, 128×64, 256×128 e 512×256 per frame.
+- Il laboratorio mantelli usa 256×128 HD come risoluzione predefinita e permette di scegliere fino a 512×256 HD+.
+- GIF e APNG animate mantengono la risoluzione originale supportata e possono avere fino a 24 frame a 10 FPS.
+- Il renderer Nuovo Ordine Cosmetics conserva i frame HD senza ridimensionarli a 64×32.
+- Restano completamente compatibili i vecchi mantelli 64×32.
+- Limite prudenziale del file mantello: 900 KB compressi, per mantenere affidabile la sincronizzazione Forge tra client e server.
+- Restano inclusi installer/updater Windows, skin personalizzate, login Microsoft e aggiornamento automatico del modpack.
