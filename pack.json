@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-17",
+  "version": "2026.10.03-ext-18",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — rimosso Create Better FPS dal client.",
+  "news": "Nuovo Ordine — Tectonic sostituito con Geophilic 3.7 + Regions Unexplored 0.5.6 + TerraBlender 3.0.1.10.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -1893,13 +1893,6 @@
       "path": "config/tacz_turrets-common.toml",
       "size": 4243,
       "sha256": "f5af7c6191ae6cd890542585ecddee83cc5aa492038a89d87a5ee6c425555916",
-      "mode": "replace",
-      "archive": "extras"
-    },
-    {
-      "path": "config/tectonic.json",
-      "size": 1267,
-      "sha256": "9edbc0a7900f8446e515e3a603eb6dde591b471fed228d69e38417d772eb93c3",
       "mode": "replace",
       "archive": "extras"
     },
@@ -32258,6 +32251,27 @@
       "sha256": "0530b80481b233d865ed0be55e9558562893fb48edec176d730d4789a9369469",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/8984/815/Luxium%20Let%20there%20be%20light-2.8.0-pre-alpha.jar"
+    },
+    {
+      "path": "mods/Geophilic v3.7.mod.jar",
+      "size": 1115993,
+      "sha256": "9e6a98b438e078f2e4f5b79f71bfc715a730369f8cf42fd287c6e43c7441cfae",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8966/202/Geophilic%20v3.7.mod.jar"
+    },
+    {
+      "path": "mods/RegionsUnexploredForge-0.5.6+1.20.1.jar",
+      "size": 5726781,
+      "sha256": "5ba96a83d12c0e2eb3b22c0fa11262ff6d49ba8d2ebd03e1c59ab47ea7dcc2c6",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/5558/225/RegionsUnexploredForge-0.5.6+1.20.1.jar"
+    },
+    {
+      "path": "mods/TerraBlender-forge-1.20.1-3.0.1.10.jar",
+      "size": 107532,
+      "sha256": "c109016f46ca9bdae69976bf080bbf2e8e5968cb66c0a78845f8ca6af5dbbeb1",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/6290/448/TerraBlender-forge-1.20.1-3.0.1.10.jar"
     }
   ],
   "archives": {
