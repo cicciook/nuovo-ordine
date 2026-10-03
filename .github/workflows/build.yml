@@ -36,6 +36,10 @@ jobs:
           else:
               print('NUOVO_ORDINE_MSA_CLIENT_ID non configurato: build con sola modalità offline.')
           PY
+      - name: Installa Inno Setup
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: choco install innosetup --no-progress -y
       - run: python -m pip install -r requirements.txt pyinstaller==6.16.0 pytest==8.3.5
       - run: python -m pytest -q
       - run: python tools/build.py
@@ -45,6 +49,9 @@ jobs:
           path: |
             dist/*.zip
             dist/*.tar.gz
+            dist/*.exe
+            dist/*.pkg
+            dist/*.deb
           if-no-files-found: error
   release:
     if: startsWith(github.ref, 'refs/tags/launcher-v') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release launcher v'))
