@@ -186,14 +186,9 @@ public final class NuovoOrdineCompleteMod {
     private boolean townyAvailable(){try{Class.forName("com.palmergames.bukkit.towny.TownyAPI");return true;}catch(Throwable e){return false;}}
 
     private void applyTaczShootCompatibilityFix(){
-        try{
-            Class.forName("com.tacz.guns.GunMod");
-            int result=runCommand("tacz config serverShootNetworkCheck false");
-            if(result>0)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato per evitare il blocco iniziale dello sparo.");
-            else LOG.log(System.Logger.Level.WARNING,"TaCZ rilevato ma il fix serverShootNetworkCheck non e' stato applicato.");
-        }catch(Throwable ignored){
-            LOG.log(System.Logger.Level.INFO,"TaCZ non rilevato: fix sparo non necessario.");
-        }
+        int result=runCommand("tacz config serverShootNetworkCheck false");
+        if(result>0)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato per evitare il blocco iniziale dello sparo.");
+        else LOG.log(System.Logger.Level.INFO,"Comando compatibilita TaCZ non disponibile; nessuna modifica applicata.");
     }
 
     private int runCommand(String cmd){if(server==null)return 0;try{Object source=R.call(server,"createCommandSourceStack");Object commands=R.call(server,"getCommands");for(String method:List.of("performPrefixedCommand","performCommand","m_230957_"))try{Object r=R.call(commands,method,source,cmd);return r instanceof Number n?n.intValue():1;}catch(Exception ignored){}return 0;}catch(Exception e){return 0;}}
