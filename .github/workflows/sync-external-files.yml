@@ -131,7 +131,7 @@ jobs:
                   encoding='utf-8',
               )
 
-          # Quando viene scelta una nuova versione della quest mod o del loot mod,
+          # Quando viene scelta una nuova versione di quest, loot o Ammo Compat,
           # rimuove dal manifest le versioni precedenti per evitare JAR duplicati.
           quest_paths = {
               item['path']
@@ -142,6 +142,11 @@ jobs:
               item['path']
               for item in external
               if re.fullmatch(r'mods/lootr-more-tactical-loot-[^/]+\.jar', item['path'])
+          }
+          ammo_compat_paths = {
+              item['path']
+              for item in external
+              if re.fullmatch(r'mods/ammocompat-[^/]+\.jar', item['path'])
           }
 
           current_files = pack.get('files', [])
@@ -159,6 +164,14 @@ jobs:
                   if (
                       not re.fullmatch(r'mods/lootr-more-tactical-loot-[^/]+\.jar', item.get('path', ''))
                       or item.get('path') in loot_paths
+                  )
+              ]
+          if ammo_compat_paths:
+              current_files = [
+                  item for item in current_files
+                  if (
+                      not re.fullmatch(r'mods/ammocompat-[^/]+\.jar', item.get('path', ''))
+                      or item.get('path') in ammo_compat_paths
                   )
               ]
 

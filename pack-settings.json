@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Quest 1.2.5: bridge /quest su trasporto vanilla compatibile Mohist/Connector",
+  "news": "Nuovo Ordine — Ammo Compat 1.1.0: supporto aggiornato alle nuove munizioni TaCZ e Superb Warfare",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -136,6 +136,13 @@
       "sha256": "52466880d3b7287765dbcf590bd185157123742c760428458c2eda413a41be37",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/5e7fa5ec05a7ec4ad49238542f253cbccb2984dd/mods/nuovo-ordine-townnames-1.0.0.jar"
+    },
+    {
+      "path": "mods/ammocompat-1.1.0.jar",
+      "size": 7374,
+      "sha256": "43a262e99db1056e6e093129ce5c330885a621efecd880d9196b9a7ce69d1bb0",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.0.jar"
     }
   ]
 }
