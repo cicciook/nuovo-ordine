@@ -1,12 +1,28 @@
 package it.nuovoordine.cosmetics;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Set;
 import javax.imageio.ImageIO;
 
 public final class PngGuard {
     public static final int MAX_SKIN_BYTES = 32768;
-    public static final int MAX_CAPE_BYTES = 262144;
+    public static final int MAX_CAPE_BYTES = 900 * 1024;
     public static final int MAX_CAPE_FRAMES = 24;
+    public static final Set<Integer> CAPE_WIDTHS = Set.of(64, 128, 256, 512);
+
+    public static int frameHeight(int width) throws IOException {
+        if (!CAPE_WIDTHS.contains(width)) throw new IOException("Cape width");
+        return width / 2;
+    }
+
+    public static int frameCount(int width, int totalHeight) throws IOException {
+        int frameHeight = frameHeight(width);
+        if (totalHeight < frameHeight || totalHeight % frameHeight != 0)
+            throw new IOException("Cape dimensions");
+        int frames = totalHeight / frameHeight;
+        if (frames > MAX_CAPE_FRAMES) throw new IOException("Too many cape frames");
+        return frames;
+    }
 
     public static byte[] validate(byte[] data, boolean skin) throws IOException {
         if (data.length == 0) return data;
@@ -18,12 +34,10 @@ public final class PngGuard {
             throw new IOException("PNG signature");
 
         int w = b.getInt(), h = b.getInt();
-        if (w != 64) throw new IOException("PNG width");
         if (skin) {
-            if (h != 64) throw new IOException("PNG dimensions");
+            if (w != 64 || h != 64) throw new IOException("PNG dimensions");
         } else {
-            if (h < 32 || h % 32 != 0 || h / 32 > MAX_CAPE_FRAMES)
-                throw new IOException("PNG dimensions");
+            frameCount(w, h);
         }
 
         var image = ImageIO.read(new ByteArrayInputStream(data));
