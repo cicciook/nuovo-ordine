@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-18",
+  "version": "2026.10.03-ext-19",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Tectonic sostituito con Geophilic 3.7 + Regions Unexplored 0.5.6 + TerraBlender 3.0.1.10.",
+  "news": "Nuovo Ordine — ripristinati Oculus 1.8.0 e Create Better FPS 1.1.2; Luxium rimosso.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32272,6 +32272,20 @@
       "sha256": "c109016f46ca9bdae69976bf080bbf2e8e5968cb66c0a78845f8ca6af5dbbeb1",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/6290/448/TerraBlender-forge-1.20.1-3.0.1.10.jar"
+    },
+    {
+      "path": "mods/oculus-mc1.20.1-1.8.0.jar",
+      "size": 2851119,
+      "sha256": "0945df0cba0f62b3901dd80c3268e5311b770ece78c78037a45db12ac0425fef",
+      "mode": "replace",
+      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/0945df0cba0f62b3901dd80c3268e5311b770ece78c78037a45db12ac0425fef.bin"
+    },
+    {
+      "path": "mods/createbetterfps-1.20.1-1.1.2.jar",
+      "size": 25214,
+      "sha256": "6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3",
+      "mode": "replace",
+      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3.bin"
     }
   ],
   "archives": {
