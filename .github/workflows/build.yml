@@ -39,12 +39,24 @@ jobs:
       - run: python -m pip install -r requirements.txt pyinstaller==6.16.0 pytest==8.3.5
       - run: python -m pytest -q
       - run: python tools/build.py
+      - name: Crea installer Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = python -c "from launcher import VERSION; print(VERSION)"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          & $iscc "/DAppVersion=$version" "/DSourceDir=$PWD\dist\NuovoOrdine" "/DOutputDir=$PWD\dist" "/DArch=amd64" "installer\windows.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
           name: NuovoOrdine-${{ matrix.os }}
           path: |
             dist/*.zip
             dist/*.tar.gz
+            dist/*.exe
           if-no-files-found: error
   release:
     if: startsWith(github.ref, 'refs/tags/launcher-v') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'Release launcher v'))
