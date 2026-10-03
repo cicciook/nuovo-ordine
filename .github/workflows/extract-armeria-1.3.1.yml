@@ -1,0 +1,41 @@
+name: Estrai sorgenti Armeria 1.3.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/extract-armeria-1.3.1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Estrai sorgenti dal JAR distribuito
+        run: |
+          set -euo pipefail
+          out=projects/armeria-browser-1.3.1-extracted
+          rm -rf "$out"
+          mkdir -p "$out/src/com/armeria" "$out/resources/META-INF" "$out/resources/armeria_default"
+          unzip -q mods/armeria-browser-1.3.1.jar 'META-INF/armeria-sources/com/armeria/*.java' -d /tmp/armeria131
+          cp /tmp/armeria131/META-INF/armeria-sources/com/armeria/*.java "$out/src/com/armeria/"
+          unzip -p mods/armeria-browser-1.3.1.jar armeria_default/shop.html > "$out/resources/armeria_default/shop.html"
+          unzip -p mods/armeria-browser-1.3.1.jar META-INF/mods.toml > "$out/resources/META-INF/mods.toml"
+          cat > "$out/README.md" <<'EOF'
+          # Armeria Browser 1.3.1 — sorgenti estratti
+          Sorgenti estratti dal JAR effettivamente distribuito per poter diagnosticare e correggere catalogo, prezzi e bridge client/server.
+          EOF
+      - name: Pubblica sorgenti estratti
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/armeria-browser-1.3.1-extracted
+          git commit -m 'Estrae sorgenti Armeria 1.3.1 per diagnosi' || exit 0
+          git push origin HEAD:main
