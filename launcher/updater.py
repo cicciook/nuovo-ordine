@@ -14,6 +14,10 @@ from .config import atomic_json
 ROOTS = {"mods", "config", "defaultconfigs", "kubejs", "resourcepacks", "shaderpacks", "scripts", "tacz", "customnpcs"}
 MAX_FILE = 2 * 1024**3
 MAX_PACK = 20 * 1024**3
+REQUEST_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; NuovoOrdineLauncher/1.4.3; +https://github.com/cicciook/nuovo-ordine)",
+    "Accept": "*/*",
+}
 
 
 def safe_path(root, name):
@@ -100,28 +104,80 @@ def validate_manifest(data):
     return data
 
 
+def _download_sources(url):
+    """Return safe mirrors for known public CDNs without changing the requested file."""
+    url = https_url(url)
+    parsed = urlsplit(url)
+    sources = [url]
+    if parsed.hostname == "mediafilez.forgecdn.net":
+        sources.append(url.replace("mediafilez.forgecdn.net", "edge.forgecdn.net", 1))
+    elif parsed.hostname == "edge.forgecdn.net":
+        sources.append(url.replace("edge.forgecdn.net", "mediafilez.forgecdn.net", 1))
+    return sources
+
+
+def _request_failure(label, exc, url):
+    response = getattr(exc, "response", None)
+    status = getattr(response, "status_code", None)
+    final_url = getattr(response, "url", None) or url
+    host = urlsplit(final_url).hostname or urlsplit(url).hostname or "sorgente sconosciuta"
+    if status:
+        return RuntimeError(f"{label} • HTTP {status} • {host}")
+    return RuntimeError(f"{label} • {type(exc).__name__} • {host}")
+
+
 def fetch_manifest(url):
-    with requests.get(https_url(url), timeout=(15, 45), stream=True) as response:
-        response.raise_for_status()
-        https_url(response.url)
-        body = bytearray()
-        for chunk in response.iter_content(65536):
-            body.extend(chunk)
-            if len(body) > 8 * 1024**2:
-                raise ValueError("Manifest troppo grande.")
-    return validate_manifest(json.loads(body))
+    url = https_url(url)
+    last_error = None
+    for attempt in range(3):
+        try:
+            with requests.get(
+                url,
+                timeout=(15, 60),
+                stream=True,
+                headers=REQUEST_HEADERS,
+            ) as response:
+                response.raise_for_status()
+                https_url(response.url)
+                body = bytearray()
+                for chunk in response.iter_content(65536):
+                    if not chunk:
+                        continue
+                    body.extend(chunk)
+                    if len(body) > 8 * 1024**2:
+                        raise ValueError("Manifest troppo grande.")
+            try:
+                return validate_manifest(json.loads(body))
+            except json.JSONDecodeError as exc:
+                raise RuntimeError("pack.json ricevuto da GitHub non è JSON valido.") from exc
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt < 2:
+                continue
+    raise _request_failure("Manifest modpack non disponibile", last_error, url) from last_error
 
 
 def download(item, target, report):
-    for attempt in range(3):
+    sources = _download_sources(item["url"])
+    last_error = None
+    attempts = max(3, len(sources) * 2)
+    for attempt in range(attempts):
+        source_url = sources[attempt % len(sources)]
         try:
             h = hashlib.sha256()
             count = 0
-            with requests.get(https_url(item["url"]), timeout=(15, 60), stream=True) as response:
+            with requests.get(
+                source_url,
+                timeout=(20, 120),
+                stream=True,
+                headers=REQUEST_HEADERS,
+            ) as response:
                 response.raise_for_status()
                 https_url(response.url)
                 with target.open("wb") as output:
                     for chunk in response.iter_content(1024 * 256):
+                        if not chunk:
+                            continue
                         count += len(chunk)
                         if count > item["size"]:
                             raise ValueError("Download più grande del previsto.")
@@ -131,10 +187,20 @@ def download(item, target, report):
             if count != item["size"] or h.hexdigest() != item["sha256"]:
                 raise ValueError(f'Integrità non valida: {item["path"]}')
             return
-        except (requests.RequestException, ValueError):
+        except requests.RequestException as exc:
+            last_error = exc
             target.unlink(missing_ok=True)
-            if attempt == 2:
-                raise
+            if attempt + 1 < attempts:
+                host = urlsplit(source_url).hostname or "sorgente"
+                report(f'Riprovo {item["path"]} da un mirror alternativo • {host}')
+                continue
+            raise _request_failure(f'Download non disponibile: {item["path"]}', exc, source_url) from exc
+        except ValueError as exc:
+            last_error = exc
+            target.unlink(missing_ok=True)
+            if attempt + 1 < attempts:
+                continue
+            raise
 
 
 class Updater:
