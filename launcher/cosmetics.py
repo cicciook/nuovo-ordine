@@ -6,8 +6,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 MAX_SKIN_PNG = 32 * 1024
-# Keep the serialized Forge payload below the practical custom-packet ceiling.
-MAX_CAPE_PNG = 900 * 1024
+# Large HD+ animated cape sheets are transferred in chunks by the Forge companion.
+MAX_CAPE_PNG = 4 * 1024 * 1024
 MAX_CAPE_FRAMES = 24
 CAPE_WIDTHS = (64, 128, 256, 512)
 DEFAULT_CAPE_SCALE = 4
