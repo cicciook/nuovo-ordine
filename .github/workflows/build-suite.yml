@@ -30,7 +30,7 @@ jobs:
           from pathlib import Path
 
           root = Path('projects/nuovo-ordine-suite')
-          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+          for name in ('cosmetics', 'market', 'pvp', 'townnames', 'taczfix'):
               jar_path = root / name / 'build' / 'libs' / f'nuovo-ordine-{name}-1.0.0.jar'
               with zipfile.ZipFile(jar_path) as jar:
                   assert jar.testzip() is None, f'Corrupt JAR: {jar_path}'
@@ -101,7 +101,7 @@ jobs:
           suite = repo / 'projects' / 'nuovo-ordine-suite'
           entries = []
 
-          for name in ('cosmetics', 'market', 'pvp', 'townnames'):
+          for name in ('cosmetics', 'market', 'pvp', 'townnames', 'taczfix'):
               filename = f'nuovo-ordine-{name}-1.0.0.jar'
               hits = list(artifact_root.rglob(filename))
               assert len(hits) == 1, f'Expected exactly one {filename}, found {len(hits)}'
@@ -131,6 +131,7 @@ jobs:
                   mods/nuovo-ordine-market-1.0.0.jar \
                   mods/nuovo-ordine-pvp-1.0.0.jar \
                   mods/nuovo-ordine-townnames-1.0.0.jar \
+                  mods/nuovo-ordine-taczfix-1.0.0.jar \
                   projects/nuovo-ordine-suite/artifacts.json
 
           if git diff --cached --quiet; then
@@ -168,4 +169,5 @@ jobs:
             mods/nuovo-ordine-cosmetics-1.0.0.jar \
             mods/nuovo-ordine-townnames-1.0.0.jar \
             mods/nuovo-ordine-pvp-1.0.0.jar \
+            mods/nuovo-ordine-taczfix-1.0.0.jar \
             --clobber
