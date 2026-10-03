@@ -233,7 +233,7 @@
       "size": 434,
       "sha256": "3cbc1443331e987001a760c93b74f40fb67b6e0855bc5d5e387a1ad8886b74de",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     }
   ]
 }
