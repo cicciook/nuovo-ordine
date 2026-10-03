@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: nuovo-ordine-suite-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   forge:
     runs-on: ubuntu-latest
@@ -91,7 +94,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          python - <<'PY'
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          published=0
+          for attempt in 1 2 3; do
+            echo "Publish attempt $attempt"
+            git fetch origin main
+            git reset --hard origin/main
+
+            python - <<'PY'
           import hashlib, json, shutil, zipfile
           from pathlib import Path
 
@@ -125,28 +138,39 @@ jobs:
           )
           PY
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mods/nuovo-ordine-cosmetics-1.0.0.jar \
-                  mods/nuovo-ordine-market-1.0.0.jar \
-                  mods/nuovo-ordine-pvp-1.0.0.jar \
-                  mods/nuovo-ordine-townnames-1.0.0.jar \
-                  projects/nuovo-ordine-suite/artifacts.json
+            git add mods/nuovo-ordine-cosmetics-1.0.0.jar \
+                    mods/nuovo-ordine-market-1.0.0.jar \
+                    mods/nuovo-ordine-pvp-1.0.0.jar \
+                    mods/nuovo-ordine-townnames-1.0.0.jar \
+                    projects/nuovo-ordine-suite/artifacts.json
 
-          if git diff --cached --quiet; then
-            echo 'No artifact changes to publish.'
-            exit 0
-          fi
+            if git diff --cached --quiet; then
+              echo 'No artifact changes to publish.'
+              published=1
+              break
+            fi
 
-          git commit -m 'Rebuild Nuovo Ordine suite core modules'
-          artifact_commit="$(git rev-parse HEAD)"
-          python tools/install_suite_manifest.py --commit "$artifact_commit"
-          git add pack.json pack-settings.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Distribute updated Nuovo Ordine suite through launcher manifest'
+            git commit -m 'Rebuild Nuovo Ordine suite core modules'
+            artifact_commit="$(git rev-parse HEAD)"
+            python tools/install_suite_manifest.py --commit "$artifact_commit"
+            git add pack.json pack-settings.json
+            if ! git diff --cached --quiet; then
+              git commit -m 'Distribute updated Nuovo Ordine suite through launcher manifest'
+            fi
+
+            if git push origin HEAD:main; then
+              published=1
+              break
+            fi
+
+            echo "Push raced with another update; retrying on fresh main."
+            sleep 2
+          done
+
+          if [ "$published" -ne 1 ]; then
+            echo "Could not publish suite artifacts after retries."
+            exit 1
           fi
-          git pull --rebase origin main
-          git push origin HEAD:main
 
           python - <<'PY'
           import json, zipfile
