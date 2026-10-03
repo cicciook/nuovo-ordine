@@ -233,14 +233,14 @@
       "size": 48797,
       "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/0f7aa4d4bba09ed076d9177e8d5ca418b071753c/mods/lootr-more-tactical-loot-1.1.17.jar"
     },
     {
       "path": "mods/armeria-browser-1.3.2.jar",
       "size": 108148,
       "sha256": "04f0024bc15c657254621bb51ef6ee5427b7690ab855e581ea5c6b63d2a06d64",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.2.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/0f7aa4d4bba09ed076d9177e8d5ca418b071753c/mods/armeria-browser-1.3.2.jar"
     }
   ],
   "exclude_paths": [
