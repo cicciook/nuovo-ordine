@@ -15,6 +15,17 @@ from .config import atomic_json
 ROOTS = {"mods", "config", "defaultconfigs", "kubejs", "resourcepacks", "shaderpacks", "scripts", "tacz", "customnpcs"}
 MAX_FILE = 2 * 1024**3
 MAX_PACK = 20 * 1024**3
+MANAGED_VERSION_FAMILIES = (
+    "nuovo-ordine-core",
+    "nuovo-ordine-quests",
+    "nuovo-ordine-complete",
+    "nuovo-ordine-cosmetics",
+    "nuovo-ordine-market",
+    "nuovo-ordine-pvp",
+    "nuovo-ordine-townnames",
+    "ammocompat",
+    "lootr-more-tactical-loot",
+)
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; NuovoOrdineLauncher/1.4.3; +https://github.com/cicciook/nuovo-ordine)",
     "Accept": "*/*",
@@ -53,6 +64,18 @@ def https_url(url):
 def digest(path):
     with Path(path).open("rb") as source:
         return hashlib.file_digest(source, "sha256").hexdigest()
+
+
+def managed_mod_family(path):
+    """Return the launcher-owned mod family for a versioned JAR, if any."""
+    name = PurePosixPath(path).name.casefold()
+    if not path.startswith("mods/") or not name.endswith(".jar"):
+        return None
+    for family in MANAGED_VERSION_FAMILIES:
+        prefix = family.casefold() + "-"
+        if name.startswith(prefix):
+            return family
+    return None
 
 
 def validate_manifest(data):
@@ -289,6 +312,28 @@ class Updater:
                 target = safe_path(self.root, name)
                 if target.exists():
                     changes.append((name, None))
+
+        # Official Nuovo Ordine mod families are single-version only. Older/manual
+        # copies of the same managed mod cause Forge duplicate-mod or channel
+        # mismatch errors, so remove them even when they predate launcher state.
+        expected_by_family = {}
+        for name in current:
+            family = managed_mod_family(name)
+            if family:
+                expected_by_family.setdefault(family, set()).add(name.casefold())
+        scheduled = {name.casefold() for name, _ in changes}
+        mods_dir = self.root / "mods"
+        if mods_dir.exists():
+            for local in mods_dir.glob("*.jar"):
+                rel = "mods/" + local.name
+                family = managed_mod_family(rel)
+                if not family or family not in expected_by_family:
+                    continue
+                key = rel.casefold()
+                if key not in expected_by_family[family] and key not in scheduled:
+                    self.report(f"Rimuovo versione duplicata gestita: {local.name}")
+                    changes.append((rel, None))
+                    scheduled.add(key)
         self.tx.mkdir()
         (self.tx / "backup").mkdir()
         (self.tx / "stage").mkdir()

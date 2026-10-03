@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-hotfix-extras-22",
+  "version": "2026.10.03-mismatch-fix-23",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — hotfix download extras: mirror GitHub API e retry con backoff per evitare HTTP 503.",
+  "news": "Nuovo Ordine — fix mod mismatch: rimossa copia duplicata CustomNPCs e pulizia automatica delle vecchie versioni delle mod Nuovo Ordine.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -2287,13 +2287,6 @@
       "sha256": "b91ca5cd028b1c919e28851b984edd61874d44ad8038cdeee87315d2656cb292",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/b91ca5cd028b1c919e28851b984edd61874d44ad8038cdeee87315d2656cb292.bin"
-    },
-    {
-      "path": "mods/CustomNPCs-1.20.1-GBPort-Unofficial-1.20.1.20260711 - Copia.jar",
-      "size": 10873769,
-      "sha256": "604916a1cd0949fd426cab5fad8f839037d7e6f74d9f18a9afbeaa7731edfc38",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/604916a1cd0949fd426cab5fad8f839037d7e6f74d9f18a9afbeaa7731edfc38.bin"
     },
     {
       "path": "mods/CustomNPCs-1.20.1-GBPort-Unofficial-1.20.1.20260711.jar",

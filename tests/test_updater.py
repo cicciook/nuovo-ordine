@@ -128,3 +128,25 @@ def test_all_downloads_finish_before_mutation(tmp_path):
     with pytest.raises(OSError):u.sync(pack(item(body=b"mod-v2"),item("mods/second.jar",body=b"mod-v2")))
     assert (tmp_path/"mods/test.jar").read_bytes()==b"mod-v1"
     assert not (tmp_path/"mods/second.jar").exists()
+
+
+def test_removes_untracked_older_managed_mod_versions(tmp_path):
+    current = item("mods/nuovo-ordine-quests-1.2.5.jar")
+    (tmp_path / "mods").mkdir()
+    (tmp_path / "mods/nuovo-ordine-quests-1.2.2.jar").write_bytes(b"old quest")
+    (tmp_path / "mods/personal.jar").write_bytes(b"personal")
+    u = Updater(tmp_path, downloader=downloader(b"mod-v1"))
+    u.sync(pack(current))
+    assert not (tmp_path / "mods/nuovo-ordine-quests-1.2.2.jar").exists()
+    assert (tmp_path / "mods/nuovo-ordine-quests-1.2.5.jar").read_bytes() == b"mod-v1"
+    assert (tmp_path / "mods/personal.jar").read_bytes() == b"personal"
+
+
+def test_removes_untracked_newer_duplicate_of_managed_family(tmp_path):
+    current = item("mods/nuovo-ordine-core-0.2.2.jar")
+    (tmp_path / "mods").mkdir()
+    (tmp_path / "mods/nuovo-ordine-core-0.2.5.jar").write_bytes(b"manual duplicate")
+    u = Updater(tmp_path, downloader=downloader(b"mod-v1"))
+    u.sync(pack(current))
+    assert not (tmp_path / "mods/nuovo-ordine-core-0.2.5.jar").exists()
+    assert (tmp_path / "mods/nuovo-ordine-core-0.2.2.jar").read_bytes() == b"mod-v1"
