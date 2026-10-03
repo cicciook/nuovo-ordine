@@ -28,6 +28,15 @@ public class PngGuardTest {
         assertTrue(PngGuard.validate(image(64, 32 * 12), false).length > 0);
     }
 
+    @Test public void hdCapeValid() throws Exception {
+        assertTrue(PngGuard.validate(image(256, 128), false).length > 0);
+        assertTrue(PngGuard.validate(image(512, 256), false).length > 0);
+    }
+
+    @Test public void hdAnimatedCapeSheetValid() throws Exception {
+        assertTrue(PngGuard.validate(image(256, 128 * 4), false).length > 0);
+    }
+
     @Test public void removal() throws Exception {
         assertEquals(0, PngGuard.validate(new byte[0], true).length);
     }
@@ -46,5 +55,13 @@ public class PngGuardTest {
 
     @Test(expected = IOException.class) public void tooManyCapeFrames() throws Exception {
         PngGuard.validate(image(64, 32 * (PngGuard.MAX_CAPE_FRAMES + 1)), false);
+    }
+
+    @Test(expected = IOException.class) public void unsupportedCapeScale() throws Exception {
+        PngGuard.validate(image(96, 48), false);
+    }
+
+    @Test(expected = IOException.class) public void wrongHdAspect() throws Exception {
+        PngGuard.validate(image(256, 64), false);
     }
 }
