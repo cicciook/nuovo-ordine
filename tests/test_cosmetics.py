@@ -1,7 +1,7 @@
 import io
 import pytest
 from PIL import Image
-from launcher.cosmetics import create_cape, save_texture, validate_png
+from launcher.cosmetics import cape_frame_count, create_cape, save_texture, save_texture_file, validate_png
 from launcher.community import normalize_content, format_changelog
 
 
@@ -48,3 +48,18 @@ def test_latest_changelog_numeric():
 
 def test_empty_changelog_fallback():
     assert len(normalize_content({})['changelog'])==1
+
+
+def test_animated_gif_becomes_vertical_cape_sheet(tmp_path):
+    source = tmp_path / "cape.gif"
+    frames = [Image.new("RGBA", (64, 32), color) for color in ("red", "green", "blue")]
+    frames[0].save(source, format="GIF", save_all=True, append_images=frames[1:], duration=100, loop=0)
+    target = save_texture_file(tmp_path / "instance", "cape", source)
+    data = target.read_bytes()
+    assert Image.open(io.BytesIO(data)).size == (64, 96)
+    assert cape_frame_count(data) == 3
+
+
+def test_reject_too_many_cape_frames():
+    with pytest.raises(ValueError):
+        validate_png(png((64, 32 * 25)), "cape")
