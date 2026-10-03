@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-mismatch-fix-23",
+  "version": "2026.10.03-render-hotfix-24",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — fix mod mismatch: rimossa copia duplicata CustomNPCs e pulizia automatica delle vecchie versioni delle mod Nuovo Ordine.",
+  "news": "Nuovo Ordine — hotfix rendering: rimosso Oculus/Flywheel Compat 2.0.3 incompatibile con Flywheel 1.0.6/Create 6.0.8.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -3225,13 +3225,6 @@
       "sha256": "66f1f6d61102dd03a4afafe4c9f1d39be9e55dabc8d0821cb46acca1328b525d",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/66f1f6d61102dd03a4afafe4c9f1d39be9e55dabc8d0821cb46acca1328b525d.bin"
-    },
-    {
-      "path": "mods/oculus-flywheel-compat-Forge-2.0.3.jar",
-      "size": 117226,
-      "sha256": "f66f523553a14b07965f007c11dcb8624d4117025e4ce1ffd470171c6fda340e",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/f66f523553a14b07965f007c11dcb8624d4117025e4ce1ffd470171c6fda340e.bin"
     },
     {
       "path": "mods/oculus-mc1.20.1-1.8.0.jar",

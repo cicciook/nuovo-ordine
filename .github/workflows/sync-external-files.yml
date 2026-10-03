@@ -149,7 +149,11 @@ jobs:
               if re.fullmatch(r'mods/ammocompat-[^/]+\.jar', item['path'])
           }
 
-          current_files = pack.get('files', [])
+          excluded = set(settings.get('exclude_paths', []))
+          current_files = [
+              item for item in pack.get('files', [])
+              if item.get('path') not in excluded
+          ]
           if quest_paths:
               current_files = [
                   item for item in current_files

@@ -34,6 +34,7 @@ def build_pack(repo, version, source, settings, output):
     manifest = {"schema":1, "version":version,"minecraft":settings["minecraft"],"forge":settings["forge"],
                 "server":settings.get("server",""),"news":settings.get("news",""),"files":[]}
     preserve = set(settings.get("preserve",[]))
+    exclude_paths = set(settings.get("exclude_paths", []))
     bundle_path = assets / "extras.zip"
     with zipfile.ZipFile(bundle_path,"w",zipfile.ZIP_DEFLATED) as bundle:
       for directory in sorted(ROOTS):
@@ -46,6 +47,8 @@ def build_pack(repo, version, source, settings, output):
             if not file.is_file() or file.name in (".gitkeep",".DS_Store"):
                 continue
             name = file.relative_to(source).as_posix()
+            if name in exclude_paths:
+                continue
             sha = digest(file)
             asset = sha + ".bin"
             entry = {"path":name,"size":file.stat().st_size,"sha256":sha,

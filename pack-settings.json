@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — hotfix updater: Create Contraption Terminals e JRFTL da Modrinth; Easy Gunpowder sostituito da ricetta KubeJS.",
+  "news": "Nuovo Ordine — hotfix rendering: rimosso Oculus/Flywheel Compat 2.0.3 incompatibile con Flywheel 1.0.6/Create 6.0.8.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -235,5 +235,8 @@
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     }
+  ],
+  "exclude_paths": [
+    "mods/oculus-flywheel-compat-Forge-2.0.3.jar"
   ]
 }
