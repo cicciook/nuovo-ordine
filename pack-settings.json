@@ -111,31 +111,31 @@
     },
     {
       "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
-      "size": 17545,
-      "sha256": "10f8994a4e6aeb1bcad8d132144f4cf181713fb160f9c3e30bac36735f837982",
+      "size": 28652,
+      "sha256": "53fd8966a5bc9ee732682b61e43b38bebf1eb1f8524438d4cf226d497a003218",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2410a33d32a3da3963b2cd165aaffa77fd287b50/mods/nuovo-ordine-cosmetics-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/5e7fa5ec05a7ec4ad49238542f253cbccb2984dd/mods/nuovo-ordine-cosmetics-1.0.0.jar"
     },
     {
       "path": "mods/nuovo-ordine-market-1.0.0.jar",
       "size": 33685,
-      "sha256": "0cbba6b6d7adc0adb54f2bdaea2ca50fbad49d57a89b831e5c98a962c2c93f16",
+      "sha256": "784553b4a3004a9a50ec22009d1a8a6ca1d1cc98fac5364e9740aea7cb64ec08",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2410a33d32a3da3963b2cd165aaffa77fd287b50/mods/nuovo-ordine-market-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/5e7fa5ec05a7ec4ad49238542f253cbccb2984dd/mods/nuovo-ordine-market-1.0.0.jar"
     },
     {
       "path": "mods/nuovo-ordine-pvp-1.0.0.jar",
       "size": 10332,
-      "sha256": "335e945975b138eb1311126cf3f7064ab4e55ce7349d9ad159411e44ed106672",
+      "sha256": "cd154a9db32c3bc3380b57e9a9d83985b1d3323f39583069b82ef3dbbac79a76",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2410a33d32a3da3963b2cd165aaffa77fd287b50/mods/nuovo-ordine-pvp-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/5e7fa5ec05a7ec4ad49238542f253cbccb2984dd/mods/nuovo-ordine-pvp-1.0.0.jar"
     },
     {
       "path": "mods/nuovo-ordine-townnames-1.0.0.jar",
       "size": 9457,
-      "sha256": "46d213581cb7a5aa0d44cc40fd544d34426652f33487eb78d04692bd21627481",
+      "sha256": "52466880d3b7287765dbcf590bd185157123742c760428458c2eda413a41be37",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/2410a33d32a3da3963b2cd165aaffa77fd287b50/mods/nuovo-ordine-townnames-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/5e7fa5ec05a7ec4ad49238542f253cbccb2984dd/mods/nuovo-ordine-townnames-1.0.0.jar"
     }
   ]
 }
