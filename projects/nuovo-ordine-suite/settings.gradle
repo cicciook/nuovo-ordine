@@ -1,4 +1,4 @@
 pluginManagement { repositories { gradlePluginPortal(); maven { url = 'https://maven.minecraftforge.net/' } } }
 rootProject.name = 'nuovo-ordine-suite'
 // gameplay is kept in the repository only as historical source; Complete 1.0.0 supersedes it.
-include 'market', 'townnames', 'pvp', 'cosmetics'
+include 'market', 'townnames', 'pvp', 'cosmetics', 'taczfix'
