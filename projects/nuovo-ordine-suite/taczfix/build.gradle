@@ -1,0 +1,1 @@
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-proc:none'] }
