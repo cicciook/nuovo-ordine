@@ -103,13 +103,6 @@
       "mode": "replace"
     },
     {
-      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
-      "size": 59044,
-      "sha256": "130c3d05d4cd918998a4cd9a8a2d6e16ff225666461436d726cabc25143c8471",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
-    },
-    {
       "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
       "size": 17284,
       "sha256": "e62283241296b3cf224d77a945a185c0982ff5fce871fa47ba8885794bf7b83f",
@@ -136,6 +129,13 @@
       "sha256": "b7f95d871e191b7dce3a8eef09e2f2d3d8b01fea0e03c099404af8416193f4b5",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/6a4bd87e76e78dfcd347d87910048ab08d4914e4/mods/nuovo-ordine-townnames-1.0.0.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
+      "size": 59262,
+      "sha256": "aa4e5d154346857413f5d87a600742ed1509d94f9227452511a9b045e1080f34",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     }
   ]
 }
