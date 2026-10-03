@@ -32246,13 +32246,6 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/0f7aa4d4bba09ed076d9177e8d5ca418b071753c/mods/armeria-browser-1.3.2.jar"
     },
     {
-      "path": "mods/Luxium Let there be light-2.8.0-pre-alpha.jar",
-      "size": 7723029,
-      "sha256": "0530b80481b233d865ed0be55e9558562893fb48edec176d730d4789a9369469",
-      "mode": "replace",
-      "url": "https://mediafilez.forgecdn.net/files/8984/815/Luxium%20Let%20there%20be%20light-2.8.0-pre-alpha.jar"
-    },
-    {
       "path": "mods/Geophilic v3.7.mod.jar",
       "size": 1115993,
       "sha256": "9e6a98b438e078f2e4f5b79f71bfc715a730369f8cf42fd287c6e43c7441cfae",
