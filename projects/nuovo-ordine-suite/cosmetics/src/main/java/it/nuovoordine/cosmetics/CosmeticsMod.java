@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 @Mod("nocosmetics")
 public class CosmeticsMod {
     static final SimpleChannel NET = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation("nocosmetics", "main"), () -> "2", "2"::equals, "2"::equals);
+            new ResourceLocation("nocosmetics", "main"), () -> "1", "1"::equals, "1"::equals);
     static final Map<UUID, Appearance> active = new HashMap<>();
     static final Map<UUID, Long> last = new HashMap<>();
 
@@ -51,7 +51,7 @@ public class CosmeticsMod {
         }
         static Upload decode(FriendlyByteBuf b) {
             return new Upload(b.readByteArray(PngGuard.MAX_SKIN_BYTES), b.readByteArray(PngGuard.MAX_CAPE_BYTES),
-                    b.readBoolean(), b.readVarInt());
+                    b.readBoolean(), b.readableBytes() > 0 ? b.readVarInt() : 0);
         }
     }
 
@@ -61,7 +61,7 @@ public class CosmeticsMod {
         }
         static Appearance decode(FriendlyByteBuf b) {
             return new Appearance(b.readUUID(), b.readByteArray(PngGuard.MAX_SKIN_BYTES),
-                    b.readByteArray(PngGuard.MAX_CAPE_BYTES), b.readBoolean(), b.readVarInt());
+                    b.readByteArray(PngGuard.MAX_CAPE_BYTES), b.readBoolean(), b.readableBytes() > 0 ? b.readVarInt() : 0);
         }
     }
 
