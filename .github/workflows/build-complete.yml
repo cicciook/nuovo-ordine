@@ -95,6 +95,38 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Other Nuovo Ordine workflows also publish into pack.json. Refresh from
+          # main first, then regenerate our manifest entry on top of the newest
+          # branch state so concurrent launcher/suite commits cannot create a
+          # stale-manifest rebase conflict.
+          cp mods/nuovo-ordine-complete-1.0.0.jar /tmp/nuovo-ordine-complete-1.0.0.jar
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.0.jar
+
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          jar = Path('mods/nuovo-ordine-complete-1.0.0.jar')
+          data = jar.read_bytes()
+          entry = {
+              'path': str(jar).replace('\\','/'),
+              'size': len(data),
+              'sha256': hashlib.sha256(data).hexdigest(),
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar',
+          }
+          managed_prefixes = ('mods/nuovo-ordine-complete-', 'mods/nuovo-ordine-gameplay-')
+          for filename, key in [('pack.json','files'), ('pack-settings.json','external_files')]:
+              path = Path(filename)
+              doc = json.loads(path.read_text(encoding='utf-8'))
+              doc[key] = [x for x in doc.get(key,[]) if not x.get('path','').startswith(managed_prefixes)] + [entry]
+              if filename == 'pack.json':
+                  doc['version'] = '2026.10.03-complete-1.0.0'
+                  doc['news'] = 'Nuovo Ordine — fix compatibilità sparo TaCZ/Mohist e aggiornamenti gameplay'
+              path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add mods/nuovo-ordine-complete-1.0.0.jar pack.json pack-settings.json
@@ -102,6 +134,5 @@ jobs:
             echo 'Artifact and manifests already current.'
           else
             git commit -m 'release: Nuovo Ordine Complete 1.0.0'
-            git pull --rebase origin main
             git push origin HEAD:main
           fi
