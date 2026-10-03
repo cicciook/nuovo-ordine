@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 import zipfile
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
@@ -70,6 +71,11 @@ def validate_manifest(data):
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", key):
             raise ValueError("Identificativo archivio non valido.")
         https_url(archive["url"])
+        mirrors = archive.get("mirrors", [])
+        if not isinstance(mirrors, list) or len(mirrors) > 8:
+            raise ValueError("Mirror archivio non validi.")
+        for mirror in mirrors:
+            https_url(mirror)
         if not re.fullmatch("[a-f0-9]{64}", archive.get("sha256", "")) or type(archive.get("size")) is not int or not 0 < archive["size"] < MAX_FILE:
             raise ValueError("Integrità archivio non valida.")
     names = set()
@@ -104,16 +110,37 @@ def validate_manifest(data):
     return data
 
 
-def _download_sources(url):
-    """Return safe mirrors for known public CDNs without changing the requested file."""
-    url = https_url(url)
-    parsed = urlsplit(url)
-    sources = [url]
-    if parsed.hostname == "mediafilez.forgecdn.net":
-        sources.append(url.replace("mediafilez.forgecdn.net", "edge.forgecdn.net", 1))
-    elif parsed.hostname == "edge.forgecdn.net":
-        sources.append(url.replace("edge.forgecdn.net", "mediafilez.forgecdn.net", 1))
+def _download_sources(item):
+    """Return safe download sources, including explicit mirrors and known CDN aliases."""
+    primary = https_url(item["url"])
+    sources = [primary]
+    for mirror in item.get("mirrors", []):
+        mirror = https_url(mirror)
+        if mirror not in sources:
+            sources.append(mirror)
+
+    # CurseForge exposes the same public file through two CDN hostnames.
+    # Keep both as a transparent fallback when one edge is unavailable.
+    for source in tuple(sources):
+        parsed = urlsplit(source)
+        if parsed.hostname == "mediafilez.forgecdn.net":
+            mirror = source.replace("mediafilez.forgecdn.net", "edge.forgecdn.net", 1)
+            if mirror not in sources:
+                sources.append(mirror)
+        elif parsed.hostname == "edge.forgecdn.net":
+            mirror = source.replace("edge.forgecdn.net", "mediafilez.forgecdn.net", 1)
+            if mirror not in sources:
+                sources.append(mirror)
     return sources
+
+
+def _headers_for(url):
+    headers = dict(REQUEST_HEADERS)
+    parsed = urlsplit(url)
+    if parsed.hostname == "api.github.com" and "/releases/assets/" in parsed.path:
+        # GitHub's release-asset API returns metadata unless this media type is requested.
+        headers["Accept"] = "application/octet-stream"
+    return headers
 
 
 def _request_failure(label, exc, url):
@@ -135,7 +162,7 @@ def fetch_manifest(url):
                 url,
                 timeout=(15, 60),
                 stream=True,
-                headers=REQUEST_HEADERS,
+                headers=_headers_for(url),
             ) as response:
                 response.raise_for_status()
                 https_url(response.url)
@@ -158,9 +185,9 @@ def fetch_manifest(url):
 
 
 def download(item, target, report):
-    sources = _download_sources(item["url"])
+    sources = _download_sources(item)
     last_error = None
-    attempts = max(3, len(sources) * 2)
+    attempts = max(4, len(sources) * 3)
     for attempt in range(attempts):
         source_url = sources[attempt % len(sources)]
         try:
@@ -170,7 +197,7 @@ def download(item, target, report):
                 source_url,
                 timeout=(20, 120),
                 stream=True,
-                headers=REQUEST_HEADERS,
+                headers=_headers_for(source_url),
             ) as response:
                 response.raise_for_status()
                 https_url(response.url)
@@ -192,13 +219,18 @@ def download(item, target, report):
             target.unlink(missing_ok=True)
             if attempt + 1 < attempts:
                 host = urlsplit(source_url).hostname or "sorgente"
-                report(f'Riprovo {item["path"]} da un mirror alternativo • {host}')
+                delay = min(12, 2 ** min(attempt, 3))
+                report(f'Riprovo {item["path"]} tra {delay}s • {host}')
+                time.sleep(delay)
                 continue
             raise _request_failure(f'Download non disponibile: {item["path"]}', exc, source_url) from exc
         except ValueError as exc:
             last_error = exc
             target.unlink(missing_ok=True)
             if attempt + 1 < attempts:
+                delay = min(8, 2 ** min(attempt, 3))
+                report(f'Verifica fallita per {item["path"]}; nuovo tentativo tra {delay}s')
+                time.sleep(delay)
                 continue
             raise
 

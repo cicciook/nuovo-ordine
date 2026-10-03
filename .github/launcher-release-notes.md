@@ -1,9 +1,8 @@
-Nuovo Ordine Launcher 1.4.3 — hotfix download modpack.
+Nuovo Ordine Launcher 1.4.4 — hotfix HTTP 503 del pacchetto extras.
 
-- I download del modpack ora usano un User-Agent compatibile con i CDN che rifiutano il client predefinito di Python.
-- Aggiunto fallback automatico tra mediafilez.forgecdn.net e edge.forgecdn.net per i file CurseForge ancora presenti nel pack.
-- Aumentati i timeout per le mod di grandi dimensioni e mantenuti SHA-256 e dimensione come verifica obbligatoria.
-- Se un download fallisce, il launcher mostra finalmente il nome esatto del file, il codice HTTP e la sorgente invece del generico "Controlla Internet".
-- Il download di pack.json viene ritentato automaticamente tre volte e segnala separatamente gli errori del manifest.
-- Create Contraption Terminals e JRFTL restano distribuiti da Modrinth; Easy Gunpowder è stato sostituito dalla ricetta KubeJS.
-- Nessun file dell'installazione attuale viene modificato finché tutti i nuovi download non sono stati verificati.
+- Il pacchetto extras ora ha un secondo percorso di download tramite GitHub Release Asset API.
+- Se github.com risponde HTTP 503, il launcher passa automaticamente al mirror API autenticazione-free per asset pubblici.
+- Il mirror API usa correttamente Accept: application/octet-stream, evitando di scaricare per errore i metadati JSON.
+- Aggiunto backoff progressivo tra i tentativi invece di ripetere immediatamente la stessa richiesta.
+- I mirror espliciti nel manifest vengono validati e possono essere usati anche per futuri pacchetti.
+- Restano attivi hash SHA-256, controllo dimensione e rollback completo: nessun file viene applicato finché tutti i download non risultano validi.

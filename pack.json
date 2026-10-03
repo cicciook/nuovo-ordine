@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-13",
+  "version": "2026.10.03-hotfix-extras-22",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — hotfix updater: Create Contraption Terminals e JRFTL da Modrinth; Easy Gunpowder sostituito da ricetta KubeJS.",
+  "news": "Nuovo Ordine — hotfix download extras: mirror GitHub API e retry con backoff per evitare HTTP 503.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32285,7 +32285,10 @@
     "extras": {
       "size": 90930109,
       "sha256": "807a078c1bb14235f583458b7a3ae2994835d07f3d2e1b62e48f1e6a1ed4532f",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/extras.zip"
+      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/extras.zip",
+      "mirrors": [
+        "https://api.github.com/repos/cicciook/nuovo-ordine/releases/assets/593287167"
+      ]
     }
   }
 }
