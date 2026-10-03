@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-15",
+  "version": "2026.10.03-ext-16",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.2: catalogo, prezzi e bridge Mohist/MCEF ripristinati.",
+  "news": "Nuovo Ordine — Oculus sostituito con Luxium 2.8.0 pre-alpha.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -3225,13 +3225,6 @@
       "sha256": "66f1f6d61102dd03a4afafe4c9f1d39be9e55dabc8d0821cb46acca1328b525d",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/66f1f6d61102dd03a4afafe4c9f1d39be9e55dabc8d0821cb46acca1328b525d.bin"
-    },
-    {
-      "path": "mods/oculus-mc1.20.1-1.8.0.jar",
-      "size": 2851119,
-      "sha256": "0945df0cba0f62b3901dd80c3268e5311b770ece78c78037a45db12ac0425fef",
-      "mode": "replace",
-      "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/0945df0cba0f62b3901dd80c3268e5311b770ece78c78037a45db12ac0425fef.bin"
     },
     {
       "path": "mods/ok_zoomer-forge-5.4.0-beta.9.jar",
@@ -32265,6 +32258,13 @@
       "sha256": "04f0024bc15c657254621bb51ef6ee5427b7690ab855e581ea5c6b63d2a06d64",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/0f7aa4d4bba09ed076d9177e8d5ca418b071753c/mods/armeria-browser-1.3.2.jar"
+    },
+    {
+      "path": "mods/Luxium Let there be light-2.8.0-pre-alpha.jar",
+      "size": 7723029,
+      "sha256": "0530b80481b233d865ed0be55e9558562893fb48edec176d730d4789a9369469",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8984/815/Luxium%20Let%20there%20be%20light-2.8.0-pre-alpha.jar"
     }
   ],
   "archives": {
