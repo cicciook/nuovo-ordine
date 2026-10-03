@@ -1,10 +1,8 @@
-Nuovo Ordine Launcher 1.3.0 — Windows, macOS e Linux.
+Nuovo Ordine Launcher 1.4.0 — Windows, macOS e Linux.
 
-- Aggiunte le sezioni SERVER, CLASSIFICHE e MERCATO con dati live dal server Nuovo Ordine.
-- Classifiche live per influenza/Legacy e statistiche player; mercato usato e numero contratti aperti visibili dal launcher.
-- Stato server con giocatori online, evento strategico, convoglio, airdrop e denaro rimosso dall'economia.
-- Refresh automatico ogni 30 secondi e stato chiaro quando l'API server non è raggiungibile.
-- Restano disponibili skin personalizzate, laboratorio mantelli, login Microsoft e aggiornamento automatico del modpack.
-- Il pannello changelog mostra solo le note di questa ultima versione.
-
-Il server deve avere Nuovo Ordine Complete 1.0.0. Di default il launcher prova http://HOST_SERVER:8765/api/all; l'indirizzo può essere impostato manualmente nelle Impostazioni.
+- Mantelli animati stile Cloaks+: import GIF/APNG/WebP oppure sprite PNG verticale 64×(32×frame), fino a 64 frame.
+- Anteprima animata e controllo velocità 1–25 FPS direttamente nel laboratorio mantelli.
+- Nuovo Nuovo Ordine TaCZ Sync Fix: ritenta la sincronizzazione ufficiale TaCZ dopo il login per eliminare il problema delle armi che richiedevano V/melee prima di sparare.
+- Gli aggiornamenti del launcher passano ora da installer nativi: setup EXE su Windows, PKG su macOS e DEB su Linux.
+- Le vecchie build ZIP/TAR restano nelle release come ponte di migrazione per chi usa ancora Launcher 1.3.0.
+- Restano disponibili login Microsoft, aggiornamento automatico del modpack, server/classifiche/mercato live e changelog dell’ultima versione.
