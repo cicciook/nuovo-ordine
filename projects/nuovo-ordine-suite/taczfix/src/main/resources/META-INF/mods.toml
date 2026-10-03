@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="notaczfix"
+version="1.0.0"
+displayName="Nuovo Ordine TaCZ Sync Fix"
+description="Ritenta in modo sicuro la sincronizzazione TaCZ dopo il login, evitando il bug che richiede V/melee prima di poter sparare."
+[[dependencies.notaczfix]]
+modId="forge"
+mandatory=true
+versionRange="[47.4,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.notaczfix]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.20.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.notaczfix]]
+modId="tacz"
+mandatory=false
+versionRange="[1.0,)"
+ordering="AFTER"
+side="BOTH"
