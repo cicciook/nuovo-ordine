@@ -25,6 +25,7 @@ MANAGED_VERSION_FAMILIES = (
     "nuovo-ordine-townnames",
     "ammocompat",
     "lootr-more-tactical-loot",
+    "armeria-browser",
 )
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; NuovoOrdineLauncher/1.4.3; +https://github.com/cicciook/nuovo-ordine)",
