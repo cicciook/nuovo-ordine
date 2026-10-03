@@ -98,13 +98,6 @@
       "url": "https://cdn.modrinth.com/data/8nIicBYu/versions/lHLTx4dM/JRFTL-1.20.1-1.6.0.jar"
     },
     {
-      "path": "mods/lootr-more-tactical-loot-1.1.19.jar",
-      "size": 51691,
-      "sha256": "3c0a52bc50ad564ff7e49524bdc535315f53dd68ad0fc6e9cf514a08021c37b9",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/aa998ed17f51c7aa0bfaaf3971660725646e1316/mods/lootr-more-tactical-loot-1.1.19.jar"
-    },
-    {
       "path": "mods/maxstuff-legacy-1.8.3_hotfix.jar",
       "size": 33737826,
       "sha256": "ea4495edbcdf96b085130ad05ddc2b5092fc54c162aa7ae4a327b84ef328d0f2",
@@ -234,6 +227,13 @@
       "sha256": "3cbc1443331e987001a760c93b74f40fb67b6e0855bc5d5e387a1ad8886b74de",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
+    },
+    {
+      "path": "mods/lootr-more-tactical-loot-1.1.17.jar",
+      "size": 48797,
+      "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.17.jar"
     }
   ],
   "exclude_paths": [
