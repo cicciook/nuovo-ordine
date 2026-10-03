@@ -12,7 +12,7 @@ def png(size=(64, 64)):
 @pytest.mark.parametrize('pattern',['stripe','cross','border'])
 def test_cape_roundtrip(pattern,tmp_path):
     data=create_cape(pattern=pattern)
-    assert Image.open(io.BytesIO(data)).size==(64,32)
+    assert Image.open(io.BytesIO(data)).size==(256,128)
     path=save_texture(tmp_path,'cape',data)
     assert path.read_bytes()==validate_png(data,'cape')
 
@@ -52,14 +52,31 @@ def test_empty_changelog_fallback():
 
 def test_animated_gif_becomes_vertical_cape_sheet(tmp_path):
     source = tmp_path / "cape.gif"
-    frames = [Image.new("RGBA", (64, 32), color) for color in ("red", "green", "blue")]
+    frames = [Image.new("RGBA", (256, 128), color) for color in ("red", "green", "blue")]
     frames[0].save(source, format="GIF", save_all=True, append_images=frames[1:], duration=100, loop=0)
     target = save_texture_file(tmp_path / "instance", "cape", source)
     data = target.read_bytes()
-    assert Image.open(io.BytesIO(data)).size == (64, 96)
+    assert Image.open(io.BytesIO(data)).size == (256, 384)
     assert cape_frame_count(data) == 3
 
 
 def test_reject_too_many_cape_frames():
     with pytest.raises(ValueError):
         validate_png(png((64, 32 * 25)), "cape")
+
+
+@pytest.mark.parametrize("size", [(64, 32), (128, 64), (256, 128), (512, 256)])
+def test_hd_static_cape_sizes(size):
+    data = png(size)
+    assert Image.open(io.BytesIO(validate_png(data, "cape"))).size == size
+
+
+def test_hd_animated_sheet_geometry():
+    data = png((512, 256 * 3))
+    assert cape_frame_count(data) == 3
+
+
+@pytest.mark.parametrize("size", [(96, 48), (256, 64), (512, 300)])
+def test_reject_invalid_cape_geometry(size):
+    with pytest.raises(ValueError):
+        validate_png(png(size), "cape")
