@@ -81,18 +81,20 @@ public class CosmeticsClient {
         if (png.length == 0) return List.of();
         NativeImage sheet = NativeImage.read(new ByteArrayInputStream(png));
         try {
-            if (sheet.getWidth() != 64 || sheet.getHeight() < 32 || sheet.getHeight() % 32 != 0)
-                throw new IOException("Dimensioni mantello non valide");
-            int frames = sheet.getHeight() / 32;
-            if (frames > PngGuard.MAX_CAPE_FRAMES)
-                throw new IOException("Troppi frame mantello");
+            int width = sheet.getWidth();
+            int frameHeight = PngGuard.frameHeight(width);
+            int frames = PngGuard.frameCount(width, sheet.getHeight());
 
             List<ResourceLocation> result = new ArrayList<>(frames);
             for (int frameIndex = 0; frameIndex < frames; frameIndex++) {
-                NativeImage frame = new NativeImage(64, 32, true);
-                for (int y = 0; y < 32; y++) {
-                    for (int x = 0; x < 64; x++) {
-                        frame.setPixelRGBA(x, y, sheet.getPixelRGBA(x, frameIndex * 32 + y));
+                NativeImage frame = new NativeImage(width, frameHeight, true);
+                for (int y = 0; y < frameHeight; y++) {
+                    for (int x = 0; x < width; x++) {
+                        frame.setPixelRGBA(
+                            x,
+                            y,
+                            sheet.getPixelRGBA(x, frameIndex * frameHeight + y)
+                        );
                     }
                 }
                 ResourceLocation location = new ResourceLocation(
