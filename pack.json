@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "2026.10.03-loot-19",
+  "version": "2026.10.03-ext-12",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
@@ -32187,7 +32187,98 @@
       "size": 51691,
       "sha256": "3c0a52bc50ad564ff7e49524bdc535315f53dd68ad0fc6e9cf514a08021c37b9",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.19.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/aa998ed17f51c7aa0bfaaf3971660725646e1316/mods/lootr-more-tactical-loot-1.1.19.jar"
+    },
+    {
+      "path": "mods/create_bb-1.0.8-1.20.1.jar",
+      "size": 2640193,
+      "sha256": "c5e4e571798433585c3bcc2b36b86e3dd9cf2a77812d63c73dfb9a4ca394a921",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8723/462/create_bb-1.0.8-1.20.1.jar"
+    },
+    {
+      "path": "mods/create_radar-0.4.6+mc1.20.1.jar",
+      "size": 2966625,
+      "sha256": "0c1ce16926a93c84a3d8ff03b3263f4128306ed62889a07c9c54c1907e04785e",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8140/581/create_radar-0.4.6+mc1.20.1.jar"
+    },
+    {
+      "path": "mods/create_ultimate_factory-2.2.4-forge-1.20.1.jar",
+      "size": 234456,
+      "sha256": "11ba77c4739666c0f3d71ad0bdd5e77f7d460abf1c93de300fb6d8de35478a89",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8038/952/create_ultimate_factory-2.2.4-forge-1.20.1.jar"
+    },
+    {
+      "path": "mods/createcontraptionterminals-1.20-1.2.0.jar",
+      "size": 88862,
+      "sha256": "b4ef1e5cc4bef1c6c8bb24c080f2ff585ad21bc6ce8d8caaebe156fb1e00ab22",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/6252/786/createcontraptionterminals-1.20-1.2.0.jar"
+    },
+    {
+      "path": "mods/CreateCyberGoggles-1.20.1-7.2.3-Forge.jar",
+      "size": 394037,
+      "sha256": "2a38f85dfd0b75773e4d6d72d8e18af71a32d99a4a6873fd95e0a09b9265738c",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8622/914/CreateCyberGoggles-1.20.1-7.2.3-Forge.jar"
+    },
+    {
+      "path": "mods/createfisheryindustry-1.20-5.0.3.jar",
+      "size": 860077,
+      "sha256": "d263089195f0ee921ecbe325bd2f50aae6abb7607d557cc8f73386fae7203ef6",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8463/638/createfisheryindustry-1.20-5.0.3.jar"
+    },
+    {
+      "path": "mods/Easy Gunpowder 1.0-1.20.1.jar",
+      "size": 5443,
+      "sha256": "8589154a63378091530ee481c4feb61e1fe6df5f406ab960ff7a6c237fb5d6f3",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/4834/711/Easy%20Gunpowder%201.0-1.20.1.jar"
+    },
+    {
+      "path": "mods/immersive_paintings-0.6.13+1.20.1-forge.jar",
+      "size": 4856103,
+      "sha256": "069d5dffa4060d965899e607fad725c4d80a8086cef64f1d7563259b0a070633",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8140/573/immersive_paintings-0.6.13+1.20.1-forge.jar"
+    },
+    {
+      "path": "mods/JRFTL-1.20.1-1.6.0.jar",
+      "size": 14541,
+      "sha256": "521258f9b254b2be0205b40db882cbcdc26cf87babc8449939646f75d8e6c3b3",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/4594/475/JRFTL-1.20.1-1.6.0.jar"
+    },
+    {
+      "path": "mods/mekanism_ponders-1.0.3-1.20.1.jar",
+      "size": 2404521,
+      "sha256": "e9d59bcac4e80d0157110d7a5f4510c39633e62b4c92f68bfd75c68cfa1e382b",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8007/323/mekanism_ponders-1.0.3-1.20.1.jar"
+    },
+    {
+      "path": "mods/nowheel-2.1.1+1.20.1forge.jar",
+      "size": 86856,
+      "sha256": "f9a676a050eab329bcb935621ff1b8a1e23f110a1921cef546157299b698afb9",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8942/572/nowheel-2.1.1+1.20.1forge.jar"
+    },
+    {
+      "path": "mods/sentrymechanicalarm-0.3.6-1.20.1-Forge.jar",
+      "size": 411402,
+      "sha256": "33895708e0dbc66cde2b2c384621e4f739c83f13a1c0ac95362879c6c4fc9f47",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8508/479/sentrymechanicalarm-0.3.6-1.20.1-Forge.jar"
+    },
+    {
+      "path": "mods/tfmg-1.0.2f.jar",
+      "size": 5343749,
+      "sha256": "a789d1519fd4033334d0e217b252c557095b8007922247bfe53ee9db4f76a63d",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/7344/584/tfmg-1.0.2f.jar"
     }
   ],
   "archives": {
