@@ -18,7 +18,7 @@ from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtCore import Qt
 
 from .config import INSTANCE
-from .cosmetics import cape_frame_count, create_cape, save_texture, save_texture_file
+from .cosmetics import cape_info, create_cape, save_texture, save_texture_file
 
 
 class CapeCanvas(QLabel):
@@ -52,7 +52,7 @@ class CosmeticsDialog(QDialog):
         layout = QVBoxLayout(self)
         text = QLabel(
             "Importa la skin e crea il tuo mantello.\n"
-            "I mantelli possono essere statici PNG oppure animati GIF/APNG. "
+            "I mantelli possono essere statici PNG oppure animati GIF/APNG in 64×32, 128×64, 256×128 o 512×256 per frame. "
             "Le animazioni vengono convertite in massimo 24 frame e riprodotte in game a 10 FPS.\n"
             "Le modifiche vengono caricate al prossimo ingresso nel server.\n"
             "Visibili agli altri giocatori con Nuovo Ordine Cosmetics."
@@ -77,6 +77,13 @@ class CosmeticsDialog(QDialog):
         self.slim.setChecked((INSTANCE / "config/nuovoordine-cosmetics/slim").exists())
         self.slim.toggled.connect(self.set_slim)
         layout.addWidget(self.slim)
+
+        self.resolution = QComboBox()
+        self.resolution.addItems(["64×32", "128×64", "256×128 (HD)", "512×256 (HD+)"])
+        self.resolution.setCurrentIndex(2)
+        self.resolution.currentIndexChanged.connect(self.preview)
+        layout.addWidget(QLabel("Risoluzione mantello"))
+        layout.addWidget(self.resolution)
 
         self.pattern = QComboBox()
         self.pattern.addItems(["Striscia", "Croce", "Bordo"])
@@ -128,6 +135,7 @@ class CosmeticsDialog(QDialog):
             self.base,
             self.accent,
             ["stripe", "cross", "border"][self.pattern.currentIndex()],
+            scale=[1, 2, 4, 8][self.resolution.currentIndex()],
         )
         if hasattr(self, "image"):
             self.render_cape()
@@ -137,9 +145,10 @@ class CosmeticsDialog(QDialog):
             return
         pix = QPixmap()
         pix.loadFromData(self.png)
-        x = 1 if self.face.currentIndex() == 0 else 12
+        scale = max(1, pix.width() // 64)
+        x = (1 if self.face.currentIndex() == 0 else 12) * scale
         self.image.setPixmap(
-            pix.copy(x, 1, 10, 16).scaled(
+            pix.copy(x, 1 * scale, 10 * scale, 16 * scale).scaled(
                 120, 192, Qt.KeepAspectRatio, Qt.FastTransformation
             )
         )
@@ -148,8 +157,15 @@ class CosmeticsDialog(QDialog):
         image = Image.open(io.BytesIO(self.png)).convert("RGBA")
         from PIL import ImageColor
 
-        offset = 1 if self.face.currentIndex() == 0 else 12
-        image.putpixel((offset + x, 1 + y), ImageColor.getcolor(self.accent, "RGBA"))
+        scale = max(1, image.width // 64)
+        offset = (1 if self.face.currentIndex() == 0 else 12) * scale
+        color = ImageColor.getcolor(self.accent, "RGBA")
+        for px in range(scale):
+            for py in range(scale):
+                image.putpixel(
+                    (offset + x * scale + px, scale + y * scale + py),
+                    color,
+                )
         out = io.BytesIO()
         image.save(out, format="PNG")
         self.png = out.getvalue()
@@ -170,14 +186,16 @@ class CosmeticsDialog(QDialog):
         try:
             target = save_texture_file(INSTANCE, kind, Path(path))
             if kind == "cape":
-                frames = cape_frame_count(target.read_bytes())
+                width, frame_height, frames = cape_info(target.read_bytes())
                 if frames > 1:
                     self.status.setText(
-                        f"Mantello animato salvato: {frames} frame a 10 FPS. "
+                        f"Mantello animato {width}×{frame_height} salvato: {frames} frame a 10 FPS. "
                         "Rientra nel server per applicarlo."
                     )
                 else:
-                    self.status.setText("Mantello salvato. Rientra nel server per applicarlo.")
+                    self.status.setText(
+                        f"Mantello {width}×{frame_height} salvato. Rientra nel server per applicarlo."
+                    )
             else:
                 self.status.setText("Skin salvata. Rientra nel server per applicarla.")
         except Exception as exc:
