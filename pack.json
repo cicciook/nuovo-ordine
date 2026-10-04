@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.04-ext-21",
+  "version": "2026.10.04-ext-22",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — aggiunti Better Fps Render Distance 6.0, Distant Horizons 3.3.3 e Observable 4.4.1.",
+  "news": "Nuovo Ordine — aggiunti Better Fps Render Distance 6.0, Distant Horizons 3.3.3, Observable 4.4.1 e Cupboard 4.2.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32300,6 +32300,13 @@
       "sha256": "cb0d189d2ca663b9a4cc877493b3398243c630225232b962656916dc4d468433",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/5080/064/observable-4.4.1.jar"
+    },
+    {
+      "path": "mods/cupboard-1.20.1-4.2.jar",
+      "size": 33422,
+      "sha256": "6a384b880c2429e017f83657438e1fc00d091592cc2860d6d2986094bac5d48f",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/8889/041/cupboard-1.20.1-4.2.jar"
     }
   ],
   "archives": {
