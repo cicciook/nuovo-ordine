@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — aggiunti Better Fps Render Distance 6.0 e Distant Horizons 3.3.3.",
+  "news": "Nuovo Ordine — aggiunti Better Fps Render Distance 6.0, Distant Horizons 3.3.3 e Observable 4.4.1.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -290,6 +290,13 @@
       "sha256": "a537a71171d935540b56b7598d0de2c106f6f5026336c713d89a1d9ea0ea14e3",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/9004/753/DistantHorizons-3.3.3-1.20.1-fabric-forge.jar"
+    },
+    {
+      "path": "mods/observable-4.4.1.jar",
+      "size": 473368,
+      "sha256": "cb0d189d2ca663b9a4cc877493b3398243c630225232b962656916dc4d468433",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/5080/064/observable-4.4.1.jar"
     }
   ],
   "exclude_paths": [
