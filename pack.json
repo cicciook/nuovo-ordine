@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.03-ext-19",
+  "version": "2026.10.04-ext-20",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — ripristinati Oculus 1.8.0 e Create Better FPS 1.1.2; Luxium rimosso.",
+  "news": "Nuovo Ordine — aggiunti Better Fps Render Distance 6.0 e Distant Horizons 3.3.3.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32279,6 +32279,20 @@
       "sha256": "6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3",
       "mode": "replace",
       "url": "https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/6ae7511fc3c911168713d6281cd823eca8931a512f5f50917506e317bac640b3.bin"
+    },
+    {
+      "path": "mods/betterfpsdist-1.20.1-6.0.jar",
+      "size": 19917,
+      "sha256": "0fa8855bcdc67962f109a096381107f58917faa64c61dd99b32ae0e738aae4f7",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/5723/247/betterfpsdist-1.20.1-6.0.jar"
+    },
+    {
+      "path": "mods/DistantHorizons-3.3.3-1.20.1-fabric-forge.jar",
+      "size": 27700542,
+      "sha256": "a537a71171d935540b56b7598d0de2c106f6f5026336c713d89a1d9ea0ea14e3",
+      "mode": "replace",
+      "url": "https://mediafilez.forgecdn.net/files/9004/753/DistantHorizons-3.3.3-1.20.1-fabric-forge.jar"
     }
   ],
   "archives": {
