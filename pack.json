@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.05-ammocompat-1.1.1",
+  "version": "2026.10.05-starlight-1.1.2",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.1: fix TaCZ/Mohist, le armi sparano subito senza premere V.",
+  "news": "Nuovo Ordine — aggiunto Starlight 1.1.2 per ottimizzare il motore di illuminazione.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32294,6 +32294,13 @@
       "sha256": "eadcb59ac2aa959d8cd3400bcddd021213b68c5eb98e551fc2cbc14e950ae09f",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/6af11adb00f4c52bcd4004df07e6a9611692b9da/mods/armeria-browser-1.3.8.jar"
+    },
+    {
+      "path": "mods/starlight-1.1.2+forge.1cda73c.jar",
+      "size": 110583,
+      "sha256": "e90763c86d362c7cb427dbb70e89985c11a882fdd69ae7d04ac2e23a106eb500",
+      "mode": "replace",
+      "url": "https://cdn.modrinth.com/data/iRfIGC1s/versions/cNa0vkNj/starlight-1.1.2%2Bforge.1cda73c.jar"
     }
   ],
   "archives": {
