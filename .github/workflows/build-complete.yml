@@ -46,6 +46,10 @@ jobs:
             exit 1
           fi
           javap -verbose -classpath mods/nuovo-ordine-complete-1.0.2.jar it.nuovoordine.complete.NuovoOrdineCompleteMod | grep 'major version: 61'
+          javap -classpath mods/nuovo-ordine-complete-1.0.2.jar -p -c it.nuovoordine.complete.NuovoOrdineCompleteMod > /tmp/nocomplete-1.0.2.txt
+          grep -q 'SERVER_SHOOT_NETWORK_V' /tmp/nocomplete-1.0.2.txt
+          grep -q 'forceTaczShootNetworkCheckOff' /tmp/nocomplete-1.0.2.txt
+          unzip -p mods/nuovo-ordine-complete-1.0.2.jar META-INF/mods.toml | grep -q 'version="1.0.2"'
       - name: Dedicated Forge mod-loading smoke test
         shell: bash
         run: |
@@ -103,6 +107,7 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
           cp /tmp/nuovo-ordine-complete-1.0.2.jar mods/nuovo-ordine-complete-1.0.2.jar
+          rm -f mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar
 
           python - <<'PY'
           import hashlib, json
@@ -129,7 +134,7 @@ jobs:
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mods/nuovo-ordine-complete-1.0.2.jar pack.json pack-settings.json
+          git add -A mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar mods/nuovo-ordine-complete-1.0.2.jar pack.json pack-settings.json
           if git diff --cached --quiet; then
             echo 'Artifact and manifests already current.'
           else
