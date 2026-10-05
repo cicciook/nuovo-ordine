@@ -1,0 +1,115 @@
+name: Build AmmoCompat 1.1.1 modular shoot fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/ammocompat-1.1.0/**'
+      - '.github/workflows/build-ammocompat-1.1.1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ammocompat-1.1.1-main
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Build AmmoCompat
+        working-directory: projects/ammocompat-1.1.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon clean build
+          JAR=build/libs/ammocompat-1.1.1.jar
+          test -s "$JAR"
+          unzip -t "$JAR" >/dev/null
+          unzip -p "$JAR" META-INF/mods.toml | grep -q 'version="1.1.1"'
+          javap -classpath "$JAR" -p -c it.ciccio.ammocompat.AmmoCompat > /tmp/ammocompat.txt
+          grep -q 'SERVER_SHOOT_NETWORK_V' /tmp/ammocompat.txt
+          grep -q 'applyTaczShootCompatibility' /tmp/ammocompat.txt
+          ! grep -q 'SERVER_SHOOT_COOLDOWN_V' /tmp/ammocompat.txt
+
+      - name: Publish modular JAR and manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp projects/ammocompat-1.1.0/build/libs/ammocompat-1.1.1.jar /tmp/ammocompat-1.1.1.jar
+
+          git fetch origin main
+          git reset --hard origin/main
+
+          mkdir -p mods
+          cp /tmp/ammocompat-1.1.1.jar mods/ammocompat-1.1.1.jar
+          rm -f mods/ammocompat-1.1.0.jar
+          rm -f mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar mods/nuovo-ordine-complete-1.0.2.jar
+
+          python3 - <<'PY'
+          import hashlib, json, re
+          from pathlib import Path
+
+          jar=Path('mods/ammocompat-1.1.1.jar')
+          data=jar.read_bytes()
+          entry={
+              'path':'mods/ammocompat-1.1.1.jar',
+              'size':len(data),
+              'sha256':hashlib.sha256(data).hexdigest(),
+              'mode':'replace',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.1.jar',
+          }
+
+          for filename,key in [('pack-settings.json','external_files'),('pack.json','files')]:
+              p=Path(filename)
+              doc=json.loads(p.read_text('utf-8'))
+              out=[]
+              inserted=False
+              for old in doc.get(key,[]):
+                  path=old.get('path','')
+                  if re.fullmatch(r'mods/ammocompat-[^/]+\.jar',path):
+                      if not inserted:
+                          out.append(entry); inserted=True
+                      continue
+                  if path.startswith('mods/nuovo-ordine-complete-') or path.startswith('mods/nuovo-ordine-gameplay-'):
+                      continue
+                  out.append(old)
+              if not inserted: out.append(entry)
+              doc[key]=out
+              doc['news']='Nuovo Ordine — AmmoCompat 1.1.1: fix TaCZ/Mohist, le armi sparano subito senza premere V.'
+              if filename=='pack.json':
+                  doc['version']='2026.10.05-ammocompat-1.1.1'
+              p.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          settings=json.loads(Path('pack-settings.json').read_text('utf-8'))
+          assert any(x.get('path')=='mods/ammocompat-1.1.1.jar' for x in settings['external_files'])
+          assert not any(x.get('path','').startswith('mods/nuovo-ordine-complete-') for x in settings['external_files'])
+          assert not any(x.get('path')=='mods/ammocompat-1.1.0.jar' for x in settings['external_files'])
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A mods/ammocompat-1.1.0.jar mods/ammocompat-1.1.1.jar             mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar             mods/nuovo-ordine-complete-1.0.2.jar pack.json pack-settings.json
+          git commit -m 'release: AmmoCompat 1.1.1 modular shoot fix'
+          git push origin HEAD:main
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ammocompat-1.1.1
+          path: /tmp/ammocompat-1.1.1.jar
+          if-no-files-found: error
