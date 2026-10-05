@@ -1,0 +1,24 @@
+name: Export Armeria 1.3.8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-armeria-1.3.8.yml'
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifica JAR
+        run: |
+          test -s mods/armeria-browser-1.3.8.jar
+          unzip -t mods/armeria-browser-1.3.8.jar >/dev/null
+      - name: Carica JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: armeria-browser-1.3.8
+          path: mods/armeria-browser-1.3.8.jar
+          if-no-files-found: error
