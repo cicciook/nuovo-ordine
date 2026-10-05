@@ -721,7 +721,7 @@ final class ShopService {
             String name = port.economyName(); BigDecimal balance = port.balance();
             state.addProperty("economy", name); state.addProperty("balance", balance.toPlainString());
             state.addProperty("balanceFormatted", port.format(balance)); economy = true;
-        } catch (Exception e) { state.addProperty("economyError", "EssentialsX Economy/Vault non disponibile: " + e.getMessage()); }
+        } catch (Exception e) { state.addProperty("economyError", "EssentialsX Economy non disponibile: " + e.getMessage()); }
         state.addProperty("economyAvailable", economy);
         JsonArray offers = new JsonArray();
         for (Offer offer : catalog.offers) {
