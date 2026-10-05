@@ -27,6 +27,12 @@ MANAGED_VERSION_FAMILIES = (
     "lootr-more-tactical-loot",
     "armeria-browser",
 )
+
+# Mods explicitly removed from Nuovo Ordine. Purge stale/manual copies too,
+# otherwise Forge can keep loading them even after they disappear from pack.json.
+FORCED_REMOVED_MODS = re.compile(
+    r"(?i)^dox(?:lean|core)(?:[-_.].*)?\.jar$"
+)
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; NuovoOrdineLauncher/1.4.3; +https://github.com/cicciook/nuovo-ordine)",
     "Accept": "*/*",
@@ -327,10 +333,17 @@ class Updater:
         if mods_dir.exists():
             for local in mods_dir.glob("*.jar"):
                 rel = "mods/" + local.name
+                key = rel.casefold()
+
+                if FORCED_REMOVED_MODS.fullmatch(local.name) and key not in scheduled:
+                    self.report(f"Rimuovo mod eliminata dal pack: {local.name}")
+                    changes.append((rel, None))
+                    scheduled.add(key)
+                    continue
+
                 family = managed_mod_family(rel)
                 if not family or family not in expected_by_family:
                     continue
-                key = rel.casefold()
                 if key not in expected_by_family[family] and key not in scheduled:
                     self.report(f"Rimuovo versione duplicata gestita: {local.name}")
                     changes.append((rel, None))
