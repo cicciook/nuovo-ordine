@@ -293,11 +293,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
     },
     {
-      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
-      "size": 59675,
-      "sha256": "9c51c77ef3451e2c0fec858ea1fabff901c112641b306162e144466b49ba4444",
+      "path": "mods/nuovo-ordine-complete-1.0.2.jar",
+      "size": 60144,
+      "sha256": "ab44477e3ba8c0e57d32f33a33c4bf3282120c7b16c5f7451dc72228df587d44",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/nuovo-ordine-complete-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.2.jar"
     }
   ],
   "exclude_paths": [
