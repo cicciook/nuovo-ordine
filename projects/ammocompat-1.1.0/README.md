@@ -1,4 +1,4 @@
-# TaCZ Superb Warfare Ammo Compat 1.1.1
+# TaCZ Superb Warfare Ammo Compat 1.1.2
 
 Minecraft 1.20.1 / Forge 47.x.
 
@@ -19,6 +19,12 @@ Heavy anti-materiel, grenade/rocket and special ammo (laser, arrows, nails, etc.
 - Non disabilita `ServerShootCooldownCheck`, quindi il controllo della cadenza resta attivo.
 - Risolve il caso in cui le armi iniziano a sparare solo dopo aver premuto V.
 
-Build modulare 1.1.1 destinata al setup con i JAR Nuovo Ordine separati.
+Build modulare 1.1.2 destinata al setup con i JAR Nuovo Ordine separati.
 
-Publish fix definitivo della build 1.1.1.
+Publish fix definitivo della build 1.1.2.
+
+## Fix TaCZ/Mohist 1.1.2
+- Sincronizza lo stato TaCZ e il base timestamp al login.
+- Corregge automaticamente i timestamp di sparo finiti nel futuro su Mohist.
+- Evita il blocco di reload/melee dopo uno sparo senza richiedere il cambio slot.
+- Evita che il primo sparo richieda prima un melee TaCZ.
