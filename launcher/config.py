@@ -8,6 +8,9 @@ from platformdirs import user_data_path
 DATA = user_data_path("NuovoOrdine", appauthor=False)
 INSTANCE = DATA / "minecraft"
 
+OFFICIAL_REPOSITORY = "cicciook/nuovo-ordine"
+OFFICIAL_BRANCH = "main"
+
 
 def atomic_json(path, value):
     path = Path(path)
@@ -26,9 +29,14 @@ def load_config():
     path = DATA / "settings.json"
     if path.exists():
         user = json.loads(path.read_text("utf-8"))
-        # Il Client ID appartiene alla build del launcher, non alle impostazioni dei giocatori.
+        # Questi valori appartengono alla build ufficiale e non possono essere
+        # sovrascritti da vecchie impostazioni locali.
         user.pop("microsoft_client_id", None)
+        user.pop("repository", None)
+        user.pop("branch", None)
         cfg.update(user)
+    cfg["repository"] = OFFICIAL_REPOSITORY
+    cfg["branch"] = OFFICIAL_BRANCH
     return cfg
 
 
@@ -45,4 +53,4 @@ def validate_config(cfg, require_login=False):
 
 def manifest_url(cfg):
     validate_config(cfg)
-    return f'https://raw.githubusercontent.com/{cfg["repository"]}/{cfg["branch"]}/pack.json'
+    return f"https://raw.githubusercontent.com/{OFFICIAL_REPOSITORY}/{OFFICIAL_BRANCH}/pack.json"
