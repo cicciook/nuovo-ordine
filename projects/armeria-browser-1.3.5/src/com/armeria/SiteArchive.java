@@ -41,11 +41,11 @@ final class SiteArchive {
             boolean legacyDefault = existingHash.equals(
                     "e8935ae6b2853b4cc307ab67ac8c6f3c8224e57d4c4f902321dd0c912adb3106")
                     || existingText.contains("nuovo-ordine-armeria-default:1.3.3")
-                    || existingText.contains("nuovo-ordine-armeria-default:1.3.5")
+                    || existingText.contains("nuovo-ordine-armeria-default:1.3.4")
                     || (existingText.contains("ANTEPRIMA — questi articoli sono esempi grafici.")
                         && existingText.contains("function native(){return typeof window.armeriaQuery==='function'}")
                         && existingText.contains("window.addEventListener('armeriaBridgeReady'"));
-            if (legacyDefault && !existingText.contains("nuovo-ordine-armeria-default:1.3.4")) {
+            if (legacyDefault && !existingText.contains("nuovo-ordine-armeria-default:1.3.5")) {
                 Path backup = root.resolve("shop.pre-1.3.5.bak");
                 if (!Files.exists(backup, LinkOption.NOFOLLOW_LINKS))
                     Files.copy(shop, backup, StandardCopyOption.COPY_ATTRIBUTES);
