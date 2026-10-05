@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.05-starlight-1.1.2",
+  "version": "2026.10.05-ammocompat-1.1.1",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — aggiunto Starlight 1.1.2 per ottimizzare il motore di illuminazione.",
+  "news": "Nuovo Ordine — AmmoCompat 1.1.1: fix TaCZ/Mohist, le armi sparano subito senza premere V.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32115,8 +32115,8 @@
     },
     {
       "path": "mods/ammocompat-1.1.1.jar",
-      "size": 8190,
-      "sha256": "ced8502ea7eb38991e3ce5c6f9496be5c259fe0b2f3b592f002d67f15b05af7b",
+      "size": 9356,
+      "sha256": "10b94a6049dc0df17682b4127a8c6c33ec8da5cda66d6971b58672567b711488",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.1.jar"
     },
