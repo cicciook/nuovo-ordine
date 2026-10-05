@@ -117,13 +117,15 @@ final class ShopRuntime {
             Collection<?> registrations = (Collection<?>) call(services, "getRegistrations", new Class<?>[]{Class.class}, economyApi);
             for (Object registration : registrations) {
                 Object plugin = call(registration, "getPlugin");
-                if (!"TheNewEconomy".equals(call(plugin, "getName")) || !(boolean) call(plugin, "isEnabled")) continue;
+                String pluginName = String.valueOf(call(plugin, "getName"));
+                if (!"Essentials".equals(pluginName) && !"EssentialsX".equals(pluginName)) continue;
+                if (!(boolean) call(plugin, "isEnabled")) continue;
                 Object candidate = call(registration, "getProvider");
                 if ((boolean) economyApi.getMethod("isEnabled").invoke(candidate)) { economy = candidate; return candidate; }
             }
-            throw new IllegalArgumentException("TheNewEconomy non registrato in Vault.");
+            throw new IllegalArgumentException("EssentialsX Economy non registrato in Vault.");
         }
-        public String economyName() throws Exception { provider(); return "TheNewEconomy / Vault"; }
+        public String economyName() throws Exception { Object p=provider(); String name=String.valueOf(economyApi.getMethod("getName").invoke(p)); if (!"EssentialsX Economy".equals(name) && !"Essentials Economy".equals(name)) throw new IllegalArgumentException("Provider Vault non valido: serve EssentialsX Economy."); return "EssentialsX Economy / Vault"; }
         public BigDecimal balance() throws Exception {
             Object p = provider(); double value = (double) economyApi.getMethod("getBalance", offlineApi).invoke(p, bukkit);
             if (!Double.isFinite(value)) throw new IllegalStateException("Saldo non valido.");
