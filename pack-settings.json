@@ -213,7 +213,7 @@
       "size": 117114,
       "sha256": "eadcb59ac2aa959d8cd3400bcddd021213b68c5eb98e551fc2cbc14e950ae09f",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.8.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/6af11adb00f4c52bcd4004df07e6a9611692b9da/mods/armeria-browser-1.3.8.jar"
     },
     {
       "path": "mods/Geophilic v3.7.mod.jar",
@@ -297,7 +297,7 @@
       "size": 60144,
       "sha256": "df00c8b596fc4c7d4596842840c38547ef353b15df9d3ce606a1afed8a3abaef",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.2.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/6af11adb00f4c52bcd4004df07e6a9611692b9da/mods/nuovo-ordine-complete-1.0.2.jar"
     }
   ],
   "exclude_paths": [
