@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'projects/nuovo-ordine-complete-1.0.0/**'
+      - 'projects/nuovo-ordine-complete-1.0.2/**'
       - '.github/workflows/build-complete.yml'
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PROJECT=projects/nuovo-ordine-complete-1.0.0
+          PROJECT=projects/nuovo-ordine-complete-1.0.2
           rm -rf "$PROJECT/build"
           mkdir -p "$PROJECT/build/stub-src/net/minecraftforge/fml/common" "$PROJECT/build/stub-classes" "$PROJECT/build/classes"
           cat > "$PROJECT/build/stub-src/net/minecraftforge/fml/common/Mod.java" <<'JAVA'
@@ -39,13 +39,13 @@ jobs:
           find "$PROJECT/src/main/java" -name '*.java' -print0 | xargs -0 javac --release 17 --add-modules jdk.httpserver -cp "$PROJECT/build/stub-classes" -d "$PROJECT/build/classes"
           cp -R "$PROJECT/src/main/resources/." "$PROJECT/build/classes/"
           mkdir -p mods
-          jar --create --file mods/nuovo-ordine-complete-1.0.0.jar -C "$PROJECT/build/classes" .
-          unzip -t mods/nuovo-ordine-complete-1.0.0.jar
-          if jar tf mods/nuovo-ordine-complete-1.0.0.jar | grep -q '^net/minecraftforge/'; then
+          jar --create --file mods/nuovo-ordine-complete-1.0.2.jar -C "$PROJECT/build/classes" .
+          unzip -t mods/nuovo-ordine-complete-1.0.2.jar
+          if jar tf mods/nuovo-ordine-complete-1.0.2.jar | grep -q '^net/minecraftforge/'; then
             echo 'Forge compile stub leaked into release JAR' >&2
             exit 1
           fi
-          javap -verbose -classpath mods/nuovo-ordine-complete-1.0.0.jar it.nuovoordine.complete.NuovoOrdineCompleteMod | grep 'major version: 61'
+          javap -verbose -classpath mods/nuovo-ordine-complete-1.0.2.jar it.nuovoordine.complete.NuovoOrdineCompleteMod | grep 'major version: 61'
       - name: Dedicated Forge mod-loading smoke test
         shell: bash
         run: |
@@ -56,7 +56,7 @@ jobs:
           curl -fLsS https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.4.13/forge-1.20.1-47.4.13-installer.jar -o installer.jar
           java -jar installer.jar --installServer > install.log 2>&1
           mkdir -p mods
-          cp "$GITHUB_WORKSPACE/mods/nuovo-ordine-complete-1.0.0.jar" mods/
+          cp "$GITHUB_WORKSPACE/mods/nuovo-ordine-complete-1.0.2.jar" mods/
           printf 'eula=false\n' > eula.txt
           set +e
           timeout 120 bash run.sh nogui > smoke.log 2>&1
@@ -73,14 +73,14 @@ jobs:
         run: |
           import hashlib, json
           from pathlib import Path
-          jar = Path('mods/nuovo-ordine-complete-1.0.0.jar')
+          jar = Path('mods/nuovo-ordine-complete-1.0.2.jar')
           data = jar.read_bytes()
           entry = {
               'path': str(jar).replace('\\','/'),
               'size': len(data),
               'sha256': hashlib.sha256(data).hexdigest(),
               'mode': 'replace',
-              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.2.jar',
           }
           managed_prefixes = ('mods/nuovo-ordine-complete-', 'mods/nuovo-ordine-gameplay-')
           for filename, key in [('pack.json','files'), ('pack-settings.json','external_files')]:
@@ -88,8 +88,8 @@ jobs:
               doc = json.loads(path.read_text(encoding='utf-8'))
               doc[key] = [x for x in doc.get(key,[]) if not x.get('path','').startswith(managed_prefixes)] + [entry]
               if filename == 'pack.json':
-                  doc['version'] = '2026.10.01-complete-1.0.0'
-                  doc['news'] = 'Nuovo Ordine — territori, eventi, contratti, reputazione, ferite, convogli, airdrop, garage/usato e classifiche live'
+                  doc['version'] = '2026.10.01-complete-1.0.2'
+                  doc['news'] = 'Nuovo Ordine — Complete 1.0.2: fix sparo TaCZ/Mohist senza premere V'
               path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
       - name: Commit verified artifact
         shell: bash
@@ -99,22 +99,22 @@ jobs:
           # main first, then regenerate our manifest entry on top of the newest
           # branch state so concurrent launcher/suite commits cannot create a
           # stale-manifest rebase conflict.
-          cp mods/nuovo-ordine-complete-1.0.0.jar /tmp/nuovo-ordine-complete-1.0.0.jar
+          cp mods/nuovo-ordine-complete-1.0.2.jar /tmp/nuovo-ordine-complete-1.0.2.jar
           git fetch origin main
           git reset --hard origin/main
-          cp /tmp/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.0.jar
+          cp /tmp/nuovo-ordine-complete-1.0.2.jar mods/nuovo-ordine-complete-1.0.2.jar
 
           python - <<'PY'
           import hashlib, json
           from pathlib import Path
-          jar = Path('mods/nuovo-ordine-complete-1.0.0.jar')
+          jar = Path('mods/nuovo-ordine-complete-1.0.2.jar')
           data = jar.read_bytes()
           entry = {
               'path': str(jar).replace('\\','/'),
               'size': len(data),
               'sha256': hashlib.sha256(data).hexdigest(),
               'mode': 'replace',
-              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.2.jar',
           }
           managed_prefixes = ('mods/nuovo-ordine-complete-', 'mods/nuovo-ordine-gameplay-')
           for filename, key in [('pack.json','files'), ('pack-settings.json','external_files')]:
@@ -122,17 +122,17 @@ jobs:
               doc = json.loads(path.read_text(encoding='utf-8'))
               doc[key] = [x for x in doc.get(key,[]) if not x.get('path','').startswith(managed_prefixes)] + [entry]
               if filename == 'pack.json':
-                  doc['version'] = '2026.10.03-complete-1.0.0'
-                  doc['news'] = 'Nuovo Ordine — fix compatibilità sparo TaCZ/Mohist e aggiornamenti gameplay'
+                  doc['version'] = '2026.10.03-complete-1.0.2'
+                  doc['news'] = 'Nuovo Ordine — Complete 1.0.2: fix sparo TaCZ/Mohist senza premere V'
               path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mods/nuovo-ordine-complete-1.0.0.jar pack.json pack-settings.json
+          git add mods/nuovo-ordine-complete-1.0.2.jar pack.json pack-settings.json
           if git diff --cached --quiet; then
             echo 'Artifact and manifests already current.'
           else
-            git commit -m 'release: Nuovo Ordine Complete 1.0.0'
+            git commit -m 'release: Nuovo Ordine Complete 1.0.2'
             git push origin HEAD:main
           fi
