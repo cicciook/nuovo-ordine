@@ -294,8 +294,8 @@
     },
     {
       "path": "mods/nuovo-ordine-complete-1.0.0.jar",
-      "size": 59568,
-      "sha256": "d0ddca4980a229bfb7c1d79ed1e6a7adc4db693ca3ca0ad40f4eced04a6fcf77",
+      "size": 59580,
+      "sha256": "76919820dbeafb3c9882053115fd761625c54de878a0ab170f3dd567a5d1753c",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     }
