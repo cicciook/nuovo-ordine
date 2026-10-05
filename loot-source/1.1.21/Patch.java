@@ -10,18 +10,37 @@ public class Patch implements Opcodes {
     static final double OLD_WEAPON_CHANCE = 0.12d;
     static final double NEW_WEAPON_CHANCE = 0.08d;
 
-    static Object fix(Object value) {
-        if (value instanceof String s) {
-            if (s.startsWith("lootr_more_loot_injected_")) return "lootr_more_loot_injected_1121";
-            if (s.startsWith("lootr_more_loot_seen_")) return "lootr_more_loot_seen_1121.txt";
-        }
-        if (value instanceof Double d && Double.compare(d, OLD_WEAPON_CHANCE) == 0) {
-            return NEW_WEAPON_CHANCE;
-        }
+    static Object fixMarker(Object value) {
+        if (!(value instanceof String s)) return value;
+        if (s.startsWith("lootr_more_loot_injected_")) return "lootr_more_loot_injected_1121";
+        if (s.startsWith("lootr_more_loot_seen_")) return "lootr_more_loot_seen_1121.txt";
         return value;
     }
 
     static byte[] patchLootOpenEvents(byte[] bytes) {
+        ClassReader scan = new ClassReader(bytes);
+        Set<String> weaponMethods = new HashSet<>();
+
+        // Prima passata: identifica soltanto i metodi che leggono il pool WEAPONS.
+        scan.accept(new ClassVisitor(ASM8) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] ex) {
+                String key = name + "\u0000" + desc;
+                return new MethodVisitor(ASM8) {
+                    @Override
+                    public void visitFieldInsn(int opcode, String owner, String field, String descriptor) {
+                        if (owner.equals(OWNER) && field.equals("WEAPONS")) {
+                            weaponMethods.add(key);
+                        }
+                    }
+                };
+            }
+        }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+
+        if (weaponMethods.isEmpty()) {
+            throw new IllegalStateException("Nessun metodo che usa il pool WEAPONS trovato");
+        }
+
         ClassReader cr = new ClassReader(bytes);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         int[] chanceReplacements = {0};
@@ -29,21 +48,21 @@ public class Patch implements Opcodes {
         cr.accept(new ClassVisitor(ASM8, cw) {
             @Override
             public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
-                Object updated = fix(value);
-                if (value instanceof Double d && updated instanceof Double nd && Double.compare(d, nd) != 0) {
-                    chanceReplacements[0]++;
-                }
-                return super.visitField(access, name, desc, sig, updated);
+                return super.visitField(access, name, desc, sig, fixMarker(value));
             }
 
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] ex) {
                 MethodVisitor parent = super.visitMethod(access, name, desc, sig, ex);
+                boolean weaponMethod = weaponMethods.contains(name + "\u0000" + desc);
+
                 return new MethodVisitor(ASM8, parent) {
                     @Override
                     public void visitLdcInsn(Object value) {
-                        Object updated = fix(value);
-                        if (value instanceof Double d && updated instanceof Double nd && Double.compare(d, nd) != 0) {
+                        Object updated = fixMarker(value);
+                        if (weaponMethod && value instanceof Double d
+                                && Double.compare(d, OLD_WEAPON_CHANCE) == 0) {
+                            updated = NEW_WEAPON_CHANCE;
                             chanceReplacements[0]++;
                         }
                         super.visitLdcInsn(updated);
@@ -51,7 +70,7 @@ public class Patch implements Opcodes {
 
                     @Override
                     public void visitInvokeDynamicInsn(String n, String d, Handle h, Object... args) {
-                        for (int i = 0; i < args.length; i++) args[i] = fix(args[i]);
+                        for (int i = 0; i < args.length; i++) args[i] = fixMarker(args[i]);
                         super.visitInvokeDynamicInsn(n, d, h, args);
                     }
                 };
@@ -59,7 +78,8 @@ public class Patch implements Opcodes {
         }, 0);
 
         if (chanceReplacements[0] != 1) {
-            throw new IllegalStateException("Atteso esattamente un roll armi 0.12, trovati: " + chanceReplacements[0]);
+            throw new IllegalStateException(
+                    "Atteso un solo roll armi 0.12 nei metodi WEAPONS, trovati: " + chanceReplacements[0]);
         }
         return cw.toByteArray();
     }
