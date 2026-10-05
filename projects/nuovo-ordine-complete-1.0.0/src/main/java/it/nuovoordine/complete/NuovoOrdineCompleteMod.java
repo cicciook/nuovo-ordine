@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Mod("nocomplete")
 public final class NuovoOrdineCompleteMod {
     private static final System.Logger LOG=System.getLogger("nocomplete");
-    private static final String VERSION="1.0.1";
+    private static final String VERSION="1.0.2";
     private final Config cfg=new Config(Path.of("config","nuovoordine-complete.properties"));
     private final StateStore store=new StateStore(Path.of("config","nuovoordine-complete-state.dat.gz"));
     private final EconomyBridge economy=new EconomyBridge();
@@ -191,14 +191,41 @@ public final class NuovoOrdineCompleteMod {
 
     private synchronized void applyTaczShootCompatibilityFix(){
         if(server==null)return;
-        int result=runCommand("tacz config serverShootNetworkCheck false");
+        boolean direct=forceTaczShootNetworkCheckOff();
+        int result=direct?1:runCommand("tacz config serverShootNetworkCheck false");
         taczShootFixAttempts++;
         nextTaczShootFixAt=System.currentTimeMillis()+5_000L;
         if(result>0){
-            if(!taczShootFixApplied)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato. Lo sparo non richiede piu un colpo melee iniziale.");
+            if(!taczShootFixApplied)LOG.log(System.Logger.Level.INFO,"TaCZ: ServerShootNetworkCheck disabilitato a runtime. Lo sparo e disponibile subito senza premere V.");
             taczShootFixApplied=true;
         }else if(taczShootFixAttempts==1||taczShootFixAttempts==12){
-            LOG.log(System.Logger.Level.WARNING,"TaCZ: tentativo "+taczShootFixAttempts+"/12 di disabilitare serverShootNetworkCheck non riuscito; ritento automaticamente.");
+            LOG.log(System.Logger.Level.WARNING,"TaCZ: tentativo "+taczShootFixAttempts+"/12 di disabilitare ServerShootNetworkCheck non riuscito; ritento automaticamente.");
+        }
+    }
+
+    private boolean forceTaczShootNetworkCheckOff(){
+        try{
+            Class<?> sync=Class.forName("com.tacz.guns.config.sync.SyncConfig");
+            Object value=sync.getField("SERVER_SHOOT_NETWORK_V").get(null);
+            if(value==null)return false;
+            Method setter=null;
+            for(Method m:value.getClass().getMethods()){
+                if(m.getName().equals("set")&&m.getParameterCount()==1){setter=m;break;}
+            }
+            if(setter==null)return false;
+            setter.invoke(value,false);
+            try{
+                Method getter=value.getClass().getMethod("get");
+                Object current=getter.invoke(value);
+                return Boolean.FALSE.equals(current);
+            }catch(Exception ignored){
+                return true;
+            }
+        }catch(ClassNotFoundException absent){
+            return false;
+        }catch(Throwable problem){
+            LOG.log(System.Logger.Level.DEBUG,"TaCZ: accesso diretto a SyncConfig non riuscito",problem);
+            return false;
         }
     }
 
