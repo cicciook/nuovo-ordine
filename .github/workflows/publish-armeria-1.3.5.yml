@@ -1,0 +1,205 @@
+name: Pubblica Armeria Browser 1.3.5
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/armeria-browser-1.3.5/**'
+      - '.github/workflows/publish-armeria-1.3.5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Usa Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepara dipendenze di compilazione
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/armeria-libs /tmp/armeria-classes /tmp/armeria-patch/META-INF/armeria-sources/com/armeria /tmp/armeria-patch/armeria_default /tmp/armeria-patch/META-INF
+          curl -fL --retry 4 -o /tmp/armeria-libs/gson.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar
+          curl -fL --retry 4 -o /tmp/armeria-libs/netty-buffer.jar https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.82.Final/netty-buffer-4.1.82.Final.jar
+          curl -fL --retry 4 -o /tmp/armeria-libs/netty-common.jar https://repo1.maven.org/maven2/io/netty/netty-common/4.1.82.Final/netty-common-4.1.82.Final.jar
+
+      - name: Compila hotfix bridge e catalogo
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=mods/armeria-browser-1.3.4.jar
+          test -s "$BASE"
+          CP="$BASE:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar"
+          javac --release 17 -cp "$CP" -d /tmp/armeria-classes             projects/armeria-browser-1.3.5/src/com/armeria/Network.java             projects/armeria-browser-1.3.5/src/com/armeria/ShopBrowserClient.java             projects/armeria-browser-1.3.5/src/com/armeria/ShopService.java             projects/armeria-browser-1.3.5/src/com/armeria/BrowserBridge.java             projects/armeria-browser-1.3.5/src/com/armeria/SiteArchive.java             projects/armeria-browser-1.3.5/src/com/armeria/AmmoSupport.java             projects/armeria-browser-1.3.5/src/com/armeria/ShopRuntime.java
+
+      - name: Costruisci JAR 1.3.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=mods/armeria-browser-1.3.4.jar
+          OUT=mods/armeria-browser-1.3.5.jar
+          cp "$BASE" "$OUT"
+
+          cp projects/armeria-browser-1.3.5/src/com/armeria/*.java /tmp/armeria-patch/META-INF/armeria-sources/com/armeria/
+          cp projects/armeria-browser-1.3.5/resources/armeria_default/shop.html /tmp/armeria-patch/armeria_default/shop.html
+          cp projects/armeria-browser-1.3.5/README.md /tmp/armeria-patch/META-INF/armeria-1.3.5-README.md
+
+          unzip -p "$BASE" META-INF/mods.toml > /tmp/armeria-patch/META-INF/mods.toml
+          sed -i 's/version="1\.3\.4"/version="1.3.5"/' /tmp/armeria-patch/META-INF/mods.toml
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/armeria-patch/META-INF/mods.toml')
+          s=p.read_text('utf-8')
+          s=s.replace(
+              'Negozio web /armeria con rilevamento automatico delle munizioni TACZ/gunpack e Superb Warfare, prezzi iniziali bilanciati, gestione OP e pagamenti TheNewEconomy tramite Vault.',
+              'Negozio web /armeria con bridge MCEF/Mohist robusto, catalogo automatico di sole munizioni e accessori TACZ/Superb Warfare, prezzi bilanciati, gestione OP e pagamenti TheNewEconomy tramite Vault.'
+          )
+          p.write_text(s,encoding='utf-8')
+          PY
+
+          jar uf "$OUT" -C /tmp/armeria-classes com/armeria
+          jar uf "$OUT" -C /tmp/armeria-patch META-INF/armeria-sources
+          jar uf "$OUT" -C /tmp/armeria-patch armeria_default/shop.html
+          jar uf "$OUT" -C /tmp/armeria-patch META-INF/mods.toml
+          jar uf "$OUT" -C /tmp/armeria-patch META-INF/armeria-1.3.5-README.md
+
+          test "$(unzip -p "$OUT" META-INF/mods.toml | grep -c 'version="1.3.5"')" = 1
+          unzip -p "$OUT" armeria_default/shop.html | grep -q '__ARMERIA_132_REQ__' || true
+          test -s "$OUT"
+
+      - name: Verifica bytecode e contenuti
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR=mods/armeria-browser-1.3.5.jar
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.Network | grep -q 'shopTargets'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.ShopBrowserClient | grep -q 'injectBridge'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.ShopService | grep -q 'discoverTaczFamily'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.ShopService | grep -q 'caliberLabel'
+          unzip -p "$JAR" armeria_default/shop.html | grep -q 'card-top'
+          ! unzip -p "$JAR" armeria_default/shop.html | grep -q 'id="vImage"'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.BrowserBridge | grep -q 'open'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.SiteArchive | grep -q 'ensureServerPage'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.AmmoSupport | grep -q 'category'
+          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.ShopRuntime | grep -q 'receive'
+          unzip -p "$JAR" armeria_default/shop.html | grep -q "__armeria132Installed=true"
+          sha256sum "$JAR"
+
+      - name: Aggiorna manifest launcher senza perdere il pack completo
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, re, urllib.request
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          jar=Path('mods/armeria-browser-1.3.5.jar')
+          data=jar.read_bytes()
+          item={
+              'path':'mods/armeria-browser-1.3.5.jar',
+              'size':len(data),
+              'sha256':hashlib.sha256(data).hexdigest(),
+              'mode':'replace',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.5.jar',
+          }
+
+          settings_path=Path('pack-settings.json')
+          settings=json.loads(settings_path.read_text('utf-8'))
+          external=[]
+          inserted=False
+          for old in settings.get('external_files',[]):
+              p=old.get('path','')
+              if re.fullmatch(r'mods/armeria-browser-[^/]+\.jar',p):
+                  if not inserted:
+                      external.append(item); inserted=True
+              else:
+                  external.append(old)
+          if not inserted: external.append(item)
+          settings['external_files']=external
+          settings['news']='Nuovo Ordine — Armeria 1.3.5: munizioni per calibro, lotti AR/leggeri da 60 e nomi accessori corretti.'
+          settings_path.write_text(json.dumps(settings,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          pack_path=Path('pack.json')
+          raw=pack_path.read_text('utf-8').strip() if pack_path.exists() else ''
+          if raw:
+              pack=json.loads(raw)
+          else:
+              baseline='https://github.com/cicciook/nuovo-ordine/releases/download/pack-2026.09.27-1/pack.json'
+              with urllib.request.urlopen(baseline,timeout=120) as response:
+                  pack=json.load(response)
+
+          excluded=set(settings.get('exclude_paths',[]))
+          current=[x for x in pack.get('files',[]) if x.get('path') not in excluded]
+
+          families=[
+              r'mods/nuovo-ordine-quests-[^/]+\.jar',
+              r'mods/lootr-more-tactical-loot-[^/]+\.jar',
+              r'mods/ammocompat-[^/]+\.jar',
+              r'mods/armeria-browser-[^/]+\.jar',
+          ]
+          for pattern in families:
+              wanted={x['path'] for x in external if re.fullmatch(pattern,x.get('path',''))}
+              if wanted:
+                  current=[x for x in current if not re.fullmatch(pattern,x.get('path','')) or x.get('path') in wanted]
+
+          by_path={x['path']:x for x in current}
+          for x in external: by_path[x['path']]=x
+          ordered=[]; seen=set()
+          for x in current:
+              p=x['path']
+              if p not in seen:
+                  ordered.append(by_path[p]); seen.add(p)
+          for x in external:
+              p=x['path']
+              if p not in seen:
+                  ordered.append(x); seen.add(p)
+
+          pack['schema']=1
+          pack['minecraft']=settings['minecraft']
+          pack['forge']=settings['forge']
+          pack['server']=settings.get('server','')
+          pack['files']=ordered
+          pack['news']=settings['news']
+          pack['version']=datetime.now(timezone.utc).strftime('%Y.%m.%d')+'-armeria-1.3.5'
+          pack_path.write_text(json.dumps(pack,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          rm -f mods/armeria-browser-1.3.4.jar
+
+      - name: Valida manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from launcher.updater import validate_manifest
+          p=json.load(open('pack.json',encoding='utf-8'))
+          validate_manifest(p)
+          paths=[x['path'] for x in p['files']]
+          assert 'mods/armeria-browser-1.3.5.jar' in paths
+          assert not any(x.startswith('mods/armeria-browser-1.3.4') for x in paths)
+          print('Manifest valido:',len(paths),'file')
+          PY
+
+      - name: Pubblica Armeria 1.3.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/armeria-browser-1.3.5.jar mods/armeria-browser-1.3.4.jar pack-settings.json pack.json
+          git commit -m 'Pubblica Armeria Browser 1.3.5' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
