@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.1: fix TaCZ/Mohist, le armi sparano subito senza premere V.",
+  "news": "Nuovo Ordine — AmmoCompat 1.1.2: fix completo desync TaCZ/Mohist, reload e melee non si bloccano dopo lo sparo.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -15,11 +15,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     },
     {
-      "path": "mods/ammocompat-1.1.1.jar",
-      "size": 9356,
-      "sha256": "10b94a6049dc0df17682b4127a8c6c33ec8da5cda66d6971b58672567b711488",
+      "path": "mods/ammocompat-1.1.2.jar",
+      "size": 9358,
+      "sha256": "44504e15913a85cefd2375d5c445ec1f6bf3c35ea0afd04720f3709fd620c2b6",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.1.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.2.jar"
     },
     {
       "path": "mods/create_bb-1.0.8-1.20.1.jar",
