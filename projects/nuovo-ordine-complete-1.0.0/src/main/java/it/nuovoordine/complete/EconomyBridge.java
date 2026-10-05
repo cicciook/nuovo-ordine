@@ -1,29 +1,46 @@
 package it.nuovoordine.complete;
 
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.UUID;
 
 final class EconomyBridge {
-    private Object economy;
-    boolean ready(){return provider()!=null;}
-    private Object provider(){
-        if(economy!=null)return economy;
+    private Class<?> economyApi;
+    boolean ready(){return api()!=null;}
+    private Class<?> api(){
+        if(economyApi!=null)return economyApi;
         try{
             Class<?> bukkit=Class.forName("org.bukkit.Bukkit");
-            Object sm=R.scall(bukkit,"getServicesManager");
-            Class<?> eco=Class.forName("net.milkbowl.vault.economy.Economy");
-            Collection<?> regs=(Collection<?>)R.call(sm,"getRegistrations",eco);
-            for(Object reg:regs){
-                Object candidate=R.call(reg,"getProvider");
-                String name=String.valueOf(R.call(candidate,"getName"));
-                if(!"EssentialsX Economy".equals(name)&&!"Essentials Economy".equals(name))continue;
-                if(Boolean.TRUE.equals(R.call(candidate,"isEnabled"))){economy=candidate;return economy;}
-            }
-        }catch(Throwable ignored){}
-        return null;
+            Object pm=bukkit.getMethod("getPluginManager").invoke(null);
+            Object essentials=pm.getClass().getMethod("getPlugin",String.class).invoke(pm,"Essentials");
+            if(essentials==null||!Boolean.TRUE.equals(essentials.getClass().getMethod("isEnabled").invoke(essentials)))return null;
+            economyApi=essentials.getClass().getClassLoader().loadClass("com.earth2me.essentials.api.Economy");
+            return economyApi;
+        }catch(Throwable ignored){return null;}
     }
-    private Object offline(UUID uuid)throws Exception{return R.scall(Class.forName("org.bukkit.Bukkit"),"getOfflinePlayer",uuid);}
-    double balance(UUID uuid){try{Object e=provider();if(e==null)return Double.NaN;return R.num(R.call(e,"getBalance",offline(uuid)));}catch(Exception ex){return Double.NaN;}}
-    boolean withdraw(UUID uuid,double amount){if(amount<0)return false;try{Object e=provider();if(e==null)return false;Object r=R.call(e,"withdrawPlayer",offline(uuid),amount);return success(r);}catch(Exception ex){return false;}}
-    boolean deposit(UUID uuid,double amount){if(amount<0)return false;try{Object e=provider();if(e==null)return false;Object r=R.call(e,"depositPlayer",offline(uuid),amount);return success(r);}catch(Exception ex){return false;}}
-    private boolean success(Object response){try{return Boolean.TRUE.equals(R.call(response,"transactionSuccess"));}catch(Exception e){return response!=null;}}
+    double balance(UUID uuid){
+        try{
+            Class<?> api=api();if(api==null)return Double.NaN;
+            BigDecimal value=(BigDecimal)api.getMethod("getMoneyExact",UUID.class).invoke(null,uuid);
+            return value.doubleValue();
+        }catch(Throwable ex){return Double.NaN;}
+    }
+    boolean withdraw(UUID uuid,double amount){
+        if(amount<0||!Double.isFinite(amount))return false;
+        try{
+            Class<?> api=api();if(api==null)return false;
+            BigDecimal value=BigDecimal.valueOf(amount);
+            BigDecimal current=(BigDecimal)api.getMethod("getMoneyExact",UUID.class).invoke(null,uuid);
+            if(current.compareTo(value)<0)return false;
+            api.getMethod("subtract",UUID.class,BigDecimal.class).invoke(null,uuid,value);
+            return true;
+        }catch(Throwable ex){return false;}
+    }
+    boolean deposit(UUID uuid,double amount){
+        if(amount<0||!Double.isFinite(amount))return false;
+        try{
+            Class<?> api=api();if(api==null)return false;
+            api.getMethod("add",UUID.class,BigDecimal.class).invoke(null,uuid,BigDecimal.valueOf(amount));
+            return true;
+        }catch(Throwable ex){return false;}
+    }
 }
