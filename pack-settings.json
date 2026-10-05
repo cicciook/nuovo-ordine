@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.6: categorie per calibro e pagamenti esclusivamente EssentialsX Economy.",
+  "news": "Nuovo Ordine — Armeria 1.3.7: categorie per calibro e pagamenti diretti EssentialsX Economy, senza provider Vault.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -209,11 +209,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     },
     {
-      "path": "mods/armeria-browser-1.3.6.jar",
-      "size": 115059,
-      "sha256": "1bb6a7cc935e6d312a9dedc03b8be405f12e39c967585c46f64d5b912323fa1f",
+      "path": "mods/armeria-browser-1.3.7.jar",
+      "size": 115192,
+      "sha256": "a4c6f4147b7e827c685fc7e1884eed91958d2c3fd63f50c524e07c10f5b514e8",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.6.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.7.jar"
     },
     {
       "path": "mods/Geophilic v3.7.mod.jar",
