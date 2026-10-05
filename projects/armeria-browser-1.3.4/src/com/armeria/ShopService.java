@@ -460,13 +460,18 @@ final class ShopService {
     }
     private synchronized void syncAutomaticAmmo() throws Exception {
         lastAutoSync = System.nanoTime();
-        Map<String,Captured> found = discoverAutomaticAmmo();
-        if (found.isEmpty()) return;
 
         Catalog next = GSON.fromJson(GSON.toJson(catalog), Catalog.class);
         if (next.autoExcluded == null) next.autoExcluded = new LinkedHashSet<>();
         boolean changed = next.offers.removeIf(o -> !allowedCategory(o.category)
                 || (o.autoKey != null && o.autoKey.startsWith("tacz:gun:")));
+
+        Map<String,Captured> found = discoverAutomaticAmmo();
+        if (found.isEmpty()) {
+            if (changed) commit(next);
+            return;
+        }
+
         Map<String,Offer> automatic = new HashMap<>();
         Set<String> manualNbt = new HashSet<>();
         for (Offer offer : next.offers) {
