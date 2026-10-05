@@ -18,32 +18,9 @@ public class Patch implements Opcodes {
     }
 
     static byte[] patchLootOpenEvents(byte[] bytes) {
-        ClassReader scan = new ClassReader(bytes);
-        Set<String> weaponMethods = new HashSet<>();
-
-        // Prima passata: identifica soltanto i metodi che leggono il pool WEAPONS.
-        scan.accept(new ClassVisitor(ASM8) {
-            @Override
-            public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] ex) {
-                String key = name + "\u0000" + desc;
-                return new MethodVisitor(ASM8) {
-                    @Override
-                    public void visitFieldInsn(int opcode, String owner, String field, String descriptor) {
-                        if (owner.equals(OWNER) && field.equals("WEAPONS")) {
-                            weaponMethods.add(key);
-                        }
-                    }
-                };
-            }
-        }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-
-        if (weaponMethods.isEmpty()) {
-            throw new IllegalStateException("Nessun metodo che usa il pool WEAPONS trovato");
-        }
-
         ClassReader cr = new ClassReader(bytes);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        int[] chanceReplacements = {0};
+        int[] weaponChanceReplacements = {0};
 
         cr.accept(new ClassVisitor(ASM8, cw) {
             @Override
@@ -54,17 +31,24 @@ public class Patch implements Opcodes {
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] ex) {
                 MethodVisitor parent = super.visitMethod(access, name, desc, sig, ex);
-                boolean weaponMethod = weaponMethods.contains(name + "\u0000" + desc);
+                boolean lootMethod = name.equals("injectBalancedLoot") && desc.equals("(Ljava/lang/Object;)Z");
 
                 return new MethodVisitor(ASM8, parent) {
                     @Override
                     public void visitLdcInsn(Object value) {
                         Object updated = fixMarker(value);
-                        if (weaponMethod && value instanceof Double d
+
+                        // In injectBalancedLoot the first 0.12 is the WEAPONS roll.
+                        // The second 0.12 controls high-tier Survival Instinct armor
+                        // and must remain unchanged.
+                        if (lootMethod
+                                && weaponChanceReplacements[0] == 0
+                                && value instanceof Double d
                                 && Double.compare(d, OLD_WEAPON_CHANCE) == 0) {
                             updated = NEW_WEAPON_CHANCE;
-                            chanceReplacements[0]++;
+                            weaponChanceReplacements[0]++;
                         }
+
                         super.visitLdcInsn(updated);
                     }
 
@@ -77,9 +61,9 @@ public class Patch implements Opcodes {
             }
         }, 0);
 
-        if (chanceReplacements[0] != 1) {
+        if (weaponChanceReplacements[0] != 1) {
             throw new IllegalStateException(
-                    "Atteso un solo roll armi 0.12 nei metodi WEAPONS, trovati: " + chanceReplacements[0]);
+                    "Roll armi 0.12 non trovato una sola volta in injectBalancedLoot");
         }
         return cw.toByteArray();
     }
