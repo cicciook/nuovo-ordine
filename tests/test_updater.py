@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import zipfile
 from pathlib import Path
 import pytest
 from launcher.updater import Updater, safe_path, validate_manifest
@@ -150,3 +151,33 @@ def test_removes_untracked_newer_duplicate_of_managed_family(tmp_path):
     u.sync(pack(current))
     assert not (tmp_path / "mods/nuovo-ordine-core-0.2.5.jar").exists()
     assert (tmp_path / "mods/nuovo-ordine-core-0.2.2.jar").read_bytes() == b"mod-v1"
+
+
+def _forge_mod_jar(path, mod_id):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as jar:
+        jar.writestr(
+            "META-INF/mods.toml",
+            'modLoader="javafml"\nloaderVersion="[47,)"\n'
+            f'[[mods]]\nmodId="{mod_id}"\nversion="1.0.0"\n',
+        )
+
+
+@pytest.mark.parametrize("filename,mod_id", [
+    ("doxlean-1.3.0(1).jar", "doxlean"),
+    ("doxcore-1.0.1(1).jar", "doxcore"),
+    ("renamed-library.jar", "doxcore"),
+    ("whatever.jar", "doxlean"),
+])
+def test_purges_removed_dox_mods_even_when_renamed(tmp_path, filename, mod_id):
+    target = tmp_path / "mods" / filename
+    _forge_mod_jar(target, mod_id)
+    Updater(tmp_path).sync(pack())
+    assert not target.exists()
+
+
+def test_does_not_remove_unrelated_renamed_forge_mod(tmp_path):
+    target = tmp_path / "mods" / "totally-custom.jar"
+    _forge_mod_jar(target, "someothermod")
+    Updater(tmp_path).sync(pack())
+    assert target.exists()
