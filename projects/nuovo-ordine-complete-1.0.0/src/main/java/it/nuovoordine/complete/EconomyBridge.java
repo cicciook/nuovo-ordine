@@ -7,7 +7,7 @@ final class EconomyBridge {
     boolean ready(){return provider()!=null;}
     private Object provider(){
         if(economy!=null)return economy;
-        try{Class<?> bukkit=Class.forName("org.bukkit.Bukkit");Object sm=R.scall(bukkit,"getServicesManager");Class<?> eco=Class.forName("net.milkbowl.vault.economy.Economy");Object reg=R.call(sm,"getRegistration",eco);if(reg!=null)economy=R.call(reg,"getProvider");}catch(Throwable ignored){}
+        try{Class<?> bukkit=Class.forName("org.bukkit.Bukkit");Object sm=R.scall(bukkit,"getServicesManager");Class<?> eco=Class.forName("net.milkbowl.vault.economy.Economy");Object reg=R.call(sm,"getRegistration",eco);if(reg!=null){Object candidate=R.call(reg,"getProvider");String name=String.valueOf(R.call(candidate,"getName"));if("EssentialsX Economy".equals(name)||"Essentials Economy".equals(name))economy=candidate;}}catch(Throwable ignored){}
         return economy;
     }
     private Object offline(UUID uuid)throws Exception{return R.scall(Class.forName("org.bukkit.Bukkit"),"getOfflinePlayer",uuid);}
