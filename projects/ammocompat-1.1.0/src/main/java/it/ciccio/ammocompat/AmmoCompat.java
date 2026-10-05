@@ -5,12 +5,14 @@ import com.atsuishio.superbwarfare.item.gun.GunItem;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IGun;
+import com.tacz.guns.config.sync.SyncConfig;
 import com.tacz.guns.init.ModItems;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -20,6 +22,8 @@ import java.util.Set;
 @Mod(AmmoCompat.MODID)
 public class AmmoCompat {
     public static final String MODID = "ammocompat";
+    private static final System.Logger LOG = System.getLogger("ammocompat");
+    private static volatile boolean shootCompatibilityApplied;
 
     private static final Set<String> HANDGUN_AMMO = Set.of(
             "tacz:9mm", "tacz:45acp", "tacz:57x28", "tacz:46x30",
@@ -71,8 +75,19 @@ public class AmmoCompat {
     }
 
     @SubscribeEvent
+    public void serverStarted(ServerStartedEvent e) {
+        applyTaczShootCompatibility();
+    }
+
+    @SubscribeEvent
     public void playerTick(TickEvent.PlayerTickEvent e) {
-        if (e.phase != TickEvent.Phase.END || e.player.level().isClientSide || e.player.tickCount % 4 != 0) {
+        if (e.player.level().isClientSide) {
+            return;
+        }
+        if (!shootCompatibilityApplied) {
+            applyTaczShootCompatibility();
+        }
+        if (e.phase != TickEvent.Phase.END || e.player.tickCount % 4 != 0) {
             return;
         }
 
@@ -82,6 +97,26 @@ public class AmmoCompat {
             feedSuperbWarfare(player, held);
         } else if (IGun.getIGunOrNull(held) != null) {
             feedTacz(player, held);
+        }
+    }
+
+    private static synchronized void applyTaczShootCompatibility() {
+        if (shootCompatibilityApplied) {
+            return;
+        }
+        try {
+            if (SyncConfig.SERVER_SHOOT_NETWORK_V == null) {
+                return;
+            }
+            SyncConfig.SERVER_SHOOT_NETWORK_V.set(false);
+            shootCompatibilityApplied = !SyncConfig.SERVER_SHOOT_NETWORK_V.get();
+            if (shootCompatibilityApplied) {
+                LOG.log(System.Logger.Level.INFO,
+                        "TaCZ ServerShootNetworkCheck disabilitato: lo sparo e disponibile senza premere V.");
+            }
+        } catch (Throwable problem) {
+            LOG.log(System.Logger.Level.WARNING,
+                    "Impossibile applicare il fix ServerShootNetworkCheck di TaCZ; verra ritentato.", problem);
         }
     }
 
