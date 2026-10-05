@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.8: pagina aggiornata automaticamente, categorie per calibro e nomi attachment corretti.",
+  "news": "Nuovo Ordine — Complete 1.0.2: fix sparo TaCZ/Mohist, non serve più premere V prima di sparare.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
