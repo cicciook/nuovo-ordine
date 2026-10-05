@@ -1,0 +1,123 @@
+name: Pubblica Lootr More Tactical Loot 1.1.21 finale
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-loot-1.1.21-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compila patch Java 17
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/loot-patch
+          javac \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -d /tmp/loot-patch \
+            loot-source/1.1.21/Patch.java
+
+      - name: Costruisci e valida JAR 1.1.21
+        run: |
+          set -euo pipefail
+          test -f mods/lootr-more-tactical-loot-1.1.20.jar
+          rm -f mods/lootr-more-tactical-loot-1.1.21.jar
+
+          java \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -cp /tmp/loot-patch \
+            Patch \
+            mods/lootr-more-tactical-loot-1.1.20.jar \
+            mods/lootr-more-tactical-loot-1.1.21.jar \
+            loot-source/1.1.21
+
+          unzip -t mods/lootr-more-tactical-loot-1.1.21.jar | tail -1
+          unzip -p mods/lootr-more-tactical-loot-1.1.21.jar META-INF/mods.toml | grep 'version="1.1.21"'
+
+          javap -classpath mods/lootr-more-tactical-loot-1.1.21.jar -p -c -constants \
+            com.cicciook.lootrmoreloot.LootOpenEvents > /tmp/loot-javap.txt
+
+          python3 - <<'PY'
+          from pathlib import Path
+          t=Path('/tmp/loot-javap.txt').read_text()
+          assert 'double 0.08d' in t, 'roll armi 8% non trovato'
+          assert 'double 0.12d' in t, 'il 12% Survival Instinct e stato rimosso'
+          i=t.index('double 0.08d')
+          j=t.find('Field WEAPONS', i)
+          assert 0 < j-i < 2500, 'lo 0.08 non precede il pool WEAPONS'
+          a=t.index('double 0.12d', i+1)
+          b=t.find('pickSurvivalArmor', a)
+          assert 0 < b-a < 2500, 'il 12% residuo non appartiene a Survival Instinct'
+          print('Validazione bytecode OK: WEAPONS=8%, high-tier armor=12%')
+          PY
+
+          grep -q 'lootr_more_loot_seen_1121.txt' /tmp/loot-javap.txt
+          grep -q 'sophisticatedbackpacks:gold_backpack' /tmp/loot-javap.txt
+          grep -q 'maxstuff:ai_awp' /tmp/loot-javap.txt
+
+      - name: Aggiorna manifest launcher
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          root=Path.cwd()
+          jar=root/'mods/lootr-more-tactical-loot-1.1.21.jar'
+          sha=hashlib.sha256(jar.read_bytes()).hexdigest()
+          entry={
+              'path':'mods/'+jar.name,
+              'size':jar.stat().st_size,
+              'sha256':sha,
+              'mode':'replace',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/'+jar.name,
+          }
+
+          sp=root/'pack-settings.json'
+          settings=json.loads(sp.read_text('utf-8'))
+          settings['external_files']=[
+              x for x in settings.get('external_files',[])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          settings['external_files'].append(entry)
+          news='Nuovo Ordine — Lootr Tactical 1.1.21: probabilita armi ridotta all 8%'
+          settings['news']=news
+          sp.write_text(json.dumps(settings,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          pp=root/'pack.json'
+          pack=json.loads(pp.read_text('utf-8'))
+          pack['version']='2026.10.05-loot-21'
+          pack['news']=news
+          pack['files']=[
+              x for x in pack.get('files',[])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          pack['files'].append(entry)
+          pp.write_text(json.dumps(pack,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          assert [x['path'] for x in settings['external_files'] if x['path'].startswith('mods/lootr-more-tactical-loot-')] == [entry['path']]
+          assert [x['path'] for x in pack['files'] if x['path'].startswith('mods/lootr-more-tactical-loot-')] == [entry['path']]
+          print(jar.stat().st_size, sha)
+          PY
+
+          rm -f mods/lootr-more-tactical-loot-1.1.20.jar
+          rm -f loot-1.1.21-debug.txt loot-1.1.20-javap.txt
+
+      - name: Pubblica
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Riduci frequenza armi Lootr Tactical all 8%'
+          git push origin HEAD:main
