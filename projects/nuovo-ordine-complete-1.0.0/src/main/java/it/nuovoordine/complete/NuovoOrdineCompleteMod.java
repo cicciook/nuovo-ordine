@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Mod("nocomplete")
 public final class NuovoOrdineCompleteMod {
     private static final System.Logger LOG=System.getLogger("nocomplete");
-    private static final String VERSION="1.0.0";
+    private static final String VERSION="1.0.1";
     private final Config cfg=new Config(Path.of("config","nuovoordine-complete.properties"));
     private final StateStore store=new StateStore(Path.of("config","nuovoordine-complete-state.dat.gz"));
     private final EconomyBridge economy=new EconomyBridge();
@@ -21,6 +21,9 @@ public final class NuovoOrdineCompleteMod {
     private volatile Object server;
     private long lastSecond=-1,lastSaveAt=0;
     private boolean dirty;
+    private boolean taczShootFixApplied;
+    private int taczShootFixAttempts;
+    private long nextTaczShootFixAt;
     private final Map<UUID,Models.Treatment> treatments=new HashMap<>();
     private final Map<UUID,Models.Loc> lastMtsLoc=new HashMap<>();
     private final Map<UUID,String> activeVehicle=new HashMap<>();
@@ -52,12 +55,13 @@ public final class NuovoOrdineCompleteMod {
         dirty=true;save();
     }
     private synchronized void serverStopping(Object e){save();hub.stop();server=null;treatments.clear();lastMtsLoc.clear();activeVehicle.clear();}
-    private void playerLogin(Object event){try{Object p=R.call(event,"getEntity");stat(p);send(p,"§7Nuovo Ordine: §f/no status §7per eventi, contratti e classifica.");}catch(Exception ignored){}}
+    private void playerLogin(Object event){try{Object p=R.call(event,"getEntity");stat(p);applyTaczShootCompatibilityFix();send(p,"§7Nuovo Ordine: §f/no status §7per eventi, contratti e classifica.");}catch(Exception ignored){}}
     private void playerLogout(Object event){try{UUID id=R.uuid(R.call(event,"getEntity"));treatments.remove(id);lastMtsLoc.remove(id);}catch(Exception ignored){}}
 
     private void serverTick(Object event){
         if(server==null||!endPhase(event))return;long tick=serverTickCount();if(tick<0||tick/20==lastSecond)return;lastSecond=tick/20;long now=System.currentTimeMillis();
         synchronized(this){
+            if(!taczShootFixApplied&&taczShootFixAttempts<12&&now>=nextTaczShootFixAt)applyTaczShootCompatibilityFix();
             tickStrategic(now);tickEvents(now);tickInfluence(now);tickInjuries(now);tickTreatments(now);tickAirdrop(now);tickConvoy(now);tickVehicleKm(now);tickExpiry(now);
             int saveEvery=cfg.i("state.saveEverySeconds",15,5,300);if(dirty&&(now-lastSaveAt>=saveEvery*1000L))save();
         }
@@ -185,10 +189,17 @@ public final class NuovoOrdineCompleteMod {
     private int vehicleCount(UUID id){return state.vehicles.getOrDefault(id,Map.of()).size();}
     private boolean townyAvailable(){try{Class.forName("com.palmergames.bukkit.towny.TownyAPI");return true;}catch(Throwable e){return false;}}
 
-    private void applyTaczShootCompatibilityFix(){
+    private synchronized void applyTaczShootCompatibilityFix(){
+        if(server==null)return;
         int result=runCommand("tacz config serverShootNetworkCheck false");
-        if(result>0)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato per evitare il blocco iniziale dello sparo.");
-        else LOG.log(System.Logger.Level.INFO,"Comando compatibilita TaCZ non disponibile; nessuna modifica applicata.");
+        taczShootFixAttempts++;
+        nextTaczShootFixAt=System.currentTimeMillis()+5_000L;
+        if(result>0){
+            if(!taczShootFixApplied)LOG.log(System.Logger.Level.INFO,"TaCZ: serverShootNetworkCheck disabilitato. Lo sparo non richiede piu un colpo melee iniziale.");
+            taczShootFixApplied=true;
+        }else if(taczShootFixAttempts==1||taczShootFixAttempts==12){
+            LOG.log(System.Logger.Level.WARNING,"TaCZ: tentativo "+taczShootFixAttempts+"/12 di disabilitare serverShootNetworkCheck non riuscito; ritento automaticamente.");
+        }
     }
 
     private int runCommand(String cmd){if(server==null)return 0;try{Object source=R.call(server,"createCommandSourceStack");Object commands=R.call(server,"getCommands");for(String method:List.of("performPrefixedCommand","performCommand","m_230957_"))try{Object r=R.call(commands,method,source,cmd);return r instanceof Number n?n.intValue():1;}catch(Exception ignored){}return 0;}catch(Exception e){return 0;}}
