@@ -634,9 +634,9 @@ final class ShopService {
             offer.name = capture.name();
             offer.description = "Articolo rilevato automaticamente. Prezzo iniziale bilanciato e modificabile dagli OP.";
             offer.image = "";
-            offer.category = capture.category() == null || capture.category().isBlank()
-                    ? calibratedCategory("Munizioni", capture.name() + " " + key + " " + capture.itemId())
-                    : capture.category();
+            offer.category = calibratedCategory(
+                    capture.category() == null || capture.category().isBlank() ? "Munizioni" : capture.category(),
+                    capture.name() + " " + key + " " + capture.itemId());
             offer.price = plan.price();
             offer.itemId = capture.itemId();
             offer.nbt = capture.nbt();
