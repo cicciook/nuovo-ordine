@@ -13,7 +13,13 @@ from PySide6.QtWidgets import (
 )
 
 from . import VERSION, auth, community, engine, selfupdate
-from .config import DATA, load_config, atomic_json, validate_config
+from .config import (
+    DATA,
+    OFFICIAL_REPOSITORY,
+    load_config,
+    atomic_json,
+    validate_config,
+)
 
 
 def resource_path(relative):
@@ -224,8 +230,6 @@ class Settings(QDialog):
         form = QFormLayout(self)
         self.fields = {}
         for key, title, placeholder in [
-            ("repository", "Repository pubblico GitHub", "nomeutente/nuovo-ordine"),
-            ("branch", "Ramo degli aggiornamenti", "main"),
             ("server", "Server di riserva", "play.esempio.it:25565"),
             ("java_path", "Java 17 (vuoto = automatico)", "Percorso di java / java.exe"),
         ]:
@@ -242,8 +246,8 @@ class Settings(QDialog):
         form.addRow("RAM massima", self.ram)
 
         note = QLabel(
-            "L'accesso Microsoft è configurato dal proprietario del launcher e non richiede ID agli utenti.\n"
-            "Changelog, eventi e Discord sono gestiti da launcher-community.json su GitHub."
+            "Gli aggiornamenti del modpack usano sempre il repository ufficiale Nuovo Ordine su main.\n"
+            "L'accesso Microsoft è configurato dal proprietario del launcher e non richiede ID agli utenti."
         )
         note.setWordWrap(True)
         form.addRow(note)
@@ -644,8 +648,6 @@ class Window(QMainWindow):
 
     def save_user_settings(self):
         allowed = {
-            "repository": self.cfg.get("repository", ""),
-            "branch": self.cfg.get("branch", "main"),
             "server": self.cfg.get("server", ""),
             "ram_mb": int(self.cfg.get("ram_mb", 6144)),
             "java_path": self.cfg.get("java_path", ""),
@@ -665,6 +667,8 @@ class Window(QMainWindow):
             values["microsoft_client_id"] = self.microsoft_client_id()
             if "offline_name" in self.cfg:
                 values["offline_name"] = self.cfg["offline_name"]
+            values["repository"] = OFFICIAL_REPOSITORY
+            values["branch"] = "main"
             self.cfg = values
             self.save_user_settings()
             self.refresh_auth_controls()
@@ -674,7 +678,7 @@ class Window(QMainWindow):
         try:
             validate_config(self.cfg)
             QDesktopServices.openUrl(
-                QUrl(f'https://github.com/{self.cfg["repository"]}/releases')
+                QUrl(f"https://github.com/{OFFICIAL_REPOSITORY}/releases")
             )
         except ValueError as exc:
             self.error(str(exc))
