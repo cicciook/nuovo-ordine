@@ -104,7 +104,7 @@ jobs:
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A mods/ammocompat-1.1.0.jar mods/ammocompat-1.1.1.jar             mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar             mods/nuovo-ordine-complete-1.0.2.jar pack.json pack-settings.json
+          git add -A mods pack.json pack-settings.json
           git commit -m 'release: AmmoCompat 1.1.1 modular shoot fix'
           git push origin HEAD:main
 
