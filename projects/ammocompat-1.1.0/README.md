@@ -18,3 +18,5 @@ Heavy anti-materiel, grenade/rocket and special ammo (laser, arrows, nails, etc.
 - Ritenta al primo tick server del player se TaCZ non era ancora pronto.
 - Non disabilita `ServerShootCooldownCheck`, quindi il controllo della cadenza resta attivo.
 - Risolve il caso in cui le armi iniziano a sparare solo dopo aver premuto V.
+
+Build modulare 1.1.1 destinata al setup con i JAR Nuovo Ordine separati.
