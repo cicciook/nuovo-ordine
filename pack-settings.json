@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.1: fix TaCZ/Mohist, le armi sparano subito senza premere V.",
+  "news": "Nuovo Ordine — aggiunto Starlight 1.1.2 per ottimizzare il motore di illuminazione.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -291,6 +291,13 @@
       "sha256": "8c9e801e77d90ca0b2db9a4351ae1646b9be263a301df10c57cf72680c5e7dce",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
+    },
+    {
+      "path": "mods/starlight-1.1.2+forge.1cda73c.jar",
+      "size": 110583,
+      "sha256": "e90763c86d362c7cb427dbb70e89985c11a882fdd69ae7d04ac2e23a106eb500",
+      "mode": "replace",
+      "url": "https://cdn.modrinth.com/data/iRfIGC1s/versions/cNa0vkNj/starlight-1.1.2%2Bforge.1cda73c.jar"
     }
   ],
   "exclude_paths": [
