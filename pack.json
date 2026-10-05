@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.05-ext-25",
+  "version": "2026.10.05-armeria-1.3.8",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.7: categorie per calibro e pagamenti diretti EssentialsX Economy, senza provider Vault.",
+  "news": "Nuovo Ordine — Armeria 1.3.8: pagina aggiornata automaticamente, categorie per calibro e nomi attachment corretti.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32289,18 +32289,18 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
     },
     {
-      "path": "mods/armeria-browser-1.3.7.jar",
-      "size": 115192,
-      "sha256": "a4c6f4147b7e827c685fc7e1884eed91958d2c3fd63f50c524e07c10f5b514e8",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/armeria-browser-1.3.7.jar"
-    },
-    {
       "path": "mods/nuovo-ordine-complete-1.0.0.jar",
       "size": 59675,
       "sha256": "9c51c77ef3451e2c0fec858ea1fabff901c112641b306162e144466b49ba4444",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/nuovo-ordine-complete-1.0.0.jar"
+    },
+    {
+      "path": "mods/armeria-browser-1.3.8.jar",
+      "size": 117114,
+      "sha256": "eadcb59ac2aa959d8cd3400bcddd021213b68c5eb98e551fc2cbc14e950ae09f",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.8.jar"
     }
   ],
   "archives": {
