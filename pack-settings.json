@@ -125,13 +125,6 @@
       "url": "https://mediafilez.forgecdn.net/files/8942/572/nowheel-2.1.1+1.20.1forge.jar"
     },
     {
-      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
-      "size": 59262,
-      "sha256": "aa4e5d154346857413f5d87a600742ed1509d94f9227452511a9b045e1080f34",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/8ffa5f0c8fcce462156db96cb5af9ca36b3b00f5/mods/nuovo-ordine-complete-1.0.0.jar"
-    },
-    {
       "path": "mods/nuovo-ordine-cosmetics-1.0.0.jar",
       "size": 28652,
       "sha256": "53fd8966a5bc9ee732682b61e43b38bebf1eb1f8524438d4cf226d497a003218",
@@ -311,6 +304,13 @@
       "sha256": "8c9e801e77d90ca0b2db9a4351ae1646b9be263a301df10c57cf72680c5e7dce",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.21.jar"
+    },
+    {
+      "path": "mods/nuovo-ordine-complete-1.0.0.jar",
+      "size": 59468,
+      "sha256": "e84375d80697b9486ed2a5f3a290ee2ad0ea0a0f8e6a5498b4c330547cc096ab",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
     }
   ],
   "exclude_paths": [
