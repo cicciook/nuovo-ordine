@@ -5,7 +5,7 @@ Modulo Forge 1.20.1 principalmente server-side che completa i sistemi gameplay d
 ## Sistemi inclusi
 
 - punti strategici e campagne Towny/Nation con conquista, contestazione, influenza, eventi caldi e Legacy stagionale;
-- money sink tramite Vault/TNE: cure, bendaggi, assicurazioni, recuperi/spawn veicoli, commissioni contratti e tassa usato;
+- money sink tramite EssentialsX Economy: cure, bendaggi, assicurazioni, recuperi/spawn veicoli, commissioni contratti e tassa usato;
 - contratti player-funded: bounty, eliminate, delivery, vehicle, transport, escort e capture;
 - reputazione Civile / Criminale / Militare e anti-farming PvP;
 - ferite: sanguinamento, gambe/testa, bendaggio e medico interrompibili;
@@ -25,7 +25,7 @@ Il vecchio `nuovo-ordine-gameplay-1.0.0.jar` è superseded da questo modulo e no
 3. Avvia una volta il server. Verranno creati:
    - `config/nuovoordine-complete.properties`
    - `config/nuovoordine-complete-state.dat.gz`
-4. Per le funzioni economiche tieni attivo Vault con The New Economy compatibile tramite Vault.
+4. Per le funzioni economiche tieni attivo EssentialsX attivo; le funzioni economiche usano direttamente EssentialsX Economy.
 5. Per Town/Nation la mod rileva Towny a runtime; senza Towny usa team/player come fallback.
 6. Per mostrare il live Hub ai launcher remoti, consenti TCP 8765 nel firewall/NAT oppure cambia `hub.port` e imposta lo stesso URL nel launcher.
 
