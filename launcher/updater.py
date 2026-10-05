@@ -34,7 +34,8 @@ FORCED_REMOVED_MODS = re.compile(
     r"(?i)^dox(?:lean|core)(?:[-_.].*)?\.jar$"
 )
 FORCED_REMOVED_MOD_IDS = re.compile(
-    r'(?im)^\\s*modId\\s*=\\s*["\\'](?:doxlean|doxcore)["\\']\\s*
+    r"(?im)^\\s*modId\\s*=\\s*[\\\"'](?:doxlean|doxcore)[\\\"']\\s*$"
+)
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; NuovoOrdineLauncher/1.4.7; +https://github.com/cicciook/nuovo-ordine)",
     "Accept": "*/*",
