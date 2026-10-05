@@ -3,15 +3,20 @@ package it.ciccio.ammocompat;
 import com.atsuishio.superbwarfare.data.gun.Ammo;
 import com.atsuishio.superbwarfare.item.gun.GunItem;
 import com.tacz.guns.api.TimelessAPI;
+import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.config.sync.SyncConfig;
+import com.tacz.guns.entity.shooter.ShooterDataHolder;
 import com.tacz.guns.init.ModItems;
+import com.tacz.guns.network.NetworkHandler;
+import com.tacz.guns.network.message.ServerMessageSyncBaseTimestamp;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -24,6 +29,7 @@ public class AmmoCompat {
     public static final String MODID = "ammocompat";
     private static final System.Logger LOG = System.getLogger("ammocompat");
     private static volatile boolean shootCompatibilityApplied;
+    private static final long MAX_FUTURE_SHOOT_TIMESTAMP_MS = 750L;
 
     private static final Set<String> HANDGUN_AMMO = Set.of(
             "tacz:9mm", "tacz:45acp", "tacz:57x28", "tacz:46x30",
@@ -80,23 +86,75 @@ public class AmmoCompat {
     }
 
     @SubscribeEvent
+    public void playerLoggedIn(PlayerEvent.PlayerLoggedInEvent e) {
+        if (e.getEntity().level().isClientSide) {
+            return;
+        }
+        Player player = e.getEntity();
+        try {
+            IGunOperator operator = IGunOperator.fromLivingEntity(player);
+            operator.initialData();
+            NetworkHandler.sendToClientPlayer(new ServerMessageSyncBaseTimestamp(), player);
+            LOG.log(System.Logger.Level.INFO,
+                    "TaCZ: stato arma e base timestamp sincronizzati al login di " + player.getGameProfile().getName());
+        } catch (Throwable problem) {
+            LOG.log(System.Logger.Level.WARNING,
+                    "TaCZ: sync iniziale stato arma non riuscita; verra ritentata al tick.", problem);
+        }
+    }
+
+    @SubscribeEvent
     public void playerTick(TickEvent.PlayerTickEvent e) {
-        if (e.player.level().isClientSide) {
+        if (e.player.level().isClientSide || e.phase != TickEvent.Phase.END) {
             return;
         }
         if (!shootCompatibilityApplied) {
             applyTaczShootCompatibility();
         }
-        if (e.phase != TickEvent.Phase.END || e.player.tickCount % 4 != 0) {
-            return;
-        }
 
         Player player = e.player;
+        repairTaczState(player);
+
+        if (e.player.tickCount % 4 != 0) {
+            return;
+        }
         ItemStack held = player.getMainHandItem();
         if (held.getItem() instanceof GunItem) {
             feedSuperbWarfare(player, held);
         } else if (IGun.getIGunOrNull(held) != null) {
             feedTacz(player, held);
+        }
+    }
+
+    private static void repairTaczState(Player player) {
+        try {
+            IGunOperator operator = IGunOperator.fromLivingEntity(player);
+            ShooterDataHolder data = operator.getDataHolder();
+
+            // Mohist può lasciare TaCZ senza currentGunItem appena il player entra.
+            // In quel caso il primo sparo viene rifiutato finché un'altra azione (es. melee)
+            // non forza una sincronizzazione. Inizializziamo noi lo stato.
+            if (data.currentGunItem == null) {
+                operator.initialData();
+            }
+
+            // Con ServerShootNetworkCheck disabilitato TaCZ accetta il timestamp client.
+            // Se client/server hanno baseTimestamp fuori sync, il timestamp può risultare
+            // nel futuro e getShootCoolDown() resta positivo per molto tempo: il client
+            // blocca reload e melee finché un cambio slot non resetta ShooterDataHolder.
+            long nowRelative = System.currentTimeMillis() - data.baseTimestamp;
+            if (data.shootTimestamp > nowRelative + MAX_FUTURE_SHOOT_TIMESTAMP_MS) {
+                long badTimestamp = data.shootTimestamp;
+                data.shootTimestamp = nowRelative;
+                if (data.lastShootTimestamp > nowRelative) {
+                    data.lastShootTimestamp = -1L;
+                }
+                LOG.log(System.Logger.Level.WARNING,
+                        "TaCZ/Mohist: corretto timestamp sparo fuori sync (" + badTimestamp
+                                + " -> " + nowRelative + ") per " + player.getGameProfile().getName());
+            }
+        } catch (Throwable problem) {
+            LOG.log(System.Logger.Level.DEBUG, "TaCZ: controllo stato sparo non disponibile.", problem);
         }
     }
 
