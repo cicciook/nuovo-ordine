@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 
 from . import VERSION
-from .config import DATA, validate_config
+from .config import DATA, OFFICIAL_REPOSITORY, validate_config
 
 MAX_UPDATE = 500 * 1024 * 1024
 
@@ -132,7 +132,7 @@ def prepare_update(cfg, report=lambda text: None):
         return None
     try:
         validate_config(cfg)
-        repo = cfg["repository"]
+        repo = OFFICIAL_REPOSITORY
         api = f"https://api.github.com/repos/{repo}/releases?per_page=30"
         report("Controllo aggiornamenti del launcher…")
         with requests.get(
