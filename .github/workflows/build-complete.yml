@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'projects/nuovo-ordine-complete-1.0.2/**'
+      - 'projects/nuovo-ordine-complete-1.0.0/**'
       - '.github/workflows/build-complete.yml'
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PROJECT=projects/nuovo-ordine-complete-1.0.2
+          PROJECT=projects/nuovo-ordine-complete-1.0.0
           rm -rf "$PROJECT/build"
           mkdir -p "$PROJECT/build/stub-src/net/minecraftforge/fml/common" "$PROJECT/build/stub-classes" "$PROJECT/build/classes"
           cat > "$PROJECT/build/stub-src/net/minecraftforge/fml/common/Mod.java" <<'JAVA'
