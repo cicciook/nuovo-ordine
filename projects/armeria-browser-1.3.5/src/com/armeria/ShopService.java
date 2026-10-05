@@ -688,7 +688,7 @@ final class ShopService {
         boolean paid;
         try { paid = port.withdraw(cost); }
         catch (Exception uncertain) { mark(receipt, tx, "REVIEW_PAYMENT"); throw new IllegalStateException("Risposta del pagamento incerta: chiedi a un OP di verificare la transazione.", uncertain); }
-        if (!paid) { mark(receipt, tx, "DECLINED"); throw new IllegalArgumentException("TNE ha rifiutato il pagamento. Nessun articolo consegnato."); }
+        if (!paid) { mark(receipt, tx, "DECLINED"); throw new IllegalArgumentException("EssentialsX Economy ha rifiutato il pagamento. Nessun articolo consegnato."); }
         try {
             mark(receipt, tx, "PAID");
             port.deliver(product.nbt, slots, counts);
@@ -721,7 +721,7 @@ final class ShopService {
             String name = port.economyName(); BigDecimal balance = port.balance();
             state.addProperty("economy", name); state.addProperty("balance", balance.toPlainString());
             state.addProperty("balanceFormatted", port.format(balance)); economy = true;
-        } catch (Exception e) { state.addProperty("economyError", "TNE/Vault non disponibile: " + e.getMessage()); }
+        } catch (Exception e) { state.addProperty("economyError", "EssentialsX Economy/Vault non disponibile: " + e.getMessage()); }
         state.addProperty("economyAvailable", economy);
         JsonArray offers = new JsonArray();
         for (Offer offer : catalog.offers) {
