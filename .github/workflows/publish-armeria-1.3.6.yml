@@ -61,10 +61,8 @@ jobs:
           from pathlib import Path
           p=Path('/tmp/armeria-patch/META-INF/mods.toml')
           s=p.read_text('utf-8')
-          p=Path('/tmp/armeria-patch/META-INF/mods.toml')
-s=p.read_text('utf-8')
-s=s.replace('TheNewEconomy','EssentialsX Economy').replace('TNE','EssentialsX Economy')
-p.write_text(s,encoding='utf-8')
+          s=s.replace('TheNewEconomy','EssentialsX Economy').replace('TNE','EssentialsX Economy')
+          p.write_text(s,encoding='utf-8')
           PY
 
           jar uf "$OUT" -C /tmp/armeria-classes com/armeria
