@@ -1,0 +1,106 @@
+name: Installa Lootr More Tactical Loot 1.1.21 retry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-loot-1.1.21-retry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compila patch Java 17
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/loot-patch
+          javac \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -d /tmp/loot-patch \
+            loot-source/1.1.21/Patch.java
+
+      - name: Costruisci JAR 1.1.21
+        run: |
+          set -euo pipefail
+          test -f mods/lootr-more-tactical-loot-1.1.20.jar
+          java \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -cp /tmp/loot-patch \
+            Patch \
+            mods/lootr-more-tactical-loot-1.1.20.jar \
+            mods/lootr-more-tactical-loot-1.1.21.jar \
+            loot-source/1.1.21
+
+          unzip -t mods/lootr-more-tactical-loot-1.1.21.jar | tail -1
+          unzip -p mods/lootr-more-tactical-loot-1.1.21.jar META-INF/mods.toml | grep 'version="1.1.21"'
+          javap -classpath mods/lootr-more-tactical-loot-1.1.21.jar -p -verbose \
+            com.cicciook.lootrmoreloot.LootOpenEvents > /tmp/loot-javap.txt
+          grep -q '0.08d' /tmp/loot-javap.txt
+          grep -q 'lootr_more_loot_seen_1121.txt' /tmp/loot-javap.txt
+          grep -q 'sophisticatedbackpacks:gold_backpack' /tmp/loot-javap.txt
+          grep -q 'maxstuff:ai_awp' /tmp/loot-javap.txt
+
+      - name: Aggiorna manifest launcher
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          root = Path.cwd()
+          jar = root / 'mods/lootr-more-tactical-loot-1.1.21.jar'
+          sha = hashlib.sha256(jar.read_bytes()).hexdigest()
+          entry = {
+              'path': 'mods/' + jar.name,
+              'size': jar.stat().st_size,
+              'sha256': sha,
+              'mode': 'replace',
+              'url': 'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/' + jar.name,
+          }
+
+          settings_path = root / 'pack-settings.json'
+          settings = json.loads(settings_path.read_text('utf-8'))
+          settings['external_files'] = [
+              x for x in settings.get('external_files', [])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          settings['external_files'].append(entry)
+          news = 'Nuovo Ordine — Lootr Tactical 1.1.21: armi ancora più rare (roll 8%)'
+          settings['news'] = news
+          settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          pack_path = root / 'pack.json'
+          pack = json.loads(pack_path.read_text('utf-8'))
+          pack['version'] = '2026.10.05-loot-21'
+          pack['news'] = news
+          pack['files'] = [
+              x for x in pack.get('files', [])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          pack['files'].append(entry)
+          pack_path.write_text(json.dumps(pack, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          rm -f mods/lootr-more-tactical-loot-1.1.20.jar
+
+      - name: Pubblica
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            mods/lootr-more-tactical-loot-1.1.20.jar \
+            mods/lootr-more-tactical-loot-1.1.21.jar \
+            loot-source/1.1.21 \
+            pack.json \
+            pack-settings.json
+          git commit -m 'Riduci frequenza armi Lootr Tactical a 8%'
+          git push origin HEAD:main
