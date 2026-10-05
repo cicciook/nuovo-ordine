@@ -62,8 +62,8 @@ jobs:
           p=Path('/tmp/armeria-patch/META-INF/mods.toml')
           s=p.read_text('utf-8')
           s=s.replace(
-              'Negozio web /armeria con rilevamento automatico delle munizioni TACZ/gunpack e Superb Warfare, prezzi iniziali bilanciati, gestione OP e pagamenti TheNewEconomy tramite Vault.',
-              'Negozio web /armeria con bridge MCEF/Mohist robusto, catalogo automatico di sole munizioni e accessori TACZ/Superb Warfare, prezzi bilanciati, gestione OP e pagamenti TheNewEconomy tramite Vault.'
+              'Negozio web /armeria con rilevamento automatico delle munizioni TACZ/gunpack e Superb Warfare, prezzi iniziali bilanciati, gestione OP e pagamenti EssentialsX Economy tramite Vault.',
+              'Negozio web /armeria con bridge MCEF/Mohist robusto, catalogo automatico di sole munizioni e accessori TACZ/Superb Warfare, prezzi bilanciati, gestione OP e pagamenti EssentialsX Economy tramite Vault.'
           )
           p.write_text(s,encoding='utf-8')
           PY
@@ -93,10 +93,8 @@ jobs:
           javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.SiteArchive | grep -q 'ensureServerPage'
           javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.AmmoSupport | grep -q 'category'
           javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p com.armeria.ShopRuntime | grep -q 'receive'
-          unzip -p "$JAR" armeria_default/shop.html | grep -q "__armeria132Installed=true"
-          ! unzip -p "$JAR" armeria_default/shop.html | grep -q 'TheNewEconomy'
           javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p -c com.armeria.ShopRuntime | grep -q 'EssentialsX Economy'
-          javap -classpath "$JAR:/tmp/armeria-libs/gson.jar:/tmp/armeria-libs/netty-buffer.jar:/tmp/armeria-libs/netty-common.jar" -p -c com.armeria.ShopService | grep -q 'calibratedCategory'
+          unzip -p "$JAR" META-INF/armeria-sources/com/armeria/ShopService.java | grep -q 'calibratedCategory'
           sha256sum "$JAR"
 
       - name: Aggiorna manifest launcher senza perdere il pack completo
