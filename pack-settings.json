@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Lootr Tactical 1.1.21: probabilita armi ridotta all 8%",
+  "news": "Nuovo Ordine — Armeria 1.3.5: munizioni per calibro, lotti AR/leggeri da 60 e nomi accessori corretti.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -209,11 +209,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     },
     {
-      "path": "mods/armeria-browser-1.3.4.jar",
-      "size": 110325,
-      "sha256": "33d82180526a744d4cbeb8e0521189202f3cdcea42df9304ed6c3c02c747cf13",
+      "path": "mods/armeria-browser-1.3.5.jar",
+      "size": 114394,
+      "sha256": "31f4461e917e8a71ada1a3d6eb800ce119c6d8248b31f95a3cf71bb7fb3ef4d2",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.4.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.5.jar"
     },
     {
       "path": "mods/Geophilic v3.7.mod.jar",
