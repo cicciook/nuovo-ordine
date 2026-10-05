@@ -1,0 +1,5 @@
+Exception in thread "main" java.lang.IllegalStateException: Atteso un solo roll armi 0.12 nei metodi WEAPONS, trovati: 2
+	at Patch.patchLootOpenEvents(Patch.java:81)
+	at Patch.main(Patch.java:111)
+javac_status=0
+patch_status=1
