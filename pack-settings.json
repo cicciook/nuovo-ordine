@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.4: solo munizioni, ammo box e accessori; armi rimosse.",
+  "news": "Nuovo Ordine — Lootr Tactical 1.1.20: armi meno comuni (roll 22% → 12%)",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -229,13 +229,6 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     },
     {
-      "path": "mods/lootr-more-tactical-loot-1.1.17.jar",
-      "size": 48797,
-      "sha256": "b48d76e26136b2e002a1822964363227e5a0ab7b87173104117b7bca7afffcee",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/0f7aa4d4bba09ed076d9177e8d5ca418b071753c/mods/lootr-more-tactical-loot-1.1.17.jar"
-    },
-    {
       "path": "mods/armeria-browser-1.3.4.jar",
       "size": 110325,
       "sha256": "33d82180526a744d4cbeb8e0521189202f3cdcea42df9304ed6c3c02c747cf13",
@@ -311,6 +304,13 @@
       "sha256": "9bf3ae15d86ec95d128542caf10e4b5498e49ca02f725b9302d6daecd5eae1db",
       "mode": "replace",
       "url": "https://mediafilez.forgecdn.net/files/7208/610/createaddition-1.20.1-1.3.3.jar"
+    },
+    {
+      "path": "mods/lootr-more-tactical-loot-1.1.20.jar",
+      "size": 50285,
+      "sha256": "9f07f3ec2a0cbf062ab1475d36fd07ddf7706a5627cb60f9f00463a8b6411161",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.20.jar"
     }
   ],
   "exclude_paths": [
