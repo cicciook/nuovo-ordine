@@ -1,0 +1,86 @@
+name: Diagnostica e pubblica Lootr 1.1.21
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-loot-1.1.21-debug.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  debug-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compila e prova patch
+        id: build
+        shell: bash
+        run: |
+          set +e
+          : > loot-1.1.21-debug.txt
+          mkdir -p /tmp/loot-patch
+          javac --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED             -d /tmp/loot-patch loot-source/1.1.21/Patch.java             >> loot-1.1.21-debug.txt 2>&1
+          C1=$?
+          if [ "$C1" -eq 0 ]; then
+            java --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED               -cp /tmp/loot-patch Patch               mods/lootr-more-tactical-loot-1.1.20.jar               mods/lootr-more-tactical-loot-1.1.21.jar               loot-source/1.1.21               >> loot-1.1.21-debug.txt 2>&1
+            C2=$?
+          else
+            C2=99
+          fi
+          echo "javac_status=$C1" >> loot-1.1.21-debug.txt
+          echo "patch_status=$C2" >> loot-1.1.21-debug.txt
+          if [ "$C1" -eq 0 ] && [ "$C2" -eq 0 ]; then
+            echo "BUILD_OK=1" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_OK=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Valida e aggiorna manifest
+        if: env.BUILD_OK == '1'
+        shell: bash
+        run: |
+          set -e
+          unzip -t mods/lootr-more-tactical-loot-1.1.21.jar >> loot-1.1.21-debug.txt 2>&1
+          unzip -p mods/lootr-more-tactical-loot-1.1.21.jar META-INF/mods.toml | grep 'version="1.1.21"' >> loot-1.1.21-debug.txt
+          javap -classpath mods/lootr-more-tactical-loot-1.1.21.jar -p -verbose             com.cicciook.lootrmoreloot.LootOpenEvents > /tmp/loot-javap.txt
+          grep '0.08d' /tmp/loot-javap.txt >> loot-1.1.21-debug.txt
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path.cwd()
+          jar=root/'mods/lootr-more-tactical-loot-1.1.21.jar'
+          sha=hashlib.sha256(jar.read_bytes()).hexdigest()
+          entry={'path':'mods/'+jar.name,'size':jar.stat().st_size,'sha256':sha,'mode':'replace',
+                 'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/'+jar.name}
+          sp=root/'pack-settings.json'
+          s=json.loads(sp.read_text('utf-8'))
+          s['external_files']=[x for x in s.get('external_files',[]) if not x['path'].startswith('mods/lootr-more-tactical-loot-')]
+          s['external_files'].append(entry)
+          s['news']='Nuovo Ordine — Lootr Tactical 1.1.21: armi ancora più rare (roll 8%)'
+          sp.write_text(json.dumps(s,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          pp=root/'pack.json'
+          p=json.loads(pp.read_text('utf-8'))
+          p['version']='2026.10.05-loot-21'
+          p['news']=s['news']
+          p['files']=[x for x in p.get('files',[]) if not x['path'].startswith('mods/lootr-more-tactical-loot-')]
+          p['files'].append(entry)
+          pp.write_text(json.dumps(p,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('sha256='+sha, file=open('loot-1.1.21-debug.txt','a'))
+          PY
+          rm -f mods/lootr-more-tactical-loot-1.1.20.jar
+
+      - name: Commit esito
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add loot-1.1.21-debug.txt pack.json pack-settings.json             mods/lootr-more-tactical-loot-1.1.20.jar             mods/lootr-more-tactical-loot-1.1.21.jar 2>/dev/null || true
+          git commit -m "Diagnostica Lootr Tactical 1.1.21" || true
+          git push origin HEAD:main
