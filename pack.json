@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.05-no-dox-1",
+  "version": "2026.10.05-ext-25",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — fix compatibilità sparo TaCZ/Mohist e aggiornamenti gameplay",
+  "news": "Nuovo Ordine — Armeria 1.3.7: categorie per calibro e pagamenti diretti EssentialsX Economy, senza provider Vault.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32286,21 +32286,21 @@
       "size": 50091,
       "sha256": "8c9e801e77d90ca0b2db9a4351ae1646b9be263a301df10c57cf72680c5e7dce",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.21.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
     },
     {
       "path": "mods/armeria-browser-1.3.7.jar",
       "size": 115192,
       "sha256": "a4c6f4147b7e827c685fc7e1884eed91958d2c3fd63f50c524e07c10f5b514e8",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.7.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/armeria-browser-1.3.7.jar"
     },
     {
       "path": "mods/nuovo-ordine-complete-1.0.0.jar",
       "size": 59675,
       "sha256": "9c51c77ef3451e2c0fec858ea1fabff901c112641b306162e144466b49ba4444",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/nuovo-ordine-complete-1.0.0.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/nuovo-ordine-complete-1.0.0.jar"
     }
   ],
   "archives": {
