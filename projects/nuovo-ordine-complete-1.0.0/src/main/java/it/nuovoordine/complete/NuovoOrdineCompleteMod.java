@@ -51,7 +51,7 @@ public final class NuovoOrdineCompleteMod {
         if(state.nextConvoyAt<=now)state.nextConvoyAt=now+min("convoy.everyMinutes",120)*60_000L;
         if(cfg.b("hub.enabled",true))hub.start(cfg.s("hub.bind","0.0.0.0"),cfg.i("hub.port",8765,1024,65535),cfg.s("hub.cors","*"),this::hubJson);
         applyTaczShootCompatibilityFix();
-        broadcast("§8[§cNuovo Ordine§8] §7Complete §f"+VERSION+" §7attivo. Towny="+(townyAvailable()?"§aOK":"§eFallback")+" §7Economia="+(economy.ready()?"§aVault/TNE OK":"§cnon trovata"));
+        broadcast("§8[§cNuovo Ordine§8] §7Complete §f"+VERSION+" §7attivo. Towny="+(townyAvailable()?"§aOK":"§eFallback")+" §7Economia="+(economy.ready()?"§aEssentialsX Economy/Vault OK":"§cnon trovata"));
         dirty=true;save();
     }
     private synchronized void serverStopping(Object e){save();hub.stop();server=null;treatments.clear();lastMtsLoc.clear();activeVehicle.clear();}
