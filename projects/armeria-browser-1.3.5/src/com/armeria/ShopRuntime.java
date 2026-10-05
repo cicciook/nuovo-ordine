@@ -36,8 +36,7 @@ final class ShopRuntime {
     private static Object call(Object object, String name) throws Exception { return call(object, name, new Class<?>[0]); }
     static final class Port implements ShopService.Port {
         private final Object player, bukkit;
-        private Object economy;
-        private Class<?> economyApi, offlineApi;
+        private Class<?> economyApi;
         Port(Object player) throws Exception {
             this.player = player;
             bukkit = call(player, "getBukkitEntity");
@@ -105,39 +104,36 @@ final class ShopRuntime {
             method(inv.getClass(), "m_6596_", "setChanged").invoke(inv);
             call(bukkit, "saveData");
         }
-        private Object provider() throws Exception {
-            if (economy != null) return economy;
+        private Class<?> essentialsEconomy() throws Exception {
+            if (economyApi != null) return economyApi;
             Object server = call(bukkit, "getServer");
             Object manager = call(server, "getPluginManager");
-            Object vault = call(manager, "getPlugin", new Class<?>[]{String.class}, "Vault");
-            if (vault == null) throw new IllegalArgumentException("Vault non installato.");
-            economyApi = vault.getClass().getClassLoader().loadClass("net.milkbowl.vault.economy.Economy");
-            offlineApi = vault.getClass().getClassLoader().loadClass("org.bukkit.OfflinePlayer");
-            Object services = call(server, "getServicesManager");
-            Collection<?> registrations = (Collection<?>) call(services, "getRegistrations", new Class<?>[]{Class.class}, economyApi);
-            for (Object registration : registrations) {
-                Object candidate = call(registration, "getProvider");
-                String providerName = String.valueOf(economyApi.getMethod("getName").invoke(candidate));
-                if (!"EssentialsX Economy".equals(providerName) && !"Essentials Economy".equals(providerName)) continue;
-                if ((boolean) economyApi.getMethod("isEnabled").invoke(candidate)) { economy = candidate; return candidate; }
-            }
-            throw new IllegalArgumentException("EssentialsX Economy non registrato in Vault.");
+            Object essentials = call(manager, "getPlugin", new Class<?>[]{String.class}, "Essentials");
+            if (essentials == null || !(boolean) call(essentials, "isEnabled"))
+                throw new IllegalArgumentException("EssentialsX non installato o non attivo.");
+            economyApi = essentials.getClass().getClassLoader().loadClass("com.earth2me.essentials.api.Economy");
+            return economyApi;
         }
-        public String economyName() throws Exception { provider(); return "EssentialsX Economy / Vault"; }
+        private UUID economyPlayerId() throws Exception { return (UUID) call(bukkit, "getUniqueId"); }
+        public String economyName() throws Exception { essentialsEconomy(); return "EssentialsX Economy"; }
         public BigDecimal balance() throws Exception {
-            Object p = provider(); double value = (double) economyApi.getMethod("getBalance", offlineApi).invoke(p, bukkit);
-            if (!Double.isFinite(value)) throw new IllegalStateException("Saldo non valido.");
-            return BigDecimal.valueOf(value);
+            Class<?> api = essentialsEconomy();
+            Object value = api.getMethod("getMoneyExact", UUID.class).invoke(null, economyPlayerId());
+            if (!(value instanceof BigDecimal amount)) throw new IllegalStateException("Saldo EssentialsX non valido.");
+            return amount;
         }
         public String format(BigDecimal value) throws Exception {
-            Object p = provider(); return (String) economyApi.getMethod("format", double.class).invoke(p, value.doubleValue());
+            return (String) essentialsEconomy().getMethod("format", BigDecimal.class).invoke(null, value);
         }
         private boolean money(String action, BigDecimal amount) throws Exception {
-            Object p = provider();
-            Object response = economyApi.getMethod(action, offlineApi, double.class).invoke(p, bukkit, amount.doubleValue());
-            return (boolean) call(response, "transactionSuccess");
+            if (amount == null || amount.signum() < 0) return false;
+            Class<?> api = essentialsEconomy();
+            UUID uuid = economyPlayerId();
+            if ("subtract".equals(action) && balance().compareTo(amount) < 0) return false;
+            api.getMethod(action, UUID.class, BigDecimal.class).invoke(null, uuid, amount);
+            return true;
         }
-        public boolean withdraw(BigDecimal value) throws Exception { return money("withdrawPlayer", value); }
-        public boolean deposit(BigDecimal value) throws Exception { return money("depositPlayer", value); }
+        public boolean withdraw(BigDecimal value) throws Exception { return money("subtract", value); }
+        public boolean deposit(BigDecimal value) throws Exception { return money("add", value); }
     }
 }
