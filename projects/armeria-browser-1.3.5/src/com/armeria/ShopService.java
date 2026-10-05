@@ -299,7 +299,12 @@ final class ShopService {
         if (name == null || name.isBlank()) return true;
         String v = name.strip().toLowerCase(Locale.ROOT);
         return v.startsWith("item.") || v.startsWith("block.")
-                || v.equals("item.tacz.attachment") || v.equals("item.tacz.ammo");
+                || v.equals("item.tacz.attachment") || v.equals("item.tacz.ammo")
+                || v.equals("attachment") || v.equals("attachments")
+                || v.equals("accessory") || v.equals("accessories")
+                || v.equals("accessorio") || v.equals("accessori")
+                || v.equals("tacz attachment") || v.equals("tacz attachments")
+                || v.equals("unknown") || v.equals("unnamed");
     }
 
     private static String prettyIdentifier(String resource) {
@@ -317,6 +322,7 @@ final class ShopService {
             if (word.isBlank()) continue;
             if (!out.isEmpty()) out.append(' ');
             String lower = word.toLowerCase(Locale.ROOT);
+            if (Set.of("attachment","attachments","accessory","accessories","item","items").contains(lower)) continue;
             String pretty = switch (lower) {
                 case "ar" -> "AR";
                 case "ak" -> "AK";
@@ -325,13 +331,28 @@ final class ShopService {
                 case "dmr" -> "DMR";
                 case "acog" -> "ACOG";
                 case "holo" -> "Holo";
-                case "scope" -> "Scope";
-                case "sight" -> "Sight";
-                case "suppressor", "silencer" -> "Soppressore";
-                case "grip" -> "Grip";
+                case "scope", "optic" -> "Ottica";
+                case "sight" -> "Mirino";
+                case "reddot" -> "Red Dot";
+                case "suppressor", "silencer" -> "Silenziatore";
+                case "muzzle" -> "Volata";
+                case "brake" -> "Freno";
+                case "compensator" -> "Compensatore";
+                case "grip", "foregrip" -> "Impugnatura";
                 case "stock" -> "Calcio";
                 case "laser" -> "Laser";
-                case "flashlight" -> "Torcia";
+                case "flashlight", "light" -> "Torcia";
+                case "bipod" -> "Bipiede";
+                case "mag", "magazine" -> "Caricatore";
+                case "handguard" -> "Astina";
+                case "rail" -> "Slitta";
+                case "mount" -> "Supporto";
+                case "canted" -> "Inclinato";
+                case "vertical" -> "Verticale";
+                case "angled" -> "Angolata";
+                case "extended" -> "Esteso";
+                case "short" -> "Corto";
+                case "long" -> "Lungo";
                 default -> Character.toUpperCase(word.charAt(0)) + word.substring(1);
             };
             out.append(pretty);
@@ -608,7 +629,7 @@ final class ShopService {
                 if (!Objects.equals(current.nbt, capture.nbt())) { current.nbt = capture.nbt(); changed = true; }
                 if (!Objects.equals(current.itemId, capture.itemId())) { current.itemId = capture.itemId(); changed = true; }
 
-                String migratedName = readableName(current.name, capture.name());
+                String migratedName = current.name;
                 if (placeholderName(current.name)) migratedName = capture.name();
                 if (!Objects.equals(current.name, migratedName)) { current.name = migratedName; changed = true; }
 
