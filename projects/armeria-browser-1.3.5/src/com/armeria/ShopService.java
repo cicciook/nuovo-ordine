@@ -114,13 +114,28 @@ final class ShopService {
     private static boolean allowedCategory(String category) {
         if (category == null) return false;
         String c = category.toLowerCase(Locale.ROOT);
-        return c.contains("munizioni") || c.contains("ammo box") || c.contains("accessori");
+        return c.contains("munizioni") || c.contains("ammo box") || c.contains("accessori") || c.contains("mirini");
     }
-    private static boolean accessoryCategory(String category) {
-        return category != null && category.toLowerCase(Locale.ROOT).contains("accessori");
+    private static boolean sightCategory(String category) {
+        return category != null && category.toLowerCase(Locale.ROOT).contains("mirini");
+    }
+    private static boolean sightHint(String text) {
+        if (text == null || text.isBlank()) return false;
+        String v = text.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", " ").strip();
+        if (v.contains("laser") || v.contains("flashlight") || v.contains("torcia")) return false;
+        return v.contains(" scope") || v.startsWith("scope ") || v.equals("scope")
+                || v.contains(" optic") || v.startsWith("optic ") || v.contains(" sight")
+                || v.startsWith("sight ") || v.contains("red dot") || v.contains("reddot")
+                || v.contains("reflex") || v.contains("holo") || v.contains("acog")
+                || v.contains("eotech") || v.contains("aimpoint") || v.contains("elcan")
+                || v.contains("specter") || v.contains("lpvo") || v.contains("magnifier")
+                || v.contains("mirino") || v.contains("ottica") || v.contains("reticle")
+                || v.contains("deltapoint") || v.contains(" rmr") || v.startsWith("rmr ")
+                || v.contains(" sro") || v.startsWith("sro ") || v.contains("uh 1")
+                || v.contains("vudu") || v.contains("romeo");
     }
     private static String accessoryImage(JsonObject data, String category, String fallback) {
-        if (!accessoryCategory(category)) return "";
+        if (!sightCategory(category)) return "";
         String value = fallback == null ? "" : fallback.strip();
         if (data.has("image")) value = text(data, "image", 1024);
         if (value.isEmpty()) return "";
@@ -129,7 +144,7 @@ final class ShopService {
         boolean relative = !value.startsWith("/") && !value.contains("..")
                 && value.matches("[A-Za-z0-9_./ -]+\\.(?i:png|jpg|jpeg|webp|gif|avif)");
         if (!https && !relative)
-            throw new IllegalArgumentException("Foto accessorio: usa un URL HTTPS o un percorso immagine relativo alla cartella armeria.");
+            throw new IllegalArgumentException("Foto mirino: usa un URL HTTPS o un percorso immagine relativo alla cartella armeria.");
         return value;
     }
     private static void op(Port port) throws Exception {
@@ -155,7 +170,8 @@ final class ShopService {
                     op(port);
                     Captured item = port.capture();
                     JsonObject held = new JsonObject(); held.addProperty("name", item.name()); held.addProperty("itemId", item.itemId());
-                    held.addProperty("count", item.count()); held.addProperty("category", item.category());
+                    held.addProperty("count", item.count()); held.addProperty("category",
+                            calibratedCategory(item.category(), item.name() + " " + item.itemId() + " " + item.nbt()));
                     held.addProperty("maxQuantity", Math.min(2304, item.maxStack() * 36));
                     response.add("held", held);
                 }
@@ -212,7 +228,6 @@ final class ShopService {
         value.category = text(data, "category", 40);
         if (!allowedCategory(value.category))
             throw new IllegalArgumentException("Categoria non ammessa: l'armeria vende solo munizioni, ammo box e accessori.");
-        value.image = accessoryImage(data, value.category, existing == null ? "" : existing.image);
         value.price = price(text(data, "price", 32)).toPlainString();
         value.quantity = quantity(data);
         value.enabled = data.get("enabled").getAsBoolean();
@@ -225,9 +240,13 @@ final class ShopService {
             Captured capture = port.capture();
             if (capture.nbt().length() > 131072) throw new IllegalArgumentException("L'articolo contiene troppi dati.");
             value.nbt = capture.nbt(); value.itemId = capture.itemId();
-            if (capture.category() != null && !capture.category().isBlank()) value.category = capture.category();
+            if (capture.category() != null && !capture.category().isBlank())
+                value.category = calibratedCategory(capture.category(),
+                        value.name + " " + capture.itemId() + " " + capture.nbt());
         } else { value.nbt = existing.nbt; value.itemId = existing.itemId; }
-        if (!accessoryCategory(value.category)) value.image = "";
+        value.category = calibratedCategory(value.category,
+                value.name + " " + value.itemId + " " + value.nbt + " " + value.autoKey);
+        value.image = accessoryImage(data, value.category, existing == null ? "" : existing.image);
         port.validateItem(value.nbt); split(value.quantity, port.maxStack(value.nbt));
         Catalog next = GSON.fromJson(GSON.toJson(catalog), Catalog.class);
         next.offers.removeIf(o -> o.id.equals(value.id)); next.offers.add(value);
@@ -415,6 +434,8 @@ final class ShopService {
     private static String calibratedCategory(String category, String hint) {
         if (category == null) return "";
         String lower = category.toLowerCase(Locale.ROOT);
+        if (lower.contains("mirini")) return "Mirini";
+        if (lower.contains("accessori") && sightHint(hint)) return "Mirini";
         if (!lower.contains("munizioni")) return category;
         String caliber = caliberLabel(hint);
         return caliber.isBlank() ? category : "Munizioni " + caliber;
@@ -621,7 +642,10 @@ final class ShopService {
         boolean changed = next.offers.removeIf(o -> !allowedCategory(o.category)
                 || (o.autoKey != null && o.autoKey.startsWith("tacz:gun:")));
         for (Offer o : next.offers) {
-            if (!accessoryCategory(o.category) && o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
+            String migratedCategory = calibratedCategory(o.category,
+                    o.name + " " + o.itemId + " " + o.autoKey + " " + o.nbt);
+            if (!Objects.equals(o.category, migratedCategory)) { o.category = migratedCategory; changed = true; }
+            if (!sightCategory(o.category) && o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
         }
 
         Map<String,Captured> found = discoverAutomaticAmmo();
@@ -660,7 +684,7 @@ final class ShopService {
                         && current.quantity != migratedPlan.quantity()) {
                     current.quantity = migratedPlan.quantity(); changed = true;
                 }
-                if (!accessoryCategory(current.category) && current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
+                if (!sightCategory(current.category) && current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
                 continue;
             }
             if (!allowedCategory(capture.category()) || next.autoExcluded.contains(key)
@@ -770,7 +794,7 @@ final class ShopService {
             row.addProperty("price", offer.price);
             row.addProperty("quantity", offer.quantity);
             row.addProperty("enabled", offer.enabled); row.addProperty("itemId", offer.itemId);
-            row.addProperty("image", accessoryCategory(offer.category) && offer.image != null ? offer.image : "");
+            row.addProperty("image", sightCategory(offer.category) && offer.image != null ? offer.image : "");
             row.addProperty("automatic", offer.automatic);
             String formatted = offer.price;
             if (economy) try { formatted = port.format(new BigDecimal(offer.price)); } catch (Exception ignored) {}
