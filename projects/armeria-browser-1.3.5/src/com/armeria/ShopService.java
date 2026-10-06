@@ -134,6 +134,88 @@ final class ShopService {
                 || v.contains(" sro") || v.startsWith("sro ") || v.contains("uh 1")
                 || v.contains("vudu") || v.contains("romeo");
     }
+    private static String attachmentIdFrom(String autoKey, String nbt) {
+        if (autoKey != null && autoKey.startsWith("tacz:attachment:")) {
+            String id = autoKey.substring("tacz:attachment:".length()).strip();
+            if (!id.isEmpty()) return id;
+        }
+        if (nbt == null || nbt.isBlank()) return "";
+        int marker = nbt.indexOf("AttachmentId");
+        if (marker < 0) return "";
+        int colon = nbt.indexOf(':', marker);
+        if (colon < 0) return "";
+        int pos = colon + 1;
+        while (pos < nbt.length() && Character.isWhitespace(nbt.charAt(pos))) pos++;
+        if (pos >= nbt.length()) return "";
+        char quote = nbt.charAt(pos);
+        if (quote == '"' || quote == '\'') {
+            int end = nbt.indexOf(quote, pos + 1);
+            return end > pos + 1 ? nbt.substring(pos + 1, end) : "";
+        }
+        int end = pos;
+        while (end < nbt.length()) {
+            char ch = nbt.charAt(end);
+            if (!(Character.isLetterOrDigit(ch) || ch == '_' || ch == '-' || ch == '.' || ch == ':' || ch == '/')) break;
+            end++;
+        }
+        return end > pos ? nbt.substring(pos, end) : "";
+    }
+    private static String gunCategoryLabel(String type) {
+        if (type == null || type.isBlank()) return "";
+        return switch (type.toLowerCase(Locale.ROOT)) {
+            case "pistol" -> "Pistole";
+            case "sniper" -> "Cecchini";
+            case "rifle" -> "Fucili";
+            case "shotgun" -> "Shotgun";
+            case "smg" -> "SMG";
+            case "rpg" -> "Lanciarazzi";
+            case "mg" -> "Mitragliatrici";
+            default -> Character.toUpperCase(type.charAt(0)) + type.substring(1);
+        };
+    }
+    private static String sightCompatibilityLine(String autoKey, String nbt) {
+        String attachmentId = attachmentIdFrom(autoKey, nbt);
+        if (attachmentId.isBlank()) return "";
+        try {
+            Class<?> resourceLocation = Class.forName("net.minecraft.resources.ResourceLocation");
+            Object attachment = resourceLocation.getConstructor(String.class).newInstance(attachmentId);
+            Class<?> api = Class.forName("com.tacz.guns.api.TimelessAPI");
+            Object all = api.getMethod("getAllCommonGunIndex").invoke(null);
+            Class<?> matcher = Class.forName("com.tacz.guns.util.AllowAttachmentTagMatcher");
+            Method match = matcher.getMethod("match", resourceLocation, resourceLocation);
+            LinkedHashSet<String> categories = new LinkedHashSet<>();
+            if (all instanceof Iterable<?> iterable) {
+                for (Object value : iterable) {
+                    if (!(value instanceof Map.Entry<?,?> entry)) continue;
+                    Object gunId = entry.getKey();
+                    if (!Boolean.TRUE.equals(match.invoke(null, gunId, attachment))) continue;
+                    Object index = entry.getValue();
+                    Object type = index.getClass().getMethod("getType").invoke(index);
+                    String label = gunCategoryLabel(type == null ? "" : type.toString());
+                    if (!label.isBlank()) categories.add(label);
+                }
+            }
+            return categories.isEmpty() ? "" : "Compatibilità armi: " + String.join(", ", categories) + ".";
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
+    private static String withSightCompatibility(String description, String autoKey, String nbt) {
+        String compatibility = sightCompatibilityLine(autoKey, nbt);
+        if (compatibility.isBlank()) return description == null ? "" : description;
+        String base = description == null ? "" : description.strip();
+        StringBuilder kept = new StringBuilder();
+        for (String line : base.split("\\R")) {
+            if (line.strip().toLowerCase(Locale.ROOT).startsWith("compatibilità armi:")) continue;
+            if (!line.isBlank()) {
+                if (!kept.isEmpty()) kept.append('\n');
+                kept.append(line.strip());
+            }
+        }
+        String cleaned = kept.toString();
+        if (cleaned.startsWith("Articolo rilevato automaticamente.")) cleaned = "";
+        return cleaned.isBlank() ? compatibility : cleaned + "\n" + compatibility;
+    }
     private static String accessoryImage(JsonObject data, String category, String fallback) {
         if (!sightCategory(category)) return "";
         String value = fallback == null ? "" : fallback.strip();
@@ -247,6 +329,10 @@ final class ShopService {
         value.category = calibratedCategory(value.category,
                 value.name + " " + value.itemId + " " + value.nbt + " " + value.autoKey);
         value.image = accessoryImage(data, value.category, existing == null ? "" : existing.image);
+        if (sightCategory(value.category)) {
+            value.quantity = 1;
+            value.description = withSightCompatibility(value.description, value.autoKey, value.nbt);
+        }
         port.validateItem(value.nbt); split(value.quantity, port.maxStack(value.nbt));
         Catalog next = GSON.fromJson(GSON.toJson(catalog), Catalog.class);
         next.offers.removeIf(o -> o.id.equals(value.id)); next.offers.add(value);
@@ -581,10 +667,10 @@ final class ShopService {
     static AutoPlan balancedPlan(String text, int maxStack) {
         String v = text == null ? "" : text.toLowerCase(Locale.ROOT).replace('-', '_');
         int q; int dollars;
-        if (v.contains("accessori tacz") || v.contains("accessori superb")) {
+        if (v.contains("mirini") || v.contains("accessori tacz") || v.contains("accessori superb")) {
             q = 1;
-            if (v.contains("silen") || v.contains("suppress") || v.contains("silencer")) dollars = 1600;
-            else if (v.contains("scope") || v.contains("optic") || v.contains("mirino")) dollars = 1200;
+            if (v.contains("mirini") || v.contains("scope") || v.contains("optic") || v.contains("mirino")) dollars = 1200;
+            else if (v.contains("silen") || v.contains("suppress") || v.contains("silencer")) dollars = 1600;
             else dollars = 850;
         }
         else if (v.contains("armi tacz") || v.contains("armi superb")) {
@@ -645,7 +731,11 @@ final class ShopService {
             String migratedCategory = calibratedCategory(o.category,
                     o.name + " " + o.itemId + " " + o.autoKey + " " + o.nbt);
             if (!Objects.equals(o.category, migratedCategory)) { o.category = migratedCategory; changed = true; }
-            if (!sightCategory(o.category) && o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
+            if (sightCategory(o.category)) {
+                if (o.quantity != 1) { o.quantity = 1; changed = true; }
+                String description = withSightCompatibility(o.description, o.autoKey, o.nbt);
+                if (!Objects.equals(o.description, description)) { o.description = description; changed = true; }
+            } else if (o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
         }
 
         Map<String,Captured> found = discoverAutomaticAmmo();
@@ -679,12 +769,17 @@ final class ShopService {
                     current.category = migratedCategory; changed = true;
                 }
 
-                AutoPlan migratedPlan = balancedPlan(capture.name() + " " + key + " " + capture.itemId(), capture.maxStack());
-                if (current.category != null && current.category.toLowerCase(Locale.ROOT).contains("munizioni")
-                        && current.quantity != migratedPlan.quantity()) {
-                    current.quantity = migratedPlan.quantity(); changed = true;
+                AutoPlan migratedPlan = balancedPlan(current.category + " " + capture.name() + " " + key + " " + capture.itemId(), capture.maxStack());
+                int desiredQuantity = sightCategory(current.category) ? 1 : migratedPlan.quantity();
+                if ((sightCategory(current.category)
+                        || (current.category != null && current.category.toLowerCase(Locale.ROOT).contains("munizioni")))
+                        && current.quantity != desiredQuantity) {
+                    current.quantity = desiredQuantity; changed = true;
                 }
-                if (!sightCategory(current.category) && current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
+                if (sightCategory(current.category)) {
+                    String description = withSightCompatibility(current.description, key, capture.nbt());
+                    if (!Objects.equals(current.description, description)) { current.description = description; changed = true; }
+                } else if (current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
                 continue;
             }
             if (!allowedCategory(capture.category()) || next.autoExcluded.contains(key)
@@ -693,15 +788,17 @@ final class ShopService {
             Offer offer = new Offer();
             offer.id = UUID.nameUUIDFromBytes(("armeria:auto:" + key).getBytes(StandardCharsets.UTF_8)).toString();
             offer.name = capture.name();
-            offer.description = "Articolo rilevato automaticamente. Prezzo iniziale bilanciato e modificabile dagli OP.";
             offer.image = "";
             offer.category = calibratedCategory(
                     capture.category() == null || capture.category().isBlank() ? "Munizioni" : capture.category(),
                     capture.name() + " " + key + " " + capture.itemId());
+            offer.description = sightCategory(offer.category)
+                    ? withSightCompatibility("", key, capture.nbt())
+                    : "Articolo rilevato automaticamente. Prezzo iniziale bilanciato e modificabile dagli OP.";
             offer.price = plan.price();
             offer.itemId = capture.itemId();
             offer.nbt = capture.nbt();
-            offer.quantity = plan.quantity();
+            offer.quantity = sightCategory(offer.category) ? 1 : plan.quantity();
             offer.enabled = true;
             offer.automatic = true;
             offer.autoKey = key;
@@ -734,7 +831,8 @@ final class ShopService {
         if (!product.enabled) throw new IllegalArgumentException("Questo articolo non e in vendita.");
         BigDecimal cost = price(product.price);
         port.economyName(); port.validateItem(product.nbt);
-        int[] counts = split(product.quantity, port.maxStack(product.nbt));
+        int purchaseQuantity = sightCategory(product.category) ? 1 : product.quantity;
+        int[] counts = split(purchaseQuantity, port.maxStack(product.nbt));
         int[] slots = port.emptySlots(counts.length);
         if (slots.length != counts.length) throw new IllegalArgumentException("Libera almeno " + counts.length + " slot nell'inventario per questo lotto.");
         Set<Integer> uniqueSlots = new HashSet<>();
@@ -745,7 +843,7 @@ final class ShopService {
         tx.addProperty("operation", operation); tx.addProperty("player", player);
         tx.addProperty("offer", product.id); tx.addProperty("vehicle", product.name);
         tx.addProperty("price", product.price); tx.addProperty("created", java.time.Instant.now().toString());
-        tx.add("slots", GSON.toJsonTree(slots)); tx.add("counts", GSON.toJsonTree(counts)); tx.addProperty("quantity", product.quantity); tx.addProperty("nbt", product.nbt); tx.addProperty("status", "PREPARED"); atomic(receipt, GSON.toJson(tx));
+        tx.add("slots", GSON.toJsonTree(slots)); tx.add("counts", GSON.toJsonTree(counts)); tx.addProperty("quantity", purchaseQuantity); tx.addProperty("nbt", product.nbt); tx.addProperty("status", "PREPARED"); atomic(receipt, GSON.toJson(tx));
         boolean paid;
         try { paid = port.withdraw(cost); }
         catch (Exception uncertain) { mark(receipt, tx, "REVIEW_PAYMENT"); throw new IllegalStateException("Risposta del pagamento incerta: chiedi a un OP di verificare la transazione.", uncertain); }
@@ -767,7 +865,7 @@ final class ShopService {
         }
         try { mark(receipt, tx, "COMPLETED"); }
         catch (Exception journal) { System.getLogger("Armeria").log(System.Logger.Level.ERROR, "Articolo consegnato, ricevuta da verificare: " + receipt, journal); }
-        return "Acquisto completato! " + product.quantity + " x " + product.name + " nel tuo inventario.";
+        return "Acquisto completato! " + purchaseQuantity + " x " + product.name + " nel tuo inventario.";
     }
     private static final class Refunded extends Exception {}
     private static void mark(Path path, JsonObject tx, String status) throws Exception {
@@ -792,7 +890,7 @@ final class ShopService {
             row.addProperty("id", offer.id); row.addProperty("name", offer.name);
             row.addProperty("description", offer.description); row.addProperty("category", offer.category);
             row.addProperty("price", offer.price);
-            row.addProperty("quantity", offer.quantity);
+            row.addProperty("quantity", sightCategory(offer.category) ? 1 : offer.quantity);
             row.addProperty("enabled", offer.enabled); row.addProperty("itemId", offer.itemId);
             row.addProperty("image", sightCategory(offer.category) && offer.image != null ? offer.image : "");
             row.addProperty("automatic", offer.automatic);
