@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "it.ciccio.ammocompat.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ammocompat.refmap.json",
+  "mixins": [
+    "AbstractGunItemMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

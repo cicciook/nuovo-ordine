@@ -8,12 +8,12 @@ import com.tacz.guns.api.item.IAmmo;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.config.sync.SyncConfig;
 import com.tacz.guns.entity.shooter.ShooterDataHolder;
-import com.tacz.guns.init.ModItems;
 import com.tacz.guns.network.NetworkHandler;
 import com.tacz.guns.network.message.ServerMessageSyncBaseTimestamp;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -120,10 +120,7 @@ public class AmmoCompat {
         repairTaczState(player);
 
         ItemStack held = player.getMainHandItem();
-        if (IGun.getIGunOrNull(held) != null) {
-            // TaCZ must see Superb ammunition immediately when the player equips the gun.
-            feedTacz(player, held);
-        } else if (held.getItem() instanceof GunItem && e.player.tickCount % 4 == 0) {
+        if (held.getItem() instanceof GunItem && e.player.tickCount % 4 == 0) {
             feedSuperbWarfare(player, held);
         }
     }
@@ -204,86 +201,64 @@ public class AmmoCompat {
         }
     }
 
-    private static void feedTacz(Player player, ItemStack gun) {
+    public static Ammo compatibleSuperbType(ItemStack gun) {
         IGun taczGun = IGun.getIGunOrNull(gun);
-        if (taczGun == null || taczGun.hasInventoryAmmo(player, gun, false)) {
-            return;
+        if (taczGun == null) {
+            return null;
         }
-
         ResourceLocation gunId = taczGun.getGunId(gun);
         ResourceLocation ammoId = TimelessAPI.getCommonGunIndex(gunId)
                 .map(index -> index.getGunData().getAmmoId())
                 .orElse(null);
-        if (ammoId == null) {
-            return;
-        }
-
-        Ammo type = typeForTaczGun(gunId, ammoId);
-        if (type == null) {
-            return;
-        }
-
-        // Lootr/Armeria now give physical Superb Warfare ammo items.
-        // Consume those directly first, then fall back to Superb's virtual ammo capability.
-        int amount = takePhysicalSuperbAmmo(player, type, 64);
-        int missing = 64 - amount;
-        if (missing > 0) {
-            int virtual = Math.min(type.get(player), missing);
-            if (virtual > 0) {
-                type.add(player, -virtual);
-                amount += virtual;
-            }
-        }
-        if (amount <= 0) {
-            return;
-        }
-
-        ItemStack ammoStack = new ItemStack(ModItems.AMMO.get(), amount);
-        IAmmo ammo = IAmmo.getIAmmoOrNull(ammoStack);
-        if (ammo == null) {
-            refundPhysicalSuperbAmmo(player, type, amount);
-            return;
-        }
-
-        ammo.setAmmoId(ammoStack, ammoId);
-        if (!player.getInventory().add(ammoStack)) {
-            player.drop(ammoStack, false);
-        }
-        player.getInventory().setChanged();
+        return typeForTaczGun(gunId, ammoId);
     }
 
-    private static int takePhysicalSuperbAmmo(Player player, Ammo type, int limit) {
-        int taken = 0;
+    public static boolean hasCompatibleSuperbAmmo(net.minecraft.world.entity.LivingEntity shooter, ItemStack gun) {
+        if (shooter == null) {
+            return false;
+        }
+        return shooter.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER, null)
+                .map(cap -> hasCompatibleSuperbAmmo(cap, gun))
+                .orElse(false);
+    }
+
+    public static boolean hasCompatibleSuperbAmmo(IItemHandler itemHandler, ItemStack gun) {
+        Ammo type = compatibleSuperbType(gun);
+        if (type == null || itemHandler == null) {
+            return false;
+        }
         Object expected = type.getItem();
-        for (int i = 0; i < player.getInventory().getContainerSize() && taken < limit; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < itemHandler.getSlots(); i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i);
+            if (!stack.isEmpty() && stack.getItem() == expected && stack.getCount() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int extractCompatibleSuperbAmmo(IItemHandler itemHandler, ItemStack gun, int requested) {
+        if (requested <= 0 || itemHandler == null) {
+            return 0;
+        }
+        Ammo type = compatibleSuperbType(gun);
+        if (type == null) {
+            return 0;
+        }
+        Object expected = type.getItem();
+        int remaining = requested;
+        for (int i = 0; i < itemHandler.getSlots() && remaining > 0; i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i);
             if (stack.isEmpty() || stack.getItem() != expected) {
                 continue;
             }
-            int amount = Math.min(stack.getCount(), limit - taken);
-            if (amount <= 0) {
-                continue;
-            }
-            stack.shrink(amount);
-            taken += amount;
+            ItemStack extracted = itemHandler.extractItem(i, remaining, false);
+            remaining -= extracted.getCount();
         }
-        if (taken > 0) {
-            player.getInventory().setChanged();
-        }
-        return taken;
+        return requested - remaining;
     }
 
-    private static void refundPhysicalSuperbAmmo(Player player, Ammo type, int amount) {
-        if (amount <= 0) {
-            return;
-        }
-        ItemStack refund = type.getItemStack(amount);
-        if (!player.getInventory().add(refund)) {
-            player.drop(refund, false);
-        }
-    }
-
-    private static Ammo typeForTaczGun(ResourceLocation gunId, ResourceLocation ammoId) {
+    static Ammo typeForTaczGun(ResourceLocation gunId, ResourceLocation ammoId) {
         if (ammoId == null) {
             return null;
         }
