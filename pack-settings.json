@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.5: TaCZ usa direttamente anche la riserva munizioni Superb Warfare mostrata nell'HUD, senza conversioni.",
+  "news": "Nuovo Ordine — AmmoCompat 1.1.6: HUD TaCZ con categoria Superb compatibile e munizioni rimanenti in tempo reale.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -15,11 +15,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     },
     {
-      "path": "mods/ammocompat-1.1.5.jar",
-      "size": 16018,
-      "sha256": "aa825088dd6c0799fe26e9a3c591f88920ee2ce9421eba37a6cd35ca8df9117e",
+      "path": "mods/ammocompat-1.1.6.jar",
+      "size": 18447,
+      "sha256": "58d0730445a5e3c824bf2a835256bbcb759c93328d74534df84e37b52e5a5bd5",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.5.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.6.jar"
     },
     {
       "path": "mods/create_bb-1.0.8-1.20.1.jar",
