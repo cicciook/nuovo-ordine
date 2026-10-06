@@ -1,18 +1,18 @@
-name: Build AmmoCompat 1.1.4 direct Superb ammo support
+name: Build AmmoCompat 1.1.5 Superb reserve bridge
 
 on:
   push:
     branches: [main]
     paths:
       - 'projects/ammocompat-1.1.0/**'
-      - '.github/workflows/build-ammocompat-1.1.4.yml'
+      - '.github/workflows/build-ammocompat-1.1.5.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: ammocompat-1.1.4-main
+  group: ammocompat-1.1.5-main
   cancel-in-progress: true
 
 jobs:
@@ -38,10 +38,10 @@ jobs:
         run: |
           set -euo pipefail
           gradle --no-daemon clean build
-          JAR=build/libs/ammocompat-1.1.4.jar
+          JAR=build/libs/ammocompat-1.1.5.jar
           test -s "$JAR"
           unzip -t "$JAR" >/dev/null
-          unzip -p "$JAR" META-INF/mods.toml | grep -q 'version="1.1.4"'
+          unzip -p "$JAR" META-INF/mods.toml | grep -q 'version="1.1.5"'
           javap -classpath "$JAR" -p -c it.ciccio.ammocompat.AmmoCompat > /tmp/ammocompat.txt
           grep -q 'SERVER_SHOOT_NETWORK_V' /tmp/ammocompat.txt
           grep -q 'ServerMessageSyncBaseTimestamp' /tmp/ammocompat.txt
@@ -52,7 +52,12 @@ jobs:
           grep -q 'extractCompatibleSuperbAmmo' /tmp/ammocompat.txt
           grep -q 'compatibleSuperbType' /tmp/ammocompat.txt
           unzip -p "$JAR" mixins.ammocompat.json | grep -q 'AbstractGunItemMixin'
+          unzip -p "$JAR" mixins.ammocompat.json | grep -q 'ModernKineticGunScriptAPIMixin'
+          unzip -p "$JAR" mixins.ammocompat.json | grep -q 'GunAnimationStateContextMixin'
           javap -classpath "$JAR" -p it.ciccio.ammocompat.mixin.AbstractGunItemMixin | grep -q 'ammocompat'
+          javap -classpath "$JAR" -p it.ciccio.ammocompat.mixin.ModernKineticGunScriptAPIMixin | grep -q 'ammocompat'
+          javap -classpath "$JAR" -p it.ciccio.ammocompat.mixin.GunAnimationStateContextMixin | grep -q 'ammocompat'
+          grep -q 'consumeCompatibleSuperbReserve' /tmp/ammocompat.txt
           ! grep -q 'ModItems.AMMO' /tmp/ammocompat.txt
           ! grep -q 'SERVER_SHOOT_COOLDOWN_V' /tmp/ammocompat.txt
 
@@ -60,13 +65,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp projects/ammocompat-1.1.0/build/libs/ammocompat-1.1.4.jar /tmp/ammocompat-1.1.4.jar
+          cp projects/ammocompat-1.1.0/build/libs/ammocompat-1.1.5.jar /tmp/ammocompat-1.1.5.jar
 
           git fetch origin main
           git reset --hard origin/main
 
           mkdir -p mods
-          cp /tmp/ammocompat-1.1.4.jar mods/ammocompat-1.1.4.jar
+          cp /tmp/ammocompat-1.1.5.jar mods/ammocompat-1.1.5.jar
           rm -f mods/ammocompat-1.1.0.jar
           rm -f mods/nuovo-ordine-complete-1.0.0.jar mods/nuovo-ordine-complete-1.0.1.jar mods/nuovo-ordine-complete-1.0.2.jar
 
@@ -74,14 +79,14 @@ jobs:
           import hashlib, json, re
           from pathlib import Path
 
-          jar=Path('mods/ammocompat-1.1.4.jar')
+          jar=Path('mods/ammocompat-1.1.5.jar')
           data=jar.read_bytes()
           entry={
-              'path':'mods/ammocompat-1.1.4.jar',
+              'path':'mods/ammocompat-1.1.5.jar',
               'size':len(data),
               'sha256':hashlib.sha256(data).hexdigest(),
               'mode':'replace',
-              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.4.jar',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.5.jar',
           }
 
           for filename,key in [('pack-settings.json','external_files'),('pack.json','files')]:
@@ -100,13 +105,13 @@ jobs:
                   out.append(old)
               if not inserted: out.append(entry)
               doc[key]=out
-              doc['news']='Nuovo Ordine — AmmoCompat 1.1.4: TaCZ usa direttamente le munizioni Superb Warfare senza trasformarle in ammo TaCZ.'
+              doc['news']='Nuovo Ordine — AmmoCompat 1.1.5: TaCZ usa direttamente anche la riserva munizioni Superb Warfare mostrata nell'HUD, senza conversioni.'
               if filename=='pack.json':
-                  doc['version']='2026.10.06-ammocompat-1.1.4'
+                  doc['version']='2026.10.06-ammocompat-1.1.5'
               p.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
           settings=json.loads(Path('pack-settings.json').read_text('utf-8'))
-          assert any(x.get('path')=='mods/ammocompat-1.1.4.jar' for x in settings['external_files'])
+          assert any(x.get('path')=='mods/ammocompat-1.1.5.jar' for x in settings['external_files'])
           assert not any(x.get('path','').startswith('mods/nuovo-ordine-complete-') for x in settings['external_files'])
           assert not any(x.get('path')=='mods/ammocompat-1.1.0.jar' for x in settings['external_files'])
           PY
@@ -114,11 +119,11 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A mods pack.json pack-settings.json
-          git commit -m 'release: AmmoCompat 1.1.4 direct Superb ammo support'
+          git commit -m 'release: AmmoCompat 1.1.5 Superb reserve bridge'
           git push origin HEAD:main
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ammocompat-1.1.4
-          path: /tmp/ammocompat-1.1.4.jar
+          name: ammocompat-1.1.5
+          path: /tmp/ammocompat-1.1.5.jar
           if-no-files-found: error

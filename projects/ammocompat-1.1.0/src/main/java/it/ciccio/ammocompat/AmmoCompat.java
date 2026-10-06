@@ -217,9 +217,33 @@ public class AmmoCompat {
         if (shooter == null) {
             return false;
         }
+        Ammo type = compatibleSuperbType(gun);
+        if (type == null) {
+            return false;
+        }
+        if (shooter instanceof Player player && type.get(player) > 0) {
+            return true;
+        }
         return shooter.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER, null)
                 .map(cap -> hasCompatibleSuperbAmmo(cap, gun))
                 .orElse(false);
+    }
+
+    public static int consumeCompatibleSuperbReserve(net.minecraft.world.entity.LivingEntity shooter,
+                                                     ItemStack gun, int requested) {
+        if (requested <= 0 || !(shooter instanceof Player player)) {
+            return 0;
+        }
+        Ammo type = compatibleSuperbType(gun);
+        if (type == null) {
+            return 0;
+        }
+        int available = type.get(player);
+        int consumed = Math.min(available, requested);
+        if (consumed > 0) {
+            type.add(player, -consumed);
+        }
+        return consumed;
     }
 
     public static boolean hasCompatibleSuperbAmmo(IItemHandler itemHandler, ItemStack gun) {

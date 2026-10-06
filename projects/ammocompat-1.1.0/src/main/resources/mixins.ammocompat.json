@@ -5,9 +5,12 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "ammocompat.refmap.json",
   "mixins": [
-    "AbstractGunItemMixin"
+    "AbstractGunItemMixin",
+    "ModernKineticGunScriptAPIMixin"
   ],
-  "client": [],
+  "client": [
+    "GunAnimationStateContextMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
