@@ -66,14 +66,18 @@ public class AmmoCompat {
             "ea:127x55", "ea:300winmag", "ea:65creedmoor", "ea:792x57"
     );
 
-    private static final Set<String> BLOCKED_AMMO = Set.of(
-            "tacz:338", "tacz:50bmg", "tacz:40mm", "tacz:rpg_rocket",
+    private static final Set<String> HEAVY_AMMO = Set.of(
+            "tacz:338", "tacz:50bmg",
             "ea:127x108", "ea:145x114", "ea:20x102", "ea:338arc",
             "ea:338norma", "ea:408cheytac", "ea:416barrett", "ea:950jdj",
+            "sfms:408", "sfms:50arms", "sfms:50ich"
+    );
+
+    private static final Set<String> BLOCKED_AMMO = Set.of(
+            "tacz:40mm", "tacz:rpg_rocket",
             "maxstuff:bannana", "maxstuff:laser", "maxstuff:nails",
             "maxstuff:can_blanks",
-            "sfms:25gl", "sfms:408", "sfms:50arms", "sfms:50ich",
-            "sfms:arrow117", "sfms:inf"
+            "sfms:25gl", "sfms:arrow117", "sfms:inf"
     );
 
     public AmmoCompat() {
@@ -115,14 +119,12 @@ public class AmmoCompat {
         Player player = e.player;
         repairTaczState(player);
 
-        if (e.player.tickCount % 4 != 0) {
-            return;
-        }
         ItemStack held = player.getMainHandItem();
-        if (held.getItem() instanceof GunItem) {
-            feedSuperbWarfare(player, held);
-        } else if (IGun.getIGunOrNull(held) != null) {
+        if (IGun.getIGunOrNull(held) != null) {
+            // TaCZ must see Superb ammunition immediately when the player equips the gun.
             feedTacz(player, held);
+        } else if (held.getItem() instanceof GunItem && e.player.tickCount % 4 == 0) {
+            feedSuperbWarfare(player, held);
         }
     }
 
@@ -216,12 +218,22 @@ public class AmmoCompat {
             return;
         }
 
-        Ammo type = fromTacz(ammoId);
-        if (type == null || type.get(player) <= 0) {
+        Ammo type = typeForTaczGun(gunId, ammoId);
+        if (type == null) {
             return;
         }
 
-        int amount = Math.min(type.get(player), 64);
+        // Lootr/Armeria now give physical Superb Warfare ammo items.
+        // Consume those directly first, then fall back to Superb's virtual ammo capability.
+        int amount = takePhysicalSuperbAmmo(player, type, 64);
+        int missing = 64 - amount;
+        if (missing > 0) {
+            int virtual = Math.min(type.get(player), missing);
+            if (virtual > 0) {
+                type.add(player, -virtual);
+                amount += virtual;
+            }
+        }
         if (amount <= 0) {
             return;
         }
@@ -229,13 +241,88 @@ public class AmmoCompat {
         ItemStack ammoStack = new ItemStack(ModItems.AMMO.get(), amount);
         IAmmo ammo = IAmmo.getIAmmoOrNull(ammoStack);
         if (ammo == null) {
+            refundPhysicalSuperbAmmo(player, type, amount);
             return;
         }
 
         ammo.setAmmoId(ammoStack, ammoId);
-        type.add(player, -amount);
         if (!player.getInventory().add(ammoStack)) {
             player.drop(ammoStack, false);
+        }
+        player.getInventory().setChanged();
+    }
+
+    private static int takePhysicalSuperbAmmo(Player player, Ammo type, int limit) {
+        int taken = 0;
+        Object expected = type.getItem();
+        for (int i = 0; i < player.getInventory().getContainerSize() && taken < limit; i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack.isEmpty() || stack.getItem() != expected) {
+                continue;
+            }
+            int amount = Math.min(stack.getCount(), limit - taken);
+            if (amount <= 0) {
+                continue;
+            }
+            stack.shrink(amount);
+            taken += amount;
+        }
+        if (taken > 0) {
+            player.getInventory().setChanged();
+        }
+        return taken;
+    }
+
+    private static void refundPhysicalSuperbAmmo(Player player, Ammo type, int amount) {
+        if (amount <= 0) {
+            return;
+        }
+        ItemStack refund = type.getItemStack(amount);
+        if (!player.getInventory().add(refund)) {
+            player.drop(refund, false);
+        }
+    }
+
+    private static Ammo typeForTaczGun(ResourceLocation gunId, ResourceLocation ammoId) {
+        if (ammoId == null) {
+            return null;
+        }
+
+        String ammo = ammoId.toString().toLowerCase(Locale.ROOT);
+        String path = ammoId.getPath().toLowerCase(Locale.ROOT);
+        if (BLOCKED_AMMO.contains(ammo) || containsAny(path,
+                "rpg", "rocket", "grenade", "explosive", "40mm", "25gl",
+                "laser", "arrow", "nails", "missile", "mortar")) {
+            return null;
+        }
+        if (HEAVY_AMMO.contains(ammo) || containsAny(path,
+                "50bmg", "127x99", "12.7x99", "127x108", "12.7x108",
+                "145x114", "14.5x114", "20x102", "338", "408cheytac",
+                "416barrett", "950jdj", "50arms", "50ich")) {
+            return Ammo.HEAVY;
+        }
+
+        Ammo known = fromTacz(ammoId);
+        if (known != null) {
+            return known;
+        }
+
+        // Gunpacks can add completely new AmmoIds. TaCZ still exposes the gun family,
+        // so use it as the authoritative fallback instead of maintaining a fixed caliber list.
+        try {
+            String gunType = TimelessAPI.getCommonGunIndex(gunId)
+                    .map(index -> index.getType())
+                    .orElse("")
+                    .toLowerCase(Locale.ROOT);
+            return switch (gunType) {
+                case "pistol", "smg" -> Ammo.HANDGUN;
+                case "shotgun" -> Ammo.SHOTGUN;
+                case "sniper" -> Ammo.SNIPER;
+                case "rifle", "mg" -> Ammo.RIFLE;
+                default -> null;
+            };
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
@@ -265,6 +352,9 @@ public class AmmoCompat {
         if (BLOCKED_AMMO.contains(key)) {
             return null;
         }
+        if (HEAVY_AMMO.contains(key)) {
+            return Ammo.HEAVY;
+        }
         if (HANDGUN_AMMO.contains(key)) {
             return Ammo.HANDGUN;
         }
@@ -281,9 +371,14 @@ public class AmmoCompat {
         String s = id.getPath().toLowerCase(Locale.ROOT);
         if (containsAny(s,
                 "rpg", "rocket", "grenade", "explosive", "40mm", "25gl",
-                "50bmg", "338", "408cheytac", "416barrett", "950jdj",
-                "20x102", "145x114", "127x108", "laser", "arrow", "nails")) {
+                "laser", "arrow", "nails", "missile", "mortar")) {
             return null;
+        }
+        if (containsAny(s,
+                "50bmg", "127x99", "12.7x99", "127x108", "12.7x108",
+                "145x114", "14.5x114", "20x102", "338", "408cheytac",
+                "416barrett", "950jdj", "50arms", "50ich")) {
+            return Ammo.HEAVY;
         }
         if (containsAny(s, "12g", "12_gauge", "10g", "20g", "410bore", "shotgun")) {
             return Ammo.SHOTGUN;
