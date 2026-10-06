@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.06-armeria-1.3.11",
+  "version": "2026.10.06-loot-22",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.11: i mirini si acquistano singolarmente e mostrano le categorie di armi compatibili.",
+  "news": "Nuovo Ordine — Lootr Tactical 1.1.22: le casse usano solo munizioni Superb Warfare, niente ammo TaCZ.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32282,13 +32282,6 @@
       "url": "https://mediafilez.forgecdn.net/files/7208/610/createaddition-1.20.1-1.3.3.jar"
     },
     {
-      "path": "mods/lootr-more-tactical-loot-1.1.21.jar",
-      "size": 50091,
-      "sha256": "8c9e801e77d90ca0b2db9a4351ae1646b9be263a301df10c57cf72680c5e7dce",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
-    },
-    {
       "path": "mods/starlight-1.1.2+forge.1cda73c.jar",
       "size": 110583,
       "sha256": "e90763c86d362c7cb427dbb70e89985c11a882fdd69ae7d04ac2e23a106eb500",
@@ -32301,6 +32294,13 @@
       "sha256": "0e1d2cf8cd8494fde1f8c7e3b3c3677a67206186a7f9645e7756006929a31c54",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.11.jar"
+    },
+    {
+      "path": "mods/lootr-more-tactical-loot-1.1.22.jar",
+      "size": 50526,
+      "sha256": "3976617bf61089771c8560d3701199610e4c2949e0795cbfa4fd12e76d892755",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.22.jar"
     }
   ],
   "archives": {
