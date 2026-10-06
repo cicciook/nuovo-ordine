@@ -44,8 +44,8 @@ final class SiteArchive {
                     || (existingText.contains("ANTEPRIMA — questi articoli sono esempi grafici.")
                         && existingText.contains("function native(){return typeof window.armeriaQuery==='function'}")
                         && existingText.contains("window.addEventListener('armeriaBridgeReady'"));
-            if (bundledDefault && !existingText.contains("nuovo-ordine-armeria-default:1.3.8")) {
-                Path backup = root.resolve("shop.pre-1.3.8.bak");
+            if (bundledDefault && !existingText.contains("nuovo-ordine-armeria-default:1.3.9")) {
+                Path backup = root.resolve("shop.pre-1.3.9.bak");
                 if (!Files.exists(backup, LinkOption.NOFOLLOW_LINKS))
                     Files.copy(shop, backup, StandardCopyOption.COPY_ATTRIBUTES);
                 installShop = true;

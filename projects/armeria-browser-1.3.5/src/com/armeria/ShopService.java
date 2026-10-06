@@ -116,6 +116,22 @@ final class ShopService {
         String c = category.toLowerCase(Locale.ROOT);
         return c.contains("munizioni") || c.contains("ammo box") || c.contains("accessori");
     }
+    private static boolean accessoryCategory(String category) {
+        return category != null && category.toLowerCase(Locale.ROOT).contains("accessori");
+    }
+    private static String accessoryImage(JsonObject data, String category, String fallback) {
+        if (!accessoryCategory(category)) return "";
+        String value = fallback == null ? "" : fallback.strip();
+        if (data.has("image")) value = text(data, "image", 1024);
+        if (value.isEmpty()) return "";
+        String lower = value.toLowerCase(Locale.ROOT);
+        boolean https = lower.startsWith("https://");
+        boolean relative = !value.startsWith("/") && !value.contains("..")
+                && value.matches("[A-Za-z0-9_./ -]+\\.(?i:png|jpg|jpeg|webp|gif|avif)");
+        if (!https && !relative)
+            throw new IllegalArgumentException("Foto accessorio: usa un URL HTTPS o un percorso immagine relativo alla cartella armeria.");
+        return value;
+    }
     private static void op(Port port) throws Exception {
         if (!port.isOp()) throw new IllegalArgumentException("Solo i giocatori OP possono modificare il catalogo.");
     }
@@ -196,8 +212,7 @@ final class ShopService {
         value.category = text(data, "category", 40);
         if (!allowedCategory(value.category))
             throw new IllegalArgumentException("Categoria non ammessa: l'armeria vende solo munizioni, ammo box e accessori.");
-        // Armeria 1.3.5 uses compact text-only cards: images are intentionally disabled.
-        value.image = "";
+        value.image = accessoryImage(data, value.category, existing == null ? "" : existing.image);
         value.price = price(text(data, "price", 32)).toPlainString();
         value.quantity = quantity(data);
         value.enabled = data.get("enabled").getAsBoolean();
@@ -212,6 +227,7 @@ final class ShopService {
             value.nbt = capture.nbt(); value.itemId = capture.itemId();
             if (capture.category() != null && !capture.category().isBlank()) value.category = capture.category();
         } else { value.nbt = existing.nbt; value.itemId = existing.itemId; }
+        if (!accessoryCategory(value.category)) value.image = "";
         port.validateItem(value.nbt); split(value.quantity, port.maxStack(value.nbt));
         Catalog next = GSON.fromJson(GSON.toJson(catalog), Catalog.class);
         next.offers.removeIf(o -> o.id.equals(value.id)); next.offers.add(value);
@@ -605,7 +621,7 @@ final class ShopService {
         boolean changed = next.offers.removeIf(o -> !allowedCategory(o.category)
                 || (o.autoKey != null && o.autoKey.startsWith("tacz:gun:")));
         for (Offer o : next.offers) {
-            if (o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
+            if (!accessoryCategory(o.category) && o.image != null && !o.image.isBlank()) { o.image = ""; changed = true; }
         }
 
         Map<String,Captured> found = discoverAutomaticAmmo();
@@ -644,7 +660,7 @@ final class ShopService {
                         && current.quantity != migratedPlan.quantity()) {
                     current.quantity = migratedPlan.quantity(); changed = true;
                 }
-                if (current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
+                if (!accessoryCategory(current.category) && current.image != null && !current.image.isBlank()) { current.image = ""; changed = true; }
                 continue;
             }
             if (!allowedCategory(capture.category()) || next.autoExcluded.contains(key)
@@ -754,6 +770,7 @@ final class ShopService {
             row.addProperty("price", offer.price);
             row.addProperty("quantity", offer.quantity);
             row.addProperty("enabled", offer.enabled); row.addProperty("itemId", offer.itemId);
+            row.addProperty("image", accessoryCategory(offer.category) && offer.image != null ? offer.image : "");
             row.addProperty("automatic", offer.automatic);
             String formatted = offer.price;
             if (economy) try { formatted = port.format(new BigDecimal(offer.price)); } catch (Exception ignored) {}
