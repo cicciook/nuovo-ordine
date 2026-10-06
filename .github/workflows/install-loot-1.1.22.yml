@@ -1,0 +1,127 @@
+name: Pubblica Lootr More Tactical Loot 1.1.22 solo ammo Superb
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'loot-source/1.1.22/**'
+      - '.github/workflows/install-loot-1.1.22.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compila patch Java 17
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/loot-patch
+          javac \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -d /tmp/loot-patch \
+            loot-source/1.1.22/Patch.java
+
+      - name: Costruisci e valida JAR 1.1.22
+        run: |
+          set -euo pipefail
+          test -f mods/lootr-more-tactical-loot-1.1.21.jar
+          rm -f mods/lootr-more-tactical-loot-1.1.22.jar
+
+          java \
+            --add-exports java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED \
+            -cp /tmp/loot-patch \
+            Patch \
+            mods/lootr-more-tactical-loot-1.1.21.jar \
+            mods/lootr-more-tactical-loot-1.1.22.jar \
+            loot-source/1.1.22
+
+          JAR=mods/lootr-more-tactical-loot-1.1.22.jar
+          unzip -t "$JAR" >/dev/null
+          unzip -p "$JAR" META-INF/mods.toml | grep -q 'version="1.1.22"'
+
+          javap -classpath "$JAR" -p -c -constants \
+            com.cicciook.lootrmoreloot.LootOpenEvents > /tmp/loot-javap.txt
+
+          grep -q 'lootr_more_loot_seen_1122.txt' /tmp/loot-javap.txt
+          grep -q 'superbwarfare:handgun_ammo' /tmp/loot-javap.txt
+          grep -q 'superbwarfare:rifle_ammo' /tmp/loot-javap.txt
+          grep -q 'superbwarfare:shotgun_ammo' /tmp/loot-javap.txt
+          grep -q 'superbwarfare:sniper_ammo' /tmp/loot-javap.txt
+          grep -q 'superbwarfare:heavy_ammo' /tmp/loot-javap.txt
+          grep -q 'double 0.08d' /tmp/loot-javap.txt
+          grep -q 'sophisticatedbackpacks:gold_backpack' /tmp/loot-javap.txt
+          grep -q 'maxstuff:ai_awp' /tmp/loot-javap.txt
+
+          unzip -p "$JAR" META-INF/loot-update-source/Patch.java | grep -q 'replaceAmmo'
+          unzip -p "$JAR" META-INF/loot-update-source/Patch.java | grep -q 'SUPERB_AMMO'
+
+      - name: Esporta JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: lootr-more-tactical-loot-1.1.22
+          path: mods/lootr-more-tactical-loot-1.1.22.jar
+          if-no-files-found: error
+
+      - name: Aggiorna manifest launcher
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          root=Path.cwd()
+          jar=root/'mods/lootr-more-tactical-loot-1.1.22.jar'
+          sha=hashlib.sha256(jar.read_bytes()).hexdigest()
+          entry={
+              'path':'mods/'+jar.name,
+              'size':jar.stat().st_size,
+              'sha256':sha,
+              'mode':'replace',
+              'url':'https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/'+jar.name,
+          }
+
+          sp=root/'pack-settings.json'
+          settings=json.loads(sp.read_text('utf-8'))
+          settings['external_files']=[
+              x for x in settings.get('external_files',[])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          settings['external_files'].append(entry)
+          news='Nuovo Ordine — Lootr Tactical 1.1.22: le casse usano solo munizioni Superb Warfare, niente ammo TaCZ.'
+          settings['news']=news
+          sp.write_text(json.dumps(settings,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          pp=root/'pack.json'
+          pack=json.loads(pp.read_text('utf-8'))
+          pack['version']='2026.10.06-loot-22'
+          pack['news']=news
+          pack['files']=[
+              x for x in pack.get('files',[])
+              if not x['path'].startswith('mods/lootr-more-tactical-loot-')
+          ]
+          pack['files'].append(entry)
+          pp.write_text(json.dumps(pack,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          assert [x['path'] for x in settings['external_files'] if x['path'].startswith('mods/lootr-more-tactical-loot-')] == [entry['path']]
+          assert [x['path'] for x in pack['files'] if x['path'].startswith('mods/lootr-more-tactical-loot-')] == [entry['path']]
+          print(jar.stat().st_size, sha)
+          PY
+
+          rm -f mods/lootr-more-tactical-loot-1.1.21.jar
+
+      - name: Pubblica
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A mods pack.json pack-settings.json
+          git commit -m 'Lootr Tactical 1.1.22: solo munizioni Superb Warfare'
+          git pull --rebase origin main
+          git push origin HEAD:main
