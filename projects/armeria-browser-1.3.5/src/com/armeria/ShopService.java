@@ -116,6 +116,23 @@ final class ShopService {
         String c = category.toLowerCase(Locale.ROOT);
         return c.contains("munizioni") || c.contains("ammo box") || c.contains("accessori") || c.contains("mirini");
     }
+    private static boolean taczAmmo(String category, String itemId, String nbt, String autoKey) {
+        String c = category == null ? "" : category.toLowerCase(Locale.ROOT);
+        String item = itemId == null ? "" : itemId.toLowerCase(Locale.ROOT);
+        String data = nbt == null ? "" : nbt.toLowerCase(Locale.ROOT);
+        String key = autoKey == null ? "" : autoKey.toLowerCase(Locale.ROOT);
+        boolean ammoLike = c.contains("munizioni") || c.contains("ammo box")
+                || item.equals("tacz:ammo") || item.equals("tacz:ammo_box")
+                || data.contains("ammoid");
+        if (!ammoLike) return false;
+        if (c.contains("tacz")) return true;
+        if (item.equals("tacz:ammo") || item.equals("tacz:ammo_box")) return true;
+        if (key.startsWith("tacz:") && !key.startsWith("tacz:attachment:")) return true;
+        return item.startsWith("tacz:") && data.contains("ammoid");
+    }
+    private static boolean taczAmmoOffer(Offer offer) {
+        return offer != null && taczAmmo(offer.category, offer.itemId, offer.nbt, offer.autoKey);
+    }
     private static boolean sightCategory(String category) {
         return category != null && category.toLowerCase(Locale.ROOT).contains("mirini");
     }
@@ -328,6 +345,8 @@ final class ShopService {
         } else { value.nbt = existing.nbt; value.itemId = existing.itemId; }
         value.category = calibratedCategory(value.category,
                 value.name + " " + value.itemId + " " + value.nbt + " " + value.autoKey);
+        if (taczAmmo(value.category, value.itemId, value.nbt, value.autoKey))
+            throw new IllegalArgumentException("L'Armeria vende munizioni solo di Superb Warfare. Gli accessori TACZ restano ammessi.");
         value.image = accessoryImage(data, value.category, existing == null ? "" : existing.image);
         if (sightCategory(value.category)) {
             value.quantity = 1;
@@ -608,34 +627,13 @@ final class ShopService {
     private static Map<String,Captured> discoverAutomaticAmmo() {
         Map<String,Captured> found = new LinkedHashMap<>();
 
-        // TACZ is data-driven. Enumerate the same generated stacks used by its
-        // creative categories so gunpack weapons/attachments keep their real NBT.
+        // TACZ is data-driven. Enumerate only attachments/sights.
+        // Ammunition is intentionally excluded: the shop sells Superb Warfare ammo only.
         discoverTaczFamily(found, "com.tacz.guns.item.AttachmentItem",
                 "getAttachmentId", "tacz:attachment:");
 
-        try {
-            Class<?> ammoItem = Class.forName("com.tacz.guns.item.AmmoItem");
-            Object stacks = ammoItem.getMethod("fillItemCategory").invoke(null);
-            if (stacks instanceof Iterable<?> iterable) {
-                for (Object stack : iterable) {
-                    Captured capture = captureStack(stack);
-                    String ammoId = tacZAmmoId(stack);
-                    if (!ammoId.isEmpty()) capture = new Captured(capture.nbt(), prettyAmmoName(ammoId),
-                            capture.itemId(), 1, calibratedCategory(capture.category(), ammoId), capture.maxStack());
-                    String key = "tacz:" + (ammoId.isEmpty() ? hash(capture.nbt()) : ammoId);
-                    discovered(found, key, capture);
-                }
-            }
-        } catch (ClassNotFoundException absent) {
-            // TACZ is optional.
-        } catch (Throwable problem) {
-            System.getLogger("Armeria").log(System.Logger.Level.WARNING,
-                    "Rilevamento automatico munizioni TACZ non riuscito", problem);
-        }
-
-        // Forge registry scan catches only physical ammunition/accessories accepted
-        // by AmmoSupport. TACZ generic base items are skipped because their actual
-        // attachment/ammo identity is enumerated above.
+        // Forge registry scan catches physical Superb Warfare ammunition/accessories.
+        // TACZ base items are skipped because only its data-driven attachments are allowed.
         try {
             Class<?> forgeRegistries = Class.forName("net.minecraftforge.registries.ForgeRegistries");
             Object items = forgeRegistries.getField("ITEMS").get(null);
@@ -726,6 +724,7 @@ final class ShopService {
         Catalog next = GSON.fromJson(GSON.toJson(catalog), Catalog.class);
         if (next.autoExcluded == null) next.autoExcluded = new LinkedHashSet<>();
         boolean changed = next.offers.removeIf(o -> !allowedCategory(o.category)
+                || taczAmmoOffer(o)
                 || (o.autoKey != null && o.autoKey.startsWith("tacz:gun:")));
         for (Offer o : next.offers) {
             String migratedCategory = calibratedCategory(o.category,
@@ -826,6 +825,8 @@ final class ShopService {
         }
         revision(data);
         Offer product = offer(text(data, "id", 40));
+        if (taczAmmoOffer(product))
+            throw new IllegalArgumentException("Le munizioni TACZ non sono piu vendute in Armeria.");
         if (!allowedCategory(product.category))
             throw new IllegalArgumentException("Questo articolo non appartiene piu al catalogo munizioni/accessori.");
         if (!product.enabled) throw new IllegalArgumentException("Questo articolo non e in vendita.");
@@ -884,7 +885,7 @@ final class ShopService {
         state.addProperty("economyAvailable", economy);
         JsonArray offers = new JsonArray();
         for (Offer offer : catalog.offers) {
-            if (!allowedCategory(offer.category)) continue;
+            if (taczAmmoOffer(offer) || !allowedCategory(offer.category)) continue;
             if (!offer.enabled && !operator) continue;
             JsonObject row = new JsonObject();
             row.addProperty("id", offer.id); row.addProperty("name", offer.name);

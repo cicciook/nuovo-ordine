@@ -13,12 +13,10 @@ final class AmmoSupport {
     }
 
     static String category(Object item) throws Exception {
-        // Armeria 1.3.4 intentionally sells only ammunition and gun accessories.
-        // Guns, melee weapons and generic tactical equipment are rejected.
+        // Nuovo Ordine: ammunition is sold only from Superb Warfare.
+        // TACZ remains accepted only for gun attachments/sights.
         String[][] types = {
-            {"com.tacz.guns.api.item.IAttachment", "Accessori TACZ"},
-            {"com.tacz.guns.api.item.IAmmoBox", "Ammo box TACZ"},
-            {"com.tacz.guns.api.item.IAmmo", "Munizioni TACZ"}
+            {"com.tacz.guns.api.item.IAttachment", "Accessori TACZ"}
         };
         for (String[] type : types) {
             try { if (Class.forName(type[0]).isInstance(item)) return type[1]; }

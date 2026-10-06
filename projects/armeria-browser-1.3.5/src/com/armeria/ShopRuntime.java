@@ -47,9 +47,9 @@ final class ShopRuntime {
         private Class<?> stackClass() throws Exception { return Class.forName("net.minecraft.world.item.ItemStack"); }
         private boolean empty(Object stack) throws Exception { return (boolean) method(stackClass(), "m_41619_", "isEmpty").invoke(stack); }
         private void validateProduct(Object stack) throws Exception {
-            if (empty(stack)) throw new IllegalArgumentException("Tieni in mano una munizione, una ammo box o un accessorio TACZ / Superb Warfare.");
+            if (empty(stack)) throw new IllegalArgumentException("Tieni in mano una munizione/ammo box Superb Warfare oppure un accessorio TACZ / Superb Warfare.");
             Object item = method(stackClass(), "m_41720_", "getItem").invoke(stack);
-            if (!AmmoSupport.accepts(item)) throw new IllegalArgumentException("L'oggetto deve essere una munizione, una ammo box o un accessorio TACZ / Superb Warfare. Le armi non sono ammesse.");
+            if (!AmmoSupport.accepts(item)) throw new IllegalArgumentException("L'oggetto deve essere una munizione/ammo box Superb Warfare oppure un accessorio TACZ / Superb Warfare. Le armi non sono ammesse.");
         }
         public ShopService.Captured capture() throws Exception {
             Object held = method(player.getClass(), "m_21205_", "getMainHandItem").invoke(player);
