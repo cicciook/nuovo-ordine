@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Lootr Tactical 1.1.22: le casse usano solo munizioni Superb Warfare, niente ammo TaCZ.",
+  "news": "Nuovo Ordine — Armeria 1.3.12: munizioni solo Superb Warfare; rimosse tutte le ammo TaCZ dal catalogo.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -209,11 +209,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/eedc6e2de38b4d24dfd59e54d3e688adbfb24a3c/kubejs/server_scripts/nuovo_ordine_easy_gunpowder.js"
     },
     {
-      "path": "mods/armeria-browser-1.3.11.jar",
-      "size": 124040,
-      "sha256": "0e1d2cf8cd8494fde1f8c7e3b3c3677a67206186a7f9645e7756006929a31c54",
+      "path": "mods/armeria-browser-1.3.12.jar",
+      "size": 124793,
+      "sha256": "c4eac574236dc2d18f86b13d58abadfeb91a6d5837fcbc53832486f5a7cfca80",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.11.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.12.jar"
     },
     {
       "path": "mods/Geophilic v3.7.mod.jar",

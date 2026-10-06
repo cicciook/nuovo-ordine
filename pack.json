@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.06-loot-22",
+  "version": "2026.10.06-armeria-1.3.12",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Lootr Tactical 1.1.22: le casse usano solo munizioni Superb Warfare, niente ammo TaCZ.",
+  "news": "Nuovo Ordine — Armeria 1.3.12: munizioni solo Superb Warfare; rimosse tutte le ammo TaCZ dal catalogo.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32289,18 +32289,18 @@
       "url": "https://cdn.modrinth.com/data/iRfIGC1s/versions/cNa0vkNj/starlight-1.1.2%2Bforge.1cda73c.jar"
     },
     {
-      "path": "mods/armeria-browser-1.3.11.jar",
-      "size": 124040,
-      "sha256": "0e1d2cf8cd8494fde1f8c7e3b3c3677a67206186a7f9645e7756006929a31c54",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.11.jar"
-    },
-    {
       "path": "mods/lootr-more-tactical-loot-1.1.22.jar",
       "size": 50526,
       "sha256": "3976617bf61089771c8560d3701199610e4c2949e0795cbfa4fd12e76d892755",
       "mode": "replace",
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/lootr-more-tactical-loot-1.1.22.jar"
+    },
+    {
+      "path": "mods/armeria-browser-1.3.12.jar",
+      "size": 124793,
+      "sha256": "c4eac574236dc2d18f86b13d58abadfeb91a6d5837fcbc53832486f5a7cfca80",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.12.jar"
     }
   ],
   "archives": {
