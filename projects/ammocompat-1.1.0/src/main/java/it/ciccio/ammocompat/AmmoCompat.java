@@ -26,6 +26,7 @@ import java.util.Set;
 
 @Mod(AmmoCompat.MODID)
 public class AmmoCompat {
+    // AmmoCompat 1.1.5: Superb reserves are consumed directly by TaCZ.
     public static final String MODID = "ammocompat";
     private static final System.Logger LOG = System.getLogger("ammocompat");
     private static volatile boolean shootCompatibilityApplied;
