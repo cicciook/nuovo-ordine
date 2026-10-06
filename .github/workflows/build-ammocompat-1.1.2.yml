@@ -105,7 +105,7 @@ jobs:
                   out.append(old)
               if not inserted: out.append(entry)
               doc[key]=out
-              doc['news']='Nuovo Ordine — AmmoCompat 1.1.5: TaCZ usa direttamente anche la riserva munizioni Superb Warfare mostrata nell'HUD, senza conversioni.'
+              doc['news']="Nuovo Ordine — AmmoCompat 1.1.5: TaCZ usa direttamente anche la riserva munizioni Superb Warfare mostrata nell'HUD, senza conversioni."
               if filename=='pack.json':
                   doc['version']='2026.10.06-ammocompat-1.1.5'
               p.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
