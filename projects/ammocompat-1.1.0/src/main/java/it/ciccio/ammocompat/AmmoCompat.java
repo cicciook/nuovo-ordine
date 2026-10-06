@@ -26,7 +26,7 @@ import java.util.Set;
 
 @Mod(AmmoCompat.MODID)
 public class AmmoCompat {
-    // AmmoCompat 1.1.5: Superb reserves are consumed directly by TaCZ.
+    // AmmoCompat 1.1.6: direct Superb ammo bridge + TaCZ category HUD.
     public static final String MODID = "ammocompat";
     private static final System.Logger LOG = System.getLogger("ammocompat");
     private static volatile boolean shootCompatibilityApplied;
@@ -228,6 +228,25 @@ public class AmmoCompat {
         return shooter.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER, null)
                 .map(cap -> hasCompatibleSuperbAmmo(cap, gun))
                 .orElse(false);
+    }
+
+    public static int compatibleSuperbAmmoCount(Player player, ItemStack gun) {
+        if (player == null) {
+            return 0;
+        }
+        Ammo type = compatibleSuperbType(gun);
+        if (type == null) {
+            return 0;
+        }
+        int total = Math.max(0, type.get(player));
+        Object expected = type.getItem();
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (!stack.isEmpty() && stack.getItem() == expected) {
+                total += stack.getCount();
+            }
+        }
+        return total;
     }
 
     public static int consumeCompatibleSuperbReserve(net.minecraft.world.entity.LivingEntity shooter,
