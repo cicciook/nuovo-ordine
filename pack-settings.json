@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — Armeria 1.3.12: munizioni solo Superb Warfare; rimosse tutte le ammo TaCZ dal catalogo.",
+  "news": "Nuovo Ordine — AmmoCompat 1.1.3: le munizioni fisiche Superb Warfare ora ricaricano direttamente le armi TaCZ, inclusi i gunpack.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -15,11 +15,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     },
     {
-      "path": "mods/ammocompat-1.1.2.jar",
-      "size": 9358,
-      "sha256": "44504e15913a85cefd2375d5c445ec1f6bf3c35ea0afd04720f3709fd620c2b6",
+      "path": "mods/ammocompat-1.1.3.jar",
+      "size": 10648,
+      "sha256": "dbbff6c64d243b8e054fd6f2eef9540812817bd9b6d8a888a96a3030d41aa494",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.2.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.3.jar"
     },
     {
       "path": "mods/create_bb-1.0.8-1.20.1.jar",
