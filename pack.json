@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "version": "2026.10.05-ammocompat-1.1.2",
+  "version": "2026.10.06-armeria-1.3.9",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.2: fix completo desync TaCZ/Mohist, reload e melee non si bloccano dopo lo sparo.",
+  "news": "Nuovo Ordine — Armeria 1.3.9: slot foto dedicato agli accessori, mantenendo compatte le schede munizioni.",
   "files": [
     {
       "path": "config/BerezkaAPI.toml",
@@ -32289,18 +32289,18 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/99d295871653abee56068d3c7be26ac123fdfad1/mods/lootr-more-tactical-loot-1.1.21.jar"
     },
     {
-      "path": "mods/armeria-browser-1.3.8.jar",
-      "size": 117114,
-      "sha256": "eadcb59ac2aa959d8cd3400bcddd021213b68c5eb98e551fc2cbc14e950ae09f",
-      "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/6af11adb00f4c52bcd4004df07e6a9611692b9da/mods/armeria-browser-1.3.8.jar"
-    },
-    {
       "path": "mods/starlight-1.1.2+forge.1cda73c.jar",
       "size": 110583,
       "sha256": "e90763c86d362c7cb427dbb70e89985c11a882fdd69ae7d04ac2e23a106eb500",
       "mode": "replace",
       "url": "https://cdn.modrinth.com/data/iRfIGC1s/versions/cNa0vkNj/starlight-1.1.2%2Bforge.1cda73c.jar"
+    },
+    {
+      "path": "mods/armeria-browser-1.3.9.jar",
+      "size": 118847,
+      "sha256": "0a0c439960c721bef77e4371311bb5b18b8fa1a14e518a0ca14b3c4e40ba1f59",
+      "mode": "replace",
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/armeria-browser-1.3.9.jar"
     }
   ],
   "archives": {
