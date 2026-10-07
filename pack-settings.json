@@ -2,7 +2,7 @@
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "server": "",
-  "news": "Nuovo Ordine — AmmoCompat 1.1.6: HUD TaCZ con categoria Superb compatibile e munizioni rimanenti in tempo reale.",
+  "news": "Nuovo Ordine — AmmoCompat 1.1.7: sync server-client indipendente delle munizioni Superb; HUD corretto anche dopo il reconnect.",
   "preserve": [
     "config/jei/jei-client.ini"
   ],
@@ -15,11 +15,11 @@
       "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/7dc715769cdbb70af281d63edd9a1e822abc1d05/kubejs/server_scripts/nuovo_ordine_respawn_kit.js"
     },
     {
-      "path": "mods/ammocompat-1.1.6.jar",
-      "size": 18447,
-      "sha256": "58d0730445a5e3c824bf2a835256bbcb759c93328d74534df84e37b52e5a5bd5",
+      "path": "mods/ammocompat-1.1.7.jar",
+      "size": 24402,
+      "sha256": "739d59fc231b13acbdb254d4482ee4cbe851bd9f87fad6fc738ea8d6c66734e0",
       "mode": "replace",
-      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.6.jar"
+      "url": "https://raw.githubusercontent.com/cicciook/nuovo-ordine/main/mods/ammocompat-1.1.7.jar"
     },
     {
       "path": "mods/create_bb-1.0.8-1.20.1.jar",
