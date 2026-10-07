@@ -60,7 +60,9 @@ jobs:
           grep -q 'consumeCompatibleSuperbReserve' /tmp/ammocompat.txt
           grep -q 'compatibleSuperbAmmoCount' /tmp/ammocompat.txt
           grep -q 'retrySuperbAmmoSync' /tmp/ammocompat.txt
-          grep -q 'PlayerVariable.markDirty' /tmp/ammocompat.txt || true
+          javap -classpath "$JAR" -p -c it.ciccio.ammocompat.AmmoSyncNetwork > /tmp/ammosync.txt
+          grep -q 'PacketDistributor' /tmp/ammosync.txt
+          grep -q 'setClientSuperbAmmoCounts' /tmp/ammosync.txt
           javap -classpath "$JAR" -p -c it.ciccio.ammocompat.client.ClientAmmoHud > /tmp/ammohud.txt
           grep -q 'RenderGuiEvent' /tmp/ammohud.txt
           grep -q 'compatibleSuperbAmmoCount' /tmp/ammohud.txt
@@ -111,7 +113,7 @@ jobs:
                   out.append(old)
               if not inserted: out.append(entry)
               doc[key]=out
-              doc['news']="Nuovo Ordine — AmmoCompat 1.1.7: la riserva Superb viene risincronizzata al login, evitando HUD a 0 dopo il reconnect."
+              doc['news']="Nuovo Ordine — AmmoCompat 1.1.7: sync server-client indipendente delle munizioni Superb; HUD corretto anche dopo il reconnect."
               if filename=='pack.json':
                   doc['version']='2026.10.06-ammocompat-1.1.7'
               p.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

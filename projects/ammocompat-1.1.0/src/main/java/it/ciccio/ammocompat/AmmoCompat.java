@@ -2,7 +2,6 @@ package it.ciccio.ammocompat;
 
 import com.atsuishio.superbwarfare.data.gun.Ammo;
 import com.atsuishio.superbwarfare.item.gun.GunItem;
-import com.atsuishio.superbwarfare.capability.player.PlayerVariable;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.item.IAmmo;
@@ -30,12 +29,13 @@ import java.util.UUID;
 
 @Mod(AmmoCompat.MODID)
 public class AmmoCompat {
-    // AmmoCompat 1.1.7: direct Superb ammo bridge + HUD + login ammo resync.
+    // AmmoCompat 1.1.7: direct Superb ammo bridge + HUD + independent server-client ammo sync.
     public static final String MODID = "ammocompat";
     private static final System.Logger LOG = System.getLogger("ammocompat");
     private static volatile boolean shootCompatibilityApplied;
     private static final long MAX_FUTURE_SHOOT_TIMESTAMP_MS = 750L;
     private static final Map<UUID, Integer> SUPERB_SYNC_RETRIES = new HashMap<>();
+    private static volatile int[] CLIENT_SUPERB_AMMO = new int[]{-1, -1, -1, -1, -1};
 
     private static final Set<String> HANDGUN_AMMO = Set.of(
             "tacz:9mm", "tacz:45acp", "tacz:57x28", "tacz:46x30",
@@ -87,6 +87,7 @@ public class AmmoCompat {
     );
 
     public AmmoCompat() {
+        AmmoSyncNetwork.init();
         MinecraftForge.EVENT_BUS.register(this);
     }
 
@@ -102,18 +103,17 @@ public class AmmoCompat {
         }
         Player player = e.getEntity();
 
-        // Superb Warfare persists its ammo reserve server-side, but on some Mohist/login
-        // sequences the client receives the capability too early or not at all.
-        // Force a full-value dirty sync now and retry during the first seconds.
+        // Sync indipendente da Superb Warfare: invia i 5 contatori reali dal server.
+        // I retry coprono Mohist e l'ordine di caricamento delle capability al login.
         try {
-            PlayerVariable.markDirty(player);
+            AmmoSyncNetwork.send((net.minecraft.server.level.ServerPlayer) player);
             SUPERB_SYNC_RETRIES.put(player.getUUID(), 60);
             LOG.log(System.Logger.Level.INFO,
-                    "Superb Warfare: richiesta sincronizzazione munizioni al login per "
+                    "AmmoCompat: sincronizzazione munizioni Superb inviata al login per "
                             + player.getGameProfile().getName());
         } catch (Throwable problem) {
             LOG.log(System.Logger.Level.WARNING,
-                    "Superb Warfare: sync munizioni al login non disponibile; verra ritentata.", problem);
+                    "AmmoCompat: sync munizioni al login non riuscita; verra ritentata.", problem);
             SUPERB_SYNC_RETRIES.put(player.getUUID(), 60);
         }
 
@@ -141,14 +141,13 @@ public class AmmoCompat {
         }
 
         int next = left - 1;
-        // Retry roughly at 1s, 2s and 3s after login. MarkDirty writes the current
-        // authoritative server reserve; it does not alter the stored ammo amount.
+        // Retry roughly at 1s, 2s and 3s after login.
         if (next == 40 || next == 20 || next == 0) {
             try {
-                PlayerVariable.markDirty(player);
+                AmmoSyncNetwork.send((net.minecraft.server.level.ServerPlayer) player);
             } catch (Throwable problem) {
                 LOG.log(System.Logger.Level.DEBUG,
-                        "Superb Warfare: retry sync munizioni non disponibile.", problem);
+                        "AmmoCompat: retry sync munizioni non riuscita.", problem);
             }
         }
 
@@ -254,6 +253,32 @@ public class AmmoCompat {
         }
     }
 
+    public static void setClientSuperbAmmoCounts(int handgun, int rifle, int shotgun, int sniper, int heavy) {
+        CLIENT_SUPERB_AMMO = new int[]{
+                Math.max(0, handgun),
+                Math.max(0, rifle),
+                Math.max(0, shotgun),
+                Math.max(0, sniper),
+                Math.max(0, heavy)
+        };
+    }
+
+    public static void clearClientSuperbAmmoCounts() {
+        CLIENT_SUPERB_AMMO = new int[]{-1, -1, -1, -1, -1};
+    }
+
+    private static int clientSuperbAmmoCount(Ammo type) {
+        int[] values = CLIENT_SUPERB_AMMO;
+        int index = switch (type) {
+            case HANDGUN -> 0;
+            case RIFLE -> 1;
+            case SHOTGUN -> 2;
+            case SNIPER -> 3;
+            case HEAVY -> 4;
+        };
+        return index < values.length ? values[index] : -1;
+    }
+
     public static Ammo compatibleSuperbType(ItemStack gun) {
         IGun taczGun = IGun.getIGunOrNull(gun);
         if (taczGun == null) {
@@ -274,8 +299,13 @@ public class AmmoCompat {
         if (type == null) {
             return false;
         }
-        if (shooter instanceof Player player && type.get(player) > 0) {
-            return true;
+        if (shooter instanceof Player player) {
+            if (player.level().isClientSide) {
+                int synced = clientSuperbAmmoCount(type);
+                if (synced > 0) return true;
+            } else if (type.get(player) > 0) {
+                return true;
+            }
         }
         return shooter.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER, null)
                 .map(cap -> hasCompatibleSuperbAmmo(cap, gun))
@@ -290,7 +320,8 @@ public class AmmoCompat {
         if (type == null) {
             return 0;
         }
-        int total = Math.max(0, type.get(player));
+        int synced = player.level().isClientSide ? clientSuperbAmmoCount(type) : -1;
+        int total = synced >= 0 ? synced : Math.max(0, type.get(player));
         Object expected = type.getItem();
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
@@ -314,6 +345,9 @@ public class AmmoCompat {
         int consumed = Math.min(available, requested);
         if (consumed > 0) {
             type.add(player, -consumed);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                AmmoSyncNetwork.send(serverPlayer);
+            }
         }
         return consumed;
     }
