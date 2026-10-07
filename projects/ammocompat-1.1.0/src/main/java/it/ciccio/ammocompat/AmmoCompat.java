@@ -2,6 +2,7 @@ package it.ciccio.ammocompat;
 
 import com.atsuishio.superbwarfare.data.gun.Ammo;
 import com.atsuishio.superbwarfare.item.gun.GunItem;
+import com.atsuishio.superbwarfare.capability.player.PlayerVariable;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.entity.IGunOperator;
 import com.tacz.guns.api.item.IAmmo;
@@ -23,14 +24,18 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.Locale;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 
 @Mod(AmmoCompat.MODID)
 public class AmmoCompat {
-    // AmmoCompat 1.1.6: direct Superb ammo bridge + TaCZ category HUD.
+    // AmmoCompat 1.1.7: direct Superb ammo bridge + HUD + login ammo resync.
     public static final String MODID = "ammocompat";
     private static final System.Logger LOG = System.getLogger("ammocompat");
     private static volatile boolean shootCompatibilityApplied;
     private static final long MAX_FUTURE_SHOOT_TIMESTAMP_MS = 750L;
+    private static final Map<UUID, Integer> SUPERB_SYNC_RETRIES = new HashMap<>();
 
     private static final Set<String> HANDGUN_AMMO = Set.of(
             "tacz:9mm", "tacz:45acp", "tacz:57x28", "tacz:46x30",
@@ -96,6 +101,22 @@ public class AmmoCompat {
             return;
         }
         Player player = e.getEntity();
+
+        // Superb Warfare persists its ammo reserve server-side, but on some Mohist/login
+        // sequences the client receives the capability too early or not at all.
+        // Force a full-value dirty sync now and retry during the first seconds.
+        try {
+            PlayerVariable.markDirty(player);
+            SUPERB_SYNC_RETRIES.put(player.getUUID(), 60);
+            LOG.log(System.Logger.Level.INFO,
+                    "Superb Warfare: richiesta sincronizzazione munizioni al login per "
+                            + player.getGameProfile().getName());
+        } catch (Throwable problem) {
+            LOG.log(System.Logger.Level.WARNING,
+                    "Superb Warfare: sync munizioni al login non disponibile; verra ritentata.", problem);
+            SUPERB_SYNC_RETRIES.put(player.getUUID(), 60);
+        }
+
         try {
             IGunOperator operator = IGunOperator.fromLivingEntity(player);
             operator.initialData();
@@ -109,6 +130,36 @@ public class AmmoCompat {
     }
 
     @SubscribeEvent
+    public void playerLoggedOut(PlayerEvent.PlayerLoggedOutEvent e) {
+        SUPERB_SYNC_RETRIES.remove(e.getEntity().getUUID());
+    }
+
+    private static void retrySuperbAmmoSync(Player player) {
+        Integer left = SUPERB_SYNC_RETRIES.get(player.getUUID());
+        if (left == null) {
+            return;
+        }
+
+        int next = left - 1;
+        // Retry roughly at 1s, 2s and 3s after login. MarkDirty writes the current
+        // authoritative server reserve; it does not alter the stored ammo amount.
+        if (next == 40 || next == 20 || next == 0) {
+            try {
+                PlayerVariable.markDirty(player);
+            } catch (Throwable problem) {
+                LOG.log(System.Logger.Level.DEBUG,
+                        "Superb Warfare: retry sync munizioni non disponibile.", problem);
+            }
+        }
+
+        if (next <= 0) {
+            SUPERB_SYNC_RETRIES.remove(player.getUUID());
+        } else {
+            SUPERB_SYNC_RETRIES.put(player.getUUID(), next);
+        }
+    }
+
+    @SubscribeEvent
     public void playerTick(TickEvent.PlayerTickEvent e) {
         if (e.player.level().isClientSide || e.phase != TickEvent.Phase.END) {
             return;
@@ -118,6 +169,7 @@ public class AmmoCompat {
         }
 
         Player player = e.player;
+        retrySuperbAmmoSync(player);
         repairTaczState(player);
 
         ItemStack held = player.getMainHandItem();
